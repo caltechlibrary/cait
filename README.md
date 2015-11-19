@@ -1,2 +1,7 @@
+
 # gospace
-A proof of concept Golang based wrapper/utility for working with the ArchivesSpace REST API.
+
+## Golang ArchivesSpace package and utility
+
+A proof of concept Golang package for working with ArchivesSpace REST API.
+

@@ -1,0 +1,25 @@
+#
+# this is an example setup configuration for running the API tests.
+#
+
+#
+# Local Development setup
+#
+export ASPACE_PROTOCOL=http
+export ASPACE_HOST=localhost
+export ASPACE_PORT=8089
+export ASPACE_USERNAME=admin
+export ASPACE_PASSWORD=admin
+export ASPACE_REPOSITORY_ID=2
+export ASPACE_REPOSITORY_NAME=test
+
+#
+# Access to production read only API
+#
+export ASPACE_PROTOCOL_PRODUCTION=https
+export ASPACE_HOST_PRODUCTION=
+export ASPACE_PORT_PRODUCTION=
+export ASPACE_USERNAME_PRODUCTION=
+export ASPACE_PASSWORD_PRODCUTION=
+export ASPACE_REPOSITORY_ID_PRODUCTION=
+export ASPACE_REPOSITORY_NAME_PRODUCTION=
