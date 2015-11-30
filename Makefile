@@ -10,9 +10,10 @@ test:
 clean:
 	if [ -f aspace ]; then rm aspace; fi
 
-build:
+build: 
 	go build
+	go build cmds/gospace/gospace.go
 
 install:
 	if [ ! -d $GOBIN ]; then mkdir -p $GOBIN; fi
-	go install cmds/aspace.go
+	go install cmds/gospace/gospace.go
