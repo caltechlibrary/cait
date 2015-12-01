@@ -33,7 +33,7 @@ function getAccessions {
             curl -H "X-ArchivesSpace-Session: $TOKEN" $ASPACE_URL/repositories/$REPO_ID/accessions/$ACCESSION_ID > data/repositories/$REPO_ID/accessions/$ACCESSION_ID.json
         fi
     done
-    echo "Completed Accession dump for repostory $REPO_ID"
+    echo "Completed Accession dump for repository $REPO_ID"
 }
 
 getAccessions $1
