@@ -1,5 +1,5 @@
 /**
- * cmds/gospace.go - A command line utility using the gospace package to work
+ * cmds/aspace/aspace.go - A command line utility using the aspace package to work
  * with ArchivesSpace's REST API.
  */
 package main
@@ -206,7 +206,7 @@ func runRepoCmd(cmd *command, config map[string]string) error {
 		}
 		return api.DeleteRepository(repo)
 	}
-	return fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.)
+	return fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
 func runCmd(cmd *command, config map[string]string) error {
@@ -219,7 +219,7 @@ func runCmd(cmd *command, config map[string]string) error {
 func main() {
 	t1 := time.Now()
 	if len(os.Args) < 2 {
-		usage("gospace is a command line tool for interacting with an ArchivesSpace installation.", 1)
+		usage("aspace is a command line tool for interacting with an ArchivesSpace installation.", 1)
 	}
 	config, err := configureApp()
 	if err != nil {
