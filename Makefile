@@ -2,7 +2,7 @@
 # Simple Makefile for conviently testing, building and deploying experiment.
 #
 export GOPATH=$(pwd)
-export GOBIN=$HOME/bin
+export GOBIN="$HOME/bin"
 
 test:
 	go test
