@@ -25,3 +25,4 @@ _testmain.go
 
 # project ignore stuff
 *.conf
+data/*
