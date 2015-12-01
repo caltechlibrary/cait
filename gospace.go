@@ -76,6 +76,11 @@ type Repository struct {
 	UserMTime             time.Time              `json:"user_mtime,omitempty"`
 }
 
+// Agent represents an ArchivesSpace agent from the client point of view
+type Agent struct {
+	ID int `json:"id"`
+}
+
 func checkEnv(protocol, host, username, password string) bool {
 	if strings.TrimSpace(protocol) == "" {
 		return false
@@ -407,6 +412,16 @@ func (aspace *ArchivesSpaceAPI) ListRepositories() ([]Repository, error) {
 		}
 	}
 	return repos, nil
+}
+
+// CreateAgent creates a Agent recod via the ArchivesSpace API
+func (aspace *ArchivesSpaceAPI) CreateAgent(repo *Repository) (*Agent, error) {
+	return nil, fmt.Errorf("CreateAgent() not implemented")
+}
+
+// ListAgents return a list of agents available in the respository via the ArchivesSpace API
+func (aspace *ArchivesSpaceAPI) ListAgents() ([]Agent, error) {
+	return nil, fmt.Errorf("ListAgents() not implemented")
 }
 
 //FIXME Need to implemenent similar methods on agents and accessions
