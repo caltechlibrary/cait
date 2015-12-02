@@ -16,6 +16,19 @@ Found these tools in _Data Science at the Command Line_. For a complete list che
     + [jq](https://github.com/stedolan/jq/) A command line JSON selector analogous to XPath for XML
     + [xml2json](https://github.com/parmentf/xml2json) convert XML to JSON
 
+### ArchivesSpace tools
+
++ [ashtin](https://www.npmjs.com/package/ashtin) a NPM module for working with Solr
+    + [Project at Github](https://github.com/quoideneuf/ashtin)
+    + Might be interesting to fold some of this into gospace
+
+Install ashtin
+
+```
+    npm install ashtin -g
+    ashtin setup
+    ashtin prune-index --solr_url http://localhost:8090
+```
 
 ## Authenticating
 

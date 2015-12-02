@@ -98,14 +98,17 @@ func TestRepository(t *testing.T) {
 
 	aspace := New(aspaceProtocol, aspaceHost, aspacePort, aspaceUsername, aspacePassword)
 	tm := time.Now()
-	repoCode := fmt.Sprintf("%v", tm.Unix())
+	repoCode := fmt.Sprintf("%d", tm.Unix())
 
 	err := aspace.Login()
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	repo1, err := aspace.CreateRepository(repoCode, "This is a test generated from go_test")
+	repo0 := new(Repository)
+	repo0.RepoCode = repoCode
+	repo0.Name = "This is a test generated from go_test"
+	repo1, err := aspace.CreateRepository(repo0)
 	if err != nil {
 		t.Errorf("Error from CreateRepository() %s", err)
 	}
@@ -130,8 +133,7 @@ func TestRepository(t *testing.T) {
 	repo2.Name = fmt.Sprintf("Modified Name: %s", repo2.Name)
 	repo2.URL = `http://www.archive.example.edu`
 	repo2.ImageURL = `http://www.archive.example.edu/logo.svg`
-
-	err = aspace.UpdateRepository(repo2)
+	_, err = aspace.UpdateRepository(repo2)
 	if err != nil {
 		t.Errorf("UpdateRepository failed for %v: %s", repo2, err)
 	}
@@ -165,7 +167,7 @@ func TestRepository(t *testing.T) {
 		t.Errorf("Expected one or more in repository list: %v", repos)
 	}
 
-	err = aspace.DeleteRepository(repo2)
+	_, err = aspace.DeleteRepository(repo2)
 	if err != nil {
 		t.Errorf("DeleteRepository failed for %v: %s", repo2, err)
 		t.FailNow()

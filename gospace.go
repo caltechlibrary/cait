@@ -18,7 +18,6 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
-	"time"
 )
 
 // ArchivesSpaceAPI is a struct holding the essentials for communicating
@@ -30,125 +29,110 @@ type ArchivesSpaceAPI struct {
 	AuthToken string
 }
 
-/*
-	// Blog post on handling [JSON DATA](http://blog.golang.org/json-and-go)
-	Example Repo JSON object
-
-	{
-	    "agent_representation": {
-	        "ref": "/agents/corporate_entities/8"
-	    },
-	    "country": "UM",
-	    "create_time": "2015-11-20T18:39:49Z",
-	    "created_by": "admin",
-	    "image_url": "http://identity.example.org",
-	    "jsonmodel_type": "repository",
-	    "last_modified_by": "admin",
-	    "lock_version": 1,
-	    "name": "This is a test generated from go_test",
-	    "org_code": "Orangization or Agency Code",
-	    "parent_institution_name": "Parent Institution Name",
-	    "repo_code": "1448044788",
-	    "system_mtime": "2015-11-20T18:56:57Z",
-	    "uri": "/repositories/9",
-	    "url": "http://example.org",
-	    "user_mtime": "2015-11-20T18:56:57Z"
-	}
-*/
+// ResponseMsg is a structure to hold the JSON portion of a response from the ArchivesSpaceAPI
+type ResponseMsg struct {
+	Status      string   `json:"status,omitempty"`
+	ID          int      `json:"id,omitempty"`
+	LockVersion int      `json:"lock_version,omitempty"`
+	Stale       string   `json:"stale,omitempty"`
+	URI         string   `json:"uri,omitempty"`
+	Warnings    []string `json:"warnings,omitempty"`
+	Error       string   `json:"error,omitempty"`
+}
 
 // Repository represents an ArchivesSpace repository from the client point of view
 type Repository struct {
 	JSONModelType         string                 `json:"json_model_type,omitempty"`
-	ID                    int                    `json:"id"`
+	ID                    int                    `json:"id,omitempty"`
 	RepoCode              string                 `json:"repo_code"`
 	Name                  string                 `json:"name"`
 	URI                   string                 `json:"uri,omitempty"`
 	URL                   string                 `json:"url,omitempty"`
 	AgentRepresentation   map[string]interface{} `json:"agent_representation,omitempty"`
 	Country               string                 `json:"country,omitempty"`
-	ImageURL              string                 `json:"image_url"`
+	ImageURL              string                 `json:"image_url,omitempty"`
 	OrgCode               string                 `json:"org_code,omitempty"`
 	ParentInstitutionName string                 `json:"parent_institution_name,omitempty"`
 	LockVersion           int                    `json:"lock_version"`
 	CreatedBy             string                 `json:"created_by,omitempty"`
-	CreateTime            time.Time              `json:"create_time,omitempty"`
-	SystemMTime           time.Time              `json:"system_mtime,omitempty"`
-	UserMTime             time.Time              `json:"user_mtime,omitempty"`
+	CreateTime            string                 `json:"create_time,omitempty"`
+	SystemMTime           string                 `json:"system_mtime,omitempty"`
+	UserMTime             string                 `json:"user_mtime,omitempty"`
 }
 
 // Date an ArchivesSpace Date structure
 type Date struct {
-	JSONModelType  string    `json:"jsonmodel_type"`
-	LockVersion    string    `json:"lock_version,omitempty"`
-	Begin          string    `json:"begin"`
-	End            string    `json:"end"`
-	CreatedBy      string    `json:"created_by,omitempty"`
-	CreateTime     time.Time `json:"create_time,omitempty"`
-	SystemMTime    time.Time `json:"system_mtime,omitempty"`
-	UserMTime      time.Time `json:"user_mtime,omitempty"`
-	LastModifiedBy string    `json:"last_modified_by,omitempty"`
-	DateType       string    `json:"date_type,omitempty"`
-	Label          string    `json:"label,omitempty"`
+	JSONModelType  string `json:"jsonmodel_type,omitempty"`
+	LockVersion    string `json:"lock_version,omitempty"`
+	Begin          string `json:"begin,omitempty"`
+	End            string `json:"end,omitempty"`
+	CreatedBy      string `json:"created_by,omitempty"`
+	CreateTime     string `json:"create_time,omitempty"`
+	SystemMTime    string `json:"system_mtime,omitempty"`
+	UserMTime      string `json:"user_mtime,omitempty"`
+	LastModifiedBy string `json:"last_modified_by,omitempty"`
+	DateType       string `json:"date_type,omitempty"`
+	Label          string `json:"label,omitempty"`
 }
 
 // NoteText is the content type of subnotes
 type NoteText struct {
-	JSONModelType string `json:"jsonmodel_type"`
-	Content       string `json:"content"`
-	Publish       bool   `json:"publish"`
+	JSONModelType string `json:"jsonmodel_type,omitempty"`
+	Content       string `json:"content,omitempty"`
+	Publish       bool   `json:"publish,omitempty"`
 }
 
 // NoteBiogHist - Notes Biographical Historical
 type NoteBiogHist struct {
 	JSONModelType string     `json:"jsonmodel_type,omitempty"`
 	Label         string     `json:"label,omitempty"`
-	PersistentID  string     `json:"persistent_id"`
+	PersistentID  string     `json:"persistent_id,omitempty"`
 	SubNotes      []NoteText `json:"subnotes,omitempty"`
 	Publish       bool       `json:"publish,omitempty"`
 }
 
 // NamePerson a single agent name structure
 type NamePerson struct {
-	JSONModelType        string    `json:"json_model_type,omitempty"`
-	LockVersion          int       `json:"lock_version"`
-	PrimaryName          string    `json:"primary_name"`
-	SortName             string    `json:"sort_name"`
-	SortNameAutoGenerate bool      `json:"sort_name_auto_generate"`
-	CreatedBy            string    `json:"created_by,omitempty"`
-	CreateTime           time.Time `json:"create_time"`
-	SystemMTime          time.Time `json:"system_mtime"`
-	UserMTime            time.Time `json:"user_mtime"`
-	LastModifiedBy       string    `json:"last_modified_by,omitempty"`
-	Authorized           bool      `json:"authorized"`
-	IsDisplayName        bool      `json:"is_display_name"`
-	Source               string    `json:"source"`
-	Rules                string    `json:"rules"`
-	NameOrder            string    `json:"name_order"`
-	UseDates             []Date    `json:"use_dates"`
+	JSONModelType        string `json:"json_model_type,omitempty"`
+	LockVersion          int    `json:"lock_version,omitempty"`
+	PrimaryName          string `json:"primary_name,omitempty"`
+	SortName             string `json:"sort_name,omitempty"`
+	SortNameAutoGenerate bool   `json:"sort_name_auto_generate,omitempty"`
+	CreatedBy            string `json:"created_by,omitempty"`
+	CreateTime           string `json:"create_time,omitempty"`
+	SystemMTime          string `json:"system_mtime,omitempty"`
+	UserMTime            string `json:"user_mtime,omitempty"`
+	LastModifiedBy       string `json:"last_modified_by,omitempty"`
+	Authorized           bool   `json:"authorized,omitempty"`
+	IsDisplayName        bool   `json:"is_display_name,omitempty"`
+	Source               string `json:"source,omitempty"`
+	Rules                string `json:"rules,omitempty"`
+	NameOrder            string `json:"name_order,omitempty"`
+	UseDates             []Date `json:"use_dates,omitempty"`
 }
 
 // Agent represents an ArchivesSpace complete agent record from the client point of view
 type Agent struct {
 	JSONModelType             string                   `json:"json_model_type,omitempty"`
-	ID                        int                      `json:"id"`
-	Published                 bool                     `json:"publish"`
+	ID                        int                      `json:"id,omitempty"`
+	Published                 bool                     `json:"publish,omitempty"`
 	CreatedBy                 string                   `json:"created_by,omitempty"`
-	CreateTime                time.Time                `json:"create_time,omitempty"`
-	SystemMTime               time.Time                `json:"system_mtime,omitempty"`
-	UserMTime                 time.Time                `json:"user_mtime,omitempty"`
+	CreateTime                string                   `json:"create_time,omitempty"`
+	SystemMTime               string                   `json:"system_mtime,omitempty"`
+	UserMTime                 string                   `json:"user_mtime,omitempty"`
 	LastModifiedBy            string                   `json:"last_modified_by,omitempty"`
-	AgentType                 string                   `json:"agent_type"`
-	URI                       string                   `json:"uri"`
-	Title                     string                   `json:"title"`
-	IsLinkedToPublishedRecord bool                     `json:"is_linked_to_published_record"`
-	Names                     []NamePerson             `json:"names"`
-	DisplayName               NamePerson               `json:"display_name"`
-	RelatedAgents             []map[string]interface{} `json:"related_agents"`
+	AgentType                 string                   `json:"agent_type,omitempty"`
+	URI                       string                   `json:"uri,omitempty"`
+	Title                     string                   `json:"title,omitempty"`
+	IsLinkedToPublishedRecord bool                     `json:"is_linked_to_published_record,omitempty"`
+	Names                     []NamePerson             `json:"names,omitempty"`
+	DisplayName               NamePerson               `json:"display_name,omitempty"`
+	RelatedAgents             []map[string]interface{} `json:"related_agents,omitempty"`
 	DatesOfExistance          []Date                   `json:"dates_of_existence,omitempty"`
 	AgentContacts             []map[string]interface{} `json:"agent_contacts,omitempty"`
 	LinkedAgentRoles          []map[string]interface{} `json:"linked_agent_roles,omitempty"`
 	ExternalDocuments         []map[string]interface{} `json:"external_documents,omitempty"`
-	RightsStatements          []map[string]interface{} `json:"rights_statements"`
+	RightsStatements          []map[string]interface{} `json:"rights_statements,omitempty"`
 	Notes                     []NoteBiogHist           `json:"notes,omitempty"`
 }
 
@@ -254,12 +238,15 @@ func (aspace *ArchivesSpaceAPI) Logout() error {
 
 // CreateRepository will create a respository via the REST API for the
 // ArchivesSpace instance defined in the ArchivesSpaceAPI struct.
-func (aspace *ArchivesSpaceAPI) CreateRepository(repoCode, name string) (*Repository, error) {
+// It will return the created record.
+func (aspace *ArchivesSpaceAPI) CreateRepository(repoRequest *Repository) (*Repository, error) {
 	aspace.URL.Path = "/repositories"
-	payload := strings.NewReader(fmt.Sprintf(`{"repo_code":%q,"name":%q}`, repoCode, name))
-
+	payload, err := json.Marshal(repoRequest)
+	if err != nil {
+		return nil, err
+	}
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", aspace.URL.String(), payload)
+	req, err := http.NewRequest("POST", aspace.URL.String(), bytes.NewReader(payload))
 	if err != nil {
 		return nil, fmt.Errorf("Can't create request: %s", err)
 	}
@@ -277,20 +264,21 @@ func (aspace *ArchivesSpaceAPI) CreateRepository(repoCode, name string) (*Reposi
 	}
 	// content should look something like
 	// {"status":"Created","id":3,"lock_version":0,"stale":null,"uri":"/repositories/3","warnings":[]}
-	repo := new(Repository)
-	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), repo)
+	data := new(ResponseMsg)
+	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), data)
 	if err != nil {
-		return repo, err
+		return nil, err
 	}
-	repo.RepoCode = repoCode
-	repo.Name = name
-	return repo, nil
+	if data.Status == "Created" {
+		// We created the repository so let's fetch and return the newly created record
+		return aspace.GetRepository(data.ID)
+	}
+	return nil, fmt.Errorf("%s", data)
 }
 
 // GetRepository returns the repository details based on Id
 func (aspace *ArchivesSpaceAPI) GetRepository(id int) (*Repository, error) {
 	aspace.URL.Path = fmt.Sprintf(`/repositories/%d`, id)
-	//payload := strings.NewReader(fmt.Sprintf(`{"repo_code":%q,"name":%q}`, repoCode, name))
 
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", aspace.URL.String(), nil)
@@ -312,19 +300,17 @@ func (aspace *ArchivesSpaceAPI) GetRepository(id int) (*Repository, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Read body error: %s", err)
 	}
-	// content should look something like
-	// {"lock_version":0,"repo_code":"1447893780","name":"This is a test generated from go_test","created_by":"admin","last_modified_by":"admin","create_time":"2015-11-19T00:43:00Z","system_mtime":"2015-11-19T00:43:00Z","user_mtime":"2015-11-19T00:43:00Z","jsonmodel_type":"repository","uri":"/repositories/16","agent_representation":{"ref":"/agents/corporate_entities/15"}}
 	repo := new(Repository)
 	repo.ID = id
 	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), repo)
 	if err != nil {
-		return repo, err
+		return nil, err
 	}
 	return repo, nil
 }
 
 // UpdateRepository takes a respository structure and sends it to the ArchivesSpace REST API
-func (aspace *ArchivesSpaceAPI) UpdateRepository(repo *Repository) error {
+func (aspace *ArchivesSpaceAPI) UpdateRepository(repo *Repository) (*ResponseMsg, error) {
 	/*
 		Example get a repo with curl:
 			curl -H "X-ArchivesSpace-Session: $TOKEN" --request GET "http://localhost:8089/repositories/9" | python -m json.tool
@@ -360,44 +346,40 @@ func (aspace *ArchivesSpaceAPI) UpdateRepository(repo *Repository) error {
 	aspace.URL.Path = repo.URI
 	jsonSrc, err := json.Marshal(repo)
 	if err != nil {
-		return fmt.Errorf("Can't JSON encode update %v %s", repo, err)
+		return nil, fmt.Errorf("Can't JSON encode update %v %s", repo, err)
 	}
 	payload := strings.NewReader(fmt.Sprintf("%s", jsonSrc))
 
 	client := &http.Client{}
 	req, err := http.NewRequest("POST", aspace.URL.String(), payload)
 	if err != nil {
-		return fmt.Errorf("Can't POST update request: %s", err)
+		return nil, fmt.Errorf("Can't POST update request: %s", err)
 	}
 	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
 	req.Header.Set("Content-Type", "application/json")
 	res, err := client.Do(req)
 	if err != nil {
-		return fmt.Errorf("Request error: %s", err)
+		return nil, fmt.Errorf("Request error: %s", err)
 	}
 	defer res.Body.Close()
 	content, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return fmt.Errorf("Read body error: %s", err)
+		return nil, fmt.Errorf("Read body error: %s", err)
 	}
 	// content should look something like
 	// {"status":"Created","id":3,"lock_version":0,"stale":null,"uri":"/repositories/3","warnings":[]}
-	type msgStatus struct {
-		Status   string   `json:"status"`
-		ID       int      `json:"id"`
-		URI      string   `json:"uri,omitempty"`
-		Warnings []string `json:"warnings,omitempty"`
-	}
-	data := new(msgStatus)
+	// OR
+	// {"error":"Some error message here"}
+	data := new(ResponseMsg)
 	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), data)
 	if err != nil {
-		return fmt.Errorf("Could not unpack UpdateRepository() response [%s] %s", content, err)
+		return nil, fmt.Errorf("Could not unpack UpdateRepository() response [%s] %s", content, err)
 	}
-	return nil
+	return data, nil
 }
 
 // DeleteRepository takes a respository structure and sends it to the ArchivesSpace REST API
-func (aspace *ArchivesSpaceAPI) DeleteRepository(repo *Repository) error {
+func (aspace *ArchivesSpaceAPI) DeleteRepository(repo *Repository) (*ResponseMsg, error) {
 	/*
 		Example Listing the repo with curl:
 			curl -H "X-ArchivesSpace-Session: $TOKEN" --request GET "http://localhost:8089/repositories" | python -m json.tool
@@ -411,7 +393,7 @@ func (aspace *ArchivesSpaceAPI) DeleteRepository(repo *Repository) error {
 	client := &http.Client{}
 	req, err := http.NewRequest("DELETE", aspace.URL.String(), payload)
 	if err != nil {
-		return fmt.Errorf("Can't create request: %s", err)
+		return nil, fmt.Errorf("Can't create request: %s", err)
 	}
 	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
 	req.Header.Set("Content-Type", "application/json")
@@ -419,30 +401,18 @@ func (aspace *ArchivesSpaceAPI) DeleteRepository(repo *Repository) error {
 	res, err := client.Do(req)
 	defer res.Body.Close()
 	if err != nil {
-		return fmt.Errorf("Request error: %s", err)
+		return nil, fmt.Errorf("Request error: %s", err)
 	}
 	content, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return fmt.Errorf("Read body error: %s", err)
+		return nil, fmt.Errorf("Read body error: %s", err)
 	}
-	// content should look something like
-	// {"status":"Deleted","id":8}
-	type statusMsg struct {
-		Status string `json:"status"`
-		ID     int    `json:"id"`
-	}
-	data := new(statusMsg)
+	data := new(ResponseMsg)
 	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), data)
 	if err != nil {
-		return fmt.Errorf("Cannnot decode DeleteRepository() response %s", err)
+		return nil, fmt.Errorf("Cannnot decode DeleteRepository() response %s", err)
 	}
-	if strings.Compare(data.Status, "Deleted") != 0 {
-		return fmt.Errorf("DeleteRepository() unexpected status [%s]", data.Status)
-	}
-	if data.ID != repo.ID {
-		return fmt.Errorf("DeleteRepository() unexpected repository id %d", data.ID)
-	}
-	return nil
+	return data, nil
 }
 
 // ListRepositories returns a list of repositories available via the ArchivesSpace REST API
@@ -592,5 +562,11 @@ func (repository *Repository) String() string {
 // String return an Agent as a JSON formatted string
 func (agent *Agent) String() string {
 	src, _ := json.Marshal(agent)
+	return string(src)
+}
+
+// String return a ResponseMsg
+func (responseMsg *ResponseMsg) String() string {
+	src, _ := json.Marshal(responseMsg)
 	return string(src)
 }
