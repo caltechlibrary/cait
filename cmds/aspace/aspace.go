@@ -5,32 +5,55 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"strconv"
 	"strings"
-	"path"
+
 	"../../../gospace"
-	"time"
-	"encoding/json"
+)
+
+type command struct {
+	Subject string
+	Action  string
+	Object  string
+	Options []string
+}
+
+var (
+	subjects = []string{
+		"instance",
+		"repository",
+		"agent",
+		"accession",
+	}
+	actions = []string{
+		"create",
+		"list",
+		"update",
+		"delete",
+		"export",
+		"import",
+	}
 )
 
 func usage(msg string, exitCode int) {
 	appName := path.Base(os.Args[0])
-	USAGE_TEXT := fmt.Sprintf(`
-  USAGE: %s SUBJECT ACTION OBJECT [OPTIONS]
+	usageText := fmt.Sprintf(`
+  USAGE: %s SUBJECT ACTION [DATA] [OPTIONS]
 
   Synopsis: %s is a command line utility for interacting with an ArchivesSpace
   instance.  The command is tructure around an SUBJECT, ACTION and a OBJECT.
 
-  SUBJECT can be repository, agent, or accession.
+  SUBJECT can be %s.
 
-  ACTION can be one of create, list, update, and delete.
+  ACTION can be %s.
 
-  OBJECT is the object of the subject and action (e.g. a Repository ID, Agent ID,
-	  Accession ID, etc)
+  DATA is any additional information required to complete the ACTION on SUBJECT.
 
-  OPTIONS can be any additional values need to specify or clarify the OBJECT
+  OPTIONS addition flag based options appropriate to the SUBJECT, ACTION and DATA (e.g. -h, --help for help)
 
   %s also relies on the shell environment for information about connecting
   to the ArchivesSpace instance. The following shell variables are used
@@ -40,8 +63,6 @@ func usage(msg string, exitCode int) {
 	ASPACE_PORT              %s
 	ASPACE_USERNAME          %s
 	ASPACE_PASSWORD          %s
-	ASPACE_REPOSITORY_ID     %s
-	ASPACE_REPOSITORY_NAME   %s
 
 
   Example:
@@ -55,35 +76,32 @@ func usage(msg string, exitCode int) {
   "My Test Repository"
 
 `,
-	appName,
-	appName,
-	appName,
-	os.Getenv("ASPACE_PROTOCOL"),
-	os.Getenv("ASPACE_HOST"),
-	os.Getenv("ASPACE_PORT"),
-	os.Getenv("ASPACE_USERNAME"),
-	os.Getenv("ASPACE_PASSWORD"),
-	os.Getenv("ASPACE_REPOSITORY_ID"),
-	os.Getenv("ASPACE_REPOSITORY_NAME"),
-	appName)
+		appName,
+		appName,
+		strings.Join(subjects, ", "),
+		strings.Join(actions, ", "),
+		appName,
+		os.Getenv("ASPACE_PROTOCOL"),
+		os.Getenv("ASPACE_HOST"),
+		os.Getenv("ASPACE_PORT"),
+		os.Getenv("ASPACE_USERNAME"),
+		os.Getenv("ASPACE_PASSWORD"),
+		appName)
 
-	fmt.Fprintln(os.Stderr, USAGE_TEXT)
+	fmt.Fprintln(os.Stderr, usageText)
 	if msg != "" {
 		fmt.Fprintf(os.Stderr, " %s\n\n", msg)
 	}
 	os.Exit(exitCode)
 }
 
-
-func configureApp() (map[string]string, error){
+func configureApp() (map[string]string, error) {
 	envKeys := []string{
 		"ASPACE_PROTOCOL",
 		"ASPACE_HOST",
 		"ASPACE_PORT",
 		"ASPACE_USERNAME",
 		"ASPACE_PASSWORD",
-		"ASPACE_REPOSITORY_ID",
-		"ASPACE_REPOSITORY_NAME",
 	}
 	conf := make(map[string]string)
 	for _, ky := range envKeys {
@@ -95,13 +113,6 @@ func configureApp() (map[string]string, error){
 	return conf, nil
 }
 
-type command struct {
-	Subject string
-	Action string
-	Object string
-	Options []string
-}
-
 func containsElement(src []string, elem string) bool {
 	for _, item := range src {
 		if strings.Compare(item, elem) == 0 {
@@ -111,113 +122,111 @@ func containsElement(src []string, elem string) bool {
 	return false
 }
 
-func parseCmd(args []string)(*command, error) {
-	if len(args) < 3 {
-		return  nil, fmt.Errorf("Commands have the form SUBJECT ACTION OBJECT [OPTIONS]")
-	}
-	subjects := []string{
-		"repository",
-		"agent",
-		"accession",
-	}
-	actions := []string{
-		"create",
-		"list",
-		"update",
-		"delete",
-	}
-
+func parseCmd(args []string) (*command, error) {
 	cmd := new(command)
+
+	if len(args) < 2 {
+		return nil, fmt.Errorf("Commands have the form SUBJECT ACTION [OBJECT] [OPTIONS]")
+	}
 
 	if containsElement(subjects, args[0]) == false {
 		return nil, fmt.Errorf("%s is not a subject (e.g. %s)", args[0], strings.Join(subjects, ", "))
+	}
+	cmd.Subject = args[0]
+	if cmd.Subject == "export" {
+		return cmd, nil
 	}
 
 	if containsElement(actions, args[1]) == false {
 		return nil, fmt.Errorf("%s is not an action (e.g. %s)", args[1], strings.Join(actions, ", "))
 	}
 
-	cmd.Subject = args[0]
 	cmd.Action = args[1]
-	cmd.Object = args[2]
+	//FIXME: Object should really be assembled from the next arg OR the JSON expression encountered.
 	if len(args) > 2 {
+		cmd.Object = args[2]
 		cmd.Options = args[3:]
 	}
 	return cmd, nil
 }
 
-func runRepoCmd(cmd *command, config map[string]string) error {
+func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 	api := gospace.New(config["ASPACE_PROTOCOL"], config["ASPACE_HOST"], config["ASPACE_PORT"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
-		return err
+		return "", err
 	}
 	switch cmd.Action {
 	case "create":
-		_, err := api.CreateRepository(cmd.Object, strings.Join(cmd.Options, " "))
-		return err
+		repo, err := api.CreateRepository(cmd.Object, strings.Join(cmd.Options, " "))
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(repo)
+		if err != nil {
+			return "", err
+		}
+		return string(src), nil
 	case "list":
-		if strings.Compare(cmd.Object, "all") == 0 {
+		if strings.Compare(cmd.Object, "") == 0 {
 			repos, err := api.ListRepositories()
 			if err != nil {
-				fmt.Fprintf(os.Stderr, `{"status": "error", "message": "%s"}`, err)
-				os.Exit(1)
+				return "", fmt.Errorf(`{"status": "error", "message": "%s"}`, err)
 			}
 			src, err := json.Marshal(repos)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, `{"status": "error", "message": "Cannot JSON encode %s %s"}`, cmd.Object, err)
-				os.Exit(1)
+				return "", fmt.Errorf(`{"status": "error", "message": "Cannot JSON encode %s %s"}`, cmd.Object, err)
 			}
-			fmt.Printf("%s\n", src)
-			os.Exit(0)
-		} else {
-			repoID, err := strconv.Atoi(cmd.Object)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, `{"status": "error", "message": "Cannot convert %s to a number %s"}`, cmd.Object, err)
-				os.Exit(1)
-			}
-			repo, err := api.GetRepository(repoID)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, `{"status": "error", "message": "%s"}`, err)
-				os.Exit(1)
-			}
-			src, err := json.Marshal(repo)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, `{"status": "error", "message": "Cannot find %s %s"}`, cmd.Object, err)
-				os.Exit(1)
-			}
-			fmt.Printf("%s\n", src)
-			os.Exit(0)
+			return string(src), nil
 		}
-	case "update":
-		repo := new(gospace.Repository)
-		err := json.Unmarshal([]byte(cmd.Object), &repo);
-		if err != nil {
-			return err
-		}
-		return api.UpdateRepository(repo)
-	case "delete":
 		repoID, err := strconv.Atoi(cmd.Object)
 		if err != nil {
-			return err
+			return "", fmt.Errorf(`{"status": "error", "message": "Cannot convert %s to a number %s"}`, cmd.Object, err)
 		}
 		repo, err := api.GetRepository(repoID)
 		if err != nil {
-			return err
+			return "", fmt.Errorf(`{"status": "error", "message": "%s"}`, err)
 		}
-		return api.DeleteRepository(repo)
+		src, err := json.Marshal(repo)
+		if err != nil {
+			return "", fmt.Errorf(`{"status": "error", "message": "Cannot find %s %s"}`, cmd.Object, err)
+		}
+		return string(src), nil
+	case "update":
+		repo := new(gospace.Repository)
+		err := json.Unmarshal([]byte(cmd.Object), &repo)
+		if err != nil {
+			return "", err
+		}
+		return "", api.UpdateRepository(repo)
+	case "delete":
+		repoID, err := strconv.Atoi(cmd.Object)
+		if err != nil {
+			return "", err
+		}
+		repo, err := api.GetRepository(repoID)
+		if err != nil {
+			return "", err
+		}
+		return "", api.DeleteRepository(repo)
+	case "export":
+		return "", api.ExportInstance(cmd.Object)
+	case "import":
+		return "", api.ImportInstance(cmd.Object)
 	}
-	return fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
+	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runCmd(cmd *command, config map[string]string) error {
-	if strings.Compare(cmd.Subject, "repository") == 0 {
+func runCmd(cmd *command, config map[string]string) (string, error) {
+	switch cmd.Subject {
+	case "repository":
+		return runRepoCmd(cmd, config)
+	case "instance":
 		return runRepoCmd(cmd, config)
 	}
-	return fmt.Errorf("%v not implemented.", cmd)
+	return "", fmt.Errorf("%s %s not implemented", cmd.Subject, cmd.Action)
 }
 
 func main() {
-	t1 := time.Now()
 	if len(os.Args) < 2 {
 		usage("aspace is a command line tool for interacting with an ArchivesSpace installation.", 1)
 	}
@@ -230,10 +239,10 @@ func main() {
 		usage(fmt.Sprintf("%s", err), 1)
 	}
 
-	err = runCmd(cmd, config)
+	src, err := runCmd(cmd, config)
 	if err != nil {
 		usage(fmt.Sprintf("%s", err), 1)
 	}
-	fmt.Printf("Done. %s seconds.\n\n", time.Since(t1).String())
+	fmt.Println(src)
 	os.Exit(0)
 }

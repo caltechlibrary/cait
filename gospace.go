@@ -58,6 +58,7 @@ type ArchivesSpaceAPI struct {
 
 // Repository represents an ArchivesSpace repository from the client point of view
 type Repository struct {
+	JSONModelType         string                 `json:"json_model_type,omitempty"`
 	ID                    int                    `json:"id"`
 	RepoCode              string                 `json:"repo_code"`
 	Name                  string                 `json:"name"`
@@ -70,15 +71,85 @@ type Repository struct {
 	ParentInstitutionName string                 `json:"parent_institution_name,omitempty"`
 	LockVersion           int                    `json:"lock_version"`
 	CreatedBy             string                 `json:"created_by,omitempty"`
-	LastModifiedBy        string                 `json:"last_modified_by,omitempty"`
 	CreateTime            time.Time              `json:"create_time,omitempty"`
-	SystemTime            time.Time              `json:"system_time,omitempty"`
+	SystemMTime           time.Time              `json:"system_mtime,omitempty"`
 	UserMTime             time.Time              `json:"user_mtime,omitempty"`
 }
 
-// Agent represents an ArchivesSpace agent from the client point of view
+// Date an ArchivesSpace Date structure
+type Date struct {
+	JSONModelType  string    `json:"jsonmodel_type"`
+	LockVersion    string    `json:"lock_version,omitempty"`
+	Begin          string    `json:"begin"`
+	End            string    `json:"end"`
+	CreatedBy      string    `json:"created_by,omitempty"`
+	CreateTime     time.Time `json:"create_time,omitempty"`
+	SystemMTime    time.Time `json:"system_mtime,omitempty"`
+	UserMTime      time.Time `json:"user_mtime,omitempty"`
+	LastModifiedBy string    `json:"last_modified_by,omitempty"`
+	DateType       string    `json:"date_type,omitempty"`
+	Label          string    `json:"label,omitempty"`
+}
+
+// NoteText is the content type of subnotes
+type NoteText struct {
+	JSONModelType string `json:"jsonmodel_type"`
+	Content       string `json:"content"`
+	Publish       bool   `json:"publish"`
+}
+
+// NoteBiogHist - Notes Biographical Historical
+type NoteBiogHist struct {
+	JSONModelType string     `json:"jsonmodel_type,omitempty"`
+	Label         string     `json:"label,omitempty"`
+	PersistentID  string     `json:"persistent_id"`
+	SubNotes      []NoteText `json:"subnotes,omitempty"`
+	Publish       bool       `json:"publish,omitempty"`
+}
+
+// NamePerson a single agent name structure
+type NamePerson struct {
+	JSONModelType        string    `json:"json_model_type,omitempty"`
+	LockVersion          int       `json:"lock_version"`
+	PrimaryName          string    `json:"primary_name"`
+	SortName             string    `json:"sort_name"`
+	SortNameAutoGenerate bool      `json:"sort_name_auto_generate"`
+	CreatedBy            string    `json:"created_by,omitempty"`
+	CreateTime           time.Time `json:"create_time"`
+	SystemMTime          time.Time `json:"system_mtime"`
+	UserMTime            time.Time `json:"user_mtime"`
+	LastModifiedBy       string    `json:"last_modified_by,omitempty"`
+	Authorized           bool      `json:"authorized"`
+	IsDisplayName        bool      `json:"is_display_name"`
+	Source               string    `json:"source"`
+	Rules                string    `json:"rules"`
+	NameOrder            string    `json:"name_order"`
+	UseDates             []Date    `json:"use_dates"`
+}
+
+// Agent represents an ArchivesSpace complete agent record from the client point of view
 type Agent struct {
-	ID int `json:"id"`
+	JSONModelType             string                   `json:"json_model_type,omitempty"`
+	ID                        int                      `json:"id"`
+	Published                 bool                     `json:"publish"`
+	CreatedBy                 string                   `json:"created_by,omitempty"`
+	CreateTime                time.Time                `json:"create_time,omitempty"`
+	SystemMTime               time.Time                `json:"system_mtime,omitempty"`
+	UserMTime                 time.Time                `json:"user_mtime,omitempty"`
+	LastModifiedBy            string                   `json:"last_modified_by,omitempty"`
+	AgentType                 string                   `json:"agent_type"`
+	URI                       string                   `json:"uri"`
+	Title                     string                   `json:"title"`
+	IsLinkedToPublishedRecord bool                     `json:"is_linked_to_published_record"`
+	Names                     []NamePerson             `json:"names"`
+	DisplayName               NamePerson               `json:"display_name"`
+	RelatedAgents             []map[string]interface{} `json:"related_agents"`
+	DatesOfExistance          []Date                   `json:"dates_of_existence,omitempty"`
+	AgentContacts             []map[string]interface{} `json:"agent_contacts,omitempty"`
+	LinkedAgentRoles          []map[string]interface{} `json:"linked_agent_roles,omitempty"`
+	ExternalDocuments         []map[string]interface{} `json:"external_documents,omitempty"`
+	RightsStatements          []map[string]interface{} `json:"rights_statements"`
+	Notes                     []NoteBiogHist           `json:"notes,omitempty"`
 }
 
 func checkEnv(protocol, host, username, password string) bool {
@@ -419,9 +490,107 @@ func (aspace *ArchivesSpaceAPI) CreateAgent(repo *Repository) (*Agent, error) {
 	return nil, fmt.Errorf("CreateAgent() not implemented")
 }
 
-// ListAgents return a list of agents available in the respository via the ArchivesSpace API
-func (aspace *ArchivesSpaceAPI) ListAgents() ([]Agent, error) {
-	return nil, fmt.Errorf("ListAgents() not implemented")
+// ListAgent return an Agent via the ArchivesSpace API
+func (aspace *ArchivesSpaceAPI) ListAgent(agentType string, agentID int) (*Agent, error) {
+	aspace.URL.Path = fmt.Sprintf(`/agents/%s/%d`, agentType, agentID)
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", aspace.URL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("Can't get repository: %s", err)
+	}
+	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := client.Do(req)
+	defer res.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("Request error: %s", err)
+	}
+	if res.Status != "200 OK" {
+		return nil, fmt.Errorf("ArchiveSpace API error %s", res.Status)
+	}
+	content, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Read body error: %s", err)
+	}
+	// content should look something like
+	//
+	agent := new(Agent)
+	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), &agent)
+	if err != nil {
+		return nil, err
+	}
+	return agent, nil
 }
 
-//FIXME Need to implemenent similar methods on agents and accessions
+// ListAgentIDs return an array of Agents via the ArchivesSpace API
+func (aspace *ArchivesSpaceAPI) ListAgentIDs(agentType string) ([]int, error) {
+	aspace.URL.Path = fmt.Sprintf(`/agents/%s`, agentType)
+	q := aspace.URL.Query()
+	q.Set("all_ids", "true")
+	aspace.URL.RawQuery = q.Encode()
+
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", aspace.URL.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("Can't get repository: %s", err)
+	}
+	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := client.Do(req)
+	defer res.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("Request error: %s", err)
+	}
+	if res.Status != "200 OK" {
+		return nil, fmt.Errorf("ArchiveSpace API error %s", res.Status)
+	}
+	content, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("Read body error: %s", err)
+	}
+	// content should look something like
+	// [1,2,3,4]
+	var agentIds []int
+	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), &agentIds)
+	if err != nil {
+		return nil, err
+	}
+	return agentIds, nil
+}
+
+// ExportInstance using an aspace structure export all the agents, repositories and accessions
+// in an ArchivesSpace deployment.
+func (aspace *ArchivesSpaceAPI) ExportInstance(outputDirectory string) error {
+	return fmt.Errorf("ExportInstance() not implemented %v", aspace)
+}
+
+// ImportInstance using an aspace structure and an inputDirectory read all the JSON blobs
+// and populate an ArchivesSpace instance through the ArchivesSpace API
+func (aspace *ArchivesSpaceAPI) ImportInstance(inputDirectory string) error {
+	return fmt.Errorf("ImportInstance() not implemented %v", aspace)
+}
+
+//
+// String functions for gospace public structures
+//
+
+// String convert an ArchicesSpaceAPI struct as a JSON formatted string
+func (aspace *ArchivesSpaceAPI) String() string {
+	src, _ := json.Marshal(aspace)
+	return string(src)
+}
+
+// String return a Repository as a JSON formatted string
+func (repository *Repository) String() string {
+	src, _ := json.Marshal(repository)
+	return string(src)
+}
+
+// String return an Agent as a JSON formatted string
+func (agent *Agent) String() string {
+	src, _ := json.Marshal(agent)
+	return string(src)
+}
