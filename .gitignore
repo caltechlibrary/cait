@@ -24,6 +24,7 @@ _testmain.go
 *.prof
 
 # project ignore stuff
+aspace
 *.conf
 data/*
 data-export/*

@@ -135,7 +135,7 @@ type Agent struct {
 	RelatedAgents             []map[string]interface{} `json:"related_agents,omitempty"`
 	DatesOfExistance          []Date                   `json:"dates_of_existence,omitempty"`
 	AgentContacts             []map[string]interface{} `json:"agent_contacts,omitempty"`
-	LinkedAgentRoles          []map[string]interface{} `json:"linked_agent_roles,omitempty"`
+	LinkedAgentRoles          []map[string]string      `json:"linked_agent_roles,omitempty"`
 	ExternalDocuments         []map[string]interface{} `json:"external_documents,omitempty"`
 	RightsStatements          []map[string]interface{} `json:"rights_statements,omitempty"`
 	Notes                     []NoteBiogHist           `json:"notes,omitempty"`

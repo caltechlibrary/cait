@@ -206,11 +206,11 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 		if cmd.Payload == "" {
 			repos, err := api.ListRepositories()
 			if err != nil {
-				return "", fmt.Errorf(`{"status": "error", "message": "%s"}`, err)
+				return "", fmt.Errorf(`{"error": "%s"}`, err)
 			}
 			src, err := json.Marshal(repos)
 			if err != nil {
-				return "", fmt.Errorf(`{"status": "error", "message": "Cannot JSON encode %s %s"}`, cmd.Payload, err)
+				return "", fmt.Errorf(`{"error": "Cannot JSON encode %s %s"}`, cmd.Payload, err)
 			}
 			return string(src), nil
 		}
@@ -221,15 +221,15 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 		}
 		repoID := repo.ID
 		if err != nil {
-			return "", fmt.Errorf(`{"status": "error", "message": "Cannot convert %s to a number %s"}`, cmd.Payload, err)
+			return "", fmt.Errorf(`{"error": "Cannot convert %s to a number %s"}`, cmd.Payload, err)
 		}
 		repo, err = api.GetRepository(repoID)
 		if err != nil {
-			return "", fmt.Errorf(`{"status": "error", "message": "%s"}`, err)
+			return "", fmt.Errorf(`{"error": "%s"}`, err)
 		}
 		src, err := json.Marshal(repo)
 		if err != nil {
-			return "", fmt.Errorf(`{"status": "error", "message": "Cannot find %s %s"}`, cmd.Payload, err)
+			return "", fmt.Errorf(`{"error": "Cannot find %s %s"}`, cmd.Payload, err)
 		}
 		return string(src), nil
 	case "update":
@@ -273,72 +273,78 @@ func runAgentCmd(cmd *command, config map[string]string) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
+	//FIXME: figure out how I want to pass in agent type
+	agent := new(gospace.Agent)
+	err := json.Unmarshal([]byte(cmd.Payload), &agent)
+	if err != nil {
+		return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
+	}
+	p := strings.Split(agent.URI, "/")
+	if len(p) < 3 {
+		return "", fmt.Errorf(`Agent commands require a uri in the JSON payload, %s`, cmd.Payload)
+	} else if len(p) == 3 {
+		agent.URI = ""
+	}
+	aType := p[2]
 	switch cmd.Action {
 	case "create":
-		repo := new(gospace.Repository)
-		err := json.Unmarshal([]byte(cmd.Payload), repo)
-		repo, err = api.CreateRepository(repo)
+		agent, err = api.CreateAgent(aType, agent)
 		if err != nil {
 			return "", err
 		}
-		src, err := json.Marshal(repo)
+		src, err := json.Marshal(agent)
 		if err != nil {
 			return "", err
 		}
 		return string(src), nil
 	case "list":
-		if cmd.Payload == "" {
-			repos, err := api.ListRepositories()
+		if agent.ID == 0 {
+			agents, err := api.ListAgents(aType)
 			if err != nil {
-				return "", fmt.Errorf(`{"status": "error", "message": "%s"}`, err)
+				return "", fmt.Errorf(`{"error": "%s"}`, err)
 			}
-			src, err := json.Marshal(repos)
+			src, err := json.Marshal(agents)
 			if err != nil {
-				return "", fmt.Errorf(`{"status": "error", "message": "Cannot JSON encode %s %s"}`, cmd.Payload, err)
+				return "", fmt.Errorf(`{"error": "Cannot JSON encode %s %s"}`, cmd.Payload, err)
 			}
 			return string(src), nil
 		}
-		repo := new(gospace.Repository)
-		err := json.Unmarshal([]byte(cmd.Payload), &repo)
+		agentID := agent.ID
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf(`{"error": "Cannot convert %s to a number %s"}`, cmd.Payload, err)
 		}
-		repoID := repo.ID
+		agent, err = api.GetAgent(aType, agentID)
 		if err != nil {
-			return "", fmt.Errorf(`{"status": "error", "message": "Cannot convert %s to a number %s"}`, cmd.Payload, err)
+			return "", fmt.Errorf(`{"error": "%s"}`, err)
 		}
-		repo, err = api.GetRepository(repoID)
+		src, err := json.Marshal(agent)
 		if err != nil {
-			return "", fmt.Errorf(`{"status": "error", "message": "%s"}`, err)
-		}
-		src, err := json.Marshal(repo)
-		if err != nil {
-			return "", fmt.Errorf(`{"status": "error", "message": "Cannot find %s %s"}`, cmd.Payload, err)
+			return "", fmt.Errorf(`{"error": "Cannot find %s %s"}`, cmd.Payload, err)
 		}
 		return string(src), nil
 	case "update":
-		repo := new(gospace.Repository)
-		err := json.Unmarshal([]byte(cmd.Payload), &repo)
+		agent := new(gospace.Agent)
+		err := json.Unmarshal([]byte(cmd.Payload), &agent)
 		if err != nil {
 			return "", err
 		}
-		responseMsg, err := api.UpdateRepository(repo)
+		responseMsg, err := api.UpdateAgent(agent)
 		if err != nil {
 			return "", err
 		}
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "delete":
-		repo := new(gospace.Repository)
-		err := json.Unmarshal([]byte(cmd.Payload), &repo)
+		agent := new(gospace.Agent)
+		err := json.Unmarshal([]byte(cmd.Payload), &agent)
 		if err != nil {
 			return "", err
 		}
-		repo, err = api.GetRepository(repo.ID)
+		agent, err = api.GetAgent(aType, agent.ID)
 		if err != nil {
 			return "", err
 		}
-		responseMsg, err := api.DeleteRepository(repo)
+		responseMsg, err := api.DeleteAgent(agent)
 		if err != nil {
 			return "", err
 		}
@@ -408,6 +414,9 @@ func main() {
 		cmd.Payload = string(src)
 	}
 
+	if cmd.Subject == "agent" && len(args) > 2 {
+		cmd.Options = []string{args[2]}
+	}
 	src, err := runCmd(cmd, config)
 	if err != nil {
 		fmt.Println(err)
