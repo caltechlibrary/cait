@@ -48,7 +48,7 @@ var (
 func usage(msg string, exitCode int) {
 	appName := path.Base(os.Args[0])
 	fmt.Fprintf(os.Stderr, `
-  USAGE: %s SUBJECT ACTION [PAYLOAD] [OPTIONS]
+  USAGE: %s [OPTIONS] SUBJECT ACTION [PAYLOAD]
 
   SYNOPSIS: %s is a command line utility for interacting with an ArchivesSpace
   instance.  The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
@@ -59,7 +59,7 @@ func usage(msg string, exitCode int) {
 
   PAYLOAD is a JSON expression appropriate to the ACTION on SUBJECT.
 
-  OPTIONS addition flag based options appropriate to the SUBJECT, ACTION and PAYLOAD
+  OPTIONS addition flag based options appropriate to the SUBJECT, ACTION or PAYLOAD
 
 `,
 		appName,
@@ -279,8 +279,6 @@ func main() {
 	flag.Parse()
 
 	args := flag.Args()
-	fmt.Printf("DEBUG should be non-flag args:\n%s\n", strings.Join(args, "|"))
-	fmt.Printf("DEBUG payload: [%v] [%s]\n", payload, *payload)
 
 	if *help == true {
 		usage("", 0)
@@ -297,16 +295,14 @@ func main() {
 	if err != nil {
 		usage(fmt.Sprintf("%s", err), 1)
 	}
-	fmt.Printf("DEBUG cmd before processing payload:\n%s\n", cmd)
+
 	if *payload != "" {
 		src, err := ioutil.ReadFile(*payload)
 		if err != nil {
 			usage(fmt.Sprintf("Cannot read %s", *payload), 1)
 		}
-		fmt.Printf("DEBUG payload as string:\n%s\n", src)
 		cmd.Payload = string(src)
 	}
-	os.Exit(0) //DEBUG
 
 	src, err := runCmd(cmd, config)
 	if err != nil {
