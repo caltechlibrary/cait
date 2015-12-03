@@ -6,7 +6,9 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
@@ -20,6 +22,11 @@ type command struct {
 	Payload string
 	Options []string
 }
+
+var (
+	help    = flag.Bool("help", false, "Display the help page")
+	payload = flag.String("input", "", "Use this filepath for the payload")
+)
 
 var (
 	subjects = []string{
@@ -40,10 +47,10 @@ var (
 
 func usage(msg string, exitCode int) {
 	appName := path.Base(os.Args[0])
-	usageText := fmt.Sprintf(`
+	fmt.Fprintf(os.Stderr, `
   USAGE: %s SUBJECT ACTION [PAYLOAD] [OPTIONS]
 
-  Synopsis: %s is a command line utility for interacting with an ArchivesSpace
+  SYNOPSIS: %s is a command line utility for interacting with an ArchivesSpace
   instance.  The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
 
   SUBJECT can be %s.
@@ -52,7 +59,19 @@ func usage(msg string, exitCode int) {
 
   PAYLOAD is a JSON expression appropriate to the ACTION on SUBJECT.
 
-  OPTIONS addition flag based options appropriate to the SUBJECT, ACTION and DATA (e.g. -h, --help for help)
+  OPTIONS addition flag based options appropriate to the SUBJECT, ACTION and PAYLOAD
+
+`,
+		appName,
+		appName,
+		strings.Join(subjects, ", "),
+		strings.Join(actions, ", "))
+
+	flag.VisitAll(func(f *flag.Flag) {
+		fmt.Fprintf(os.Stderr, "\t-%s\t%s\n", f.Name, f.Usage)
+	})
+
+	fmt.Fprintf(os.Stderr, `
 
   %s also relies on the shell environment for information about connecting
   to the ArchivesSpace instance. The following shell variables are used
@@ -81,11 +100,8 @@ func usage(msg string, exitCode int) {
   Or for a specific repository by ID with
 
     %s repository list '{"id": 2}'
+
 `,
-		appName,
-		appName,
-		strings.Join(subjects, ", "),
-		strings.Join(actions, ", "),
 		appName,
 		os.Getenv("ASPACE_PROTOCOL"),
 		os.Getenv("ASPACE_HOST"),
@@ -96,10 +112,10 @@ func usage(msg string, exitCode int) {
 		appName,
 		appName)
 
-	fmt.Fprintln(os.Stderr, usageText)
 	if msg != "" {
-		fmt.Fprintf(os.Stderr, " %s\n\n", msg)
+		fmt.Fprintf(os.Stderr, "\n%s\n\n", msg)
 	}
+
 	os.Exit(exitCode)
 }
 
@@ -183,7 +199,6 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 			}
 			return string(src), nil
 		}
-		//FIXME: need to extract something userful like the repoID form cmd.Payload
 		repo := new(gospace.Repository)
 		err := json.Unmarshal([]byte(cmd.Payload), &repo)
 		if err != nil {
@@ -248,22 +263,55 @@ func runCmd(cmd *command, config map[string]string) (string, error) {
 	return "", fmt.Errorf("%s %s not implemented", cmd.Subject, cmd.Action)
 }
 
+func (c *command) String() string {
+	src, err := json.Marshal(c)
+	if err != nil {
+		return fmt.Sprintf("%s", err)
+	}
+	return string(src)
+}
+
+func init() {
+	flag.StringVar(payload, "i", "", "Use this filepath for the payload")
+}
+
 func main() {
-	if len(os.Args) < 2 {
+	flag.Parse()
+
+	args := flag.Args()
+	fmt.Printf("DEBUG should be non-flag args:\n%s\n", strings.Join(args, "|"))
+	fmt.Printf("DEBUG payload: [%v] [%s]\n", payload, *payload)
+
+	if *help == true {
+		usage("", 0)
+	}
+
+	if len(args) < 2 {
 		usage("aspace is a command line tool for interacting with an ArchivesSpace installation.", 1)
 	}
 	config, err := configureApp()
 	if err != nil {
 		usage(fmt.Sprintf("%s", err), 1)
 	}
-	cmd, err := parseCmd(os.Args[1:])
+	cmd, err := parseCmd(args)
 	if err != nil {
 		usage(fmt.Sprintf("%s", err), 1)
 	}
+	fmt.Printf("DEBUG cmd before processing payload:\n%s\n", cmd)
+	if *payload != "" {
+		src, err := ioutil.ReadFile(*payload)
+		if err != nil {
+			usage(fmt.Sprintf("Cannot read %s", *payload), 1)
+		}
+		fmt.Printf("DEBUG payload as string:\n%s\n", src)
+		cmd.Payload = string(src)
+	}
+	os.Exit(0) //DEBUG
 
 	src, err := runCmd(cmd, config)
 	if err != nil {
-		usage(fmt.Sprintf("%s", err), 1)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 	fmt.Println(src)
 	os.Exit(0)
