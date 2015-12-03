@@ -179,3 +179,91 @@ func TestRepository(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestAgent(t *testing.T) {
+	// Get the environment variables needed for testing.
+	isSetup := checkConfig(t)
+	if isSetup == false {
+		t.Error("Environment variables needed to run tests not configured", isSetup)
+		t.Skip()
+	}
+
+	aspace := New(aspaceProtocol, aspaceHost, aspacePort, aspaceUsername, aspacePassword)
+	err := aspace.Login()
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	// Test the listing of agents by Type or individually by type/id
+	for _, aType := range []string{"people", "families", "corporate_entities", "software"} {
+		if agentIDs, err := aspace.ListAgents(aType); err != nil {
+			t.Errorf(`ListAgents("%s") error: %s`, aType, err)
+		} else if len(agentIDs) > 0 {
+			for _, id := range agentIDs {
+				if agentInfo, err := aspace.GetAgent(aType, id); err != nil {
+					t.Errorf(`GetAgent("%s", %d) error: %s`, aType, id, err)
+				} else {
+					if agentInfo.ID != id {
+						t.Errorf("Returned Agent info id does not match requested %d, returened record %d", id, agentInfo.ID)
+					}
+					uri := fmt.Sprintf("/agents/%s/%d", aType, id)
+					if agentInfo.URI != uri {
+						t.Errorf("Returned Agent Info URI does not match %s != %s", uri, agentInfo.URI)
+					}
+					//FIXME: should add more tests for additional fields.
+				}
+			}
+		}
+	}
+
+	name0 := new(NamePerson)
+	name0.PrimaryName = "Topper"
+	name0.RestOfName = "Cosmo"
+	name0.NameOrder = "direct"
+	name0.SortName = "Topper, Cosmo"
+	name0.Source = "local"
+	agent0 := new(Agent)
+	agent0.Names = append(agent0.Names, name0)
+
+	aType := "people"
+	agent1, err := aspace.CreateAgent(aType, agent0)
+	if err != nil {
+		t.Errorf(`CreateAgent("%s", %s) error: %s`, aType, agent0, err)
+		t.FailNow()
+	}
+	if agent1.Names[0].PrimaryName != name0.PrimaryName {
+		t.Errorf(`CreateAgent("%s", %s), error: Names[0] does not match %s != %s `, aType, agent0, agent0.Names[0].PrimaryName, agent1.Names[0].PrimaryName)
+		t.FailNow()
+	}
+	agent1.Names[0].NameOrder = "inverted"
+	agent2, err := aspace.UpdateAgent(agent1)
+	if err != nil {
+		t.Errorf(`UpdateAgent(%s), error: %s`, agent1, err)
+		t.FailNow()
+	}
+	if strings.Compare(agent2.Names[0].NameOrder, "inverted") != 0 {
+		t.Errorf("UpdateAgent(%s), error: Failed to update Names[0].NameOrder [%s] != [%s]", agent1, agent1.Names[0].NameOrder, agent2.Names[0].NameOrder)
+		t.FailNow()
+	}
+	msg, err := aspace.DeleteAgent(agent2)
+	if err != nil {
+		t.Errorf("DaleteAgent(%s), error: %s", agent2, err)
+		t.FailNow()
+	}
+	if msg.Status != "Deleted" {
+		t.Errorf("DeleteAgent(%s), error: unexpected response status: %s", agent2, msg)
+		t.FailNow()
+	}
+
+	//FIXME: Create an Agent/families
+	//FIXME: Update an Agent/families
+	//FIXME: Delete an Agent/families
+	//FIXME: Create an Agent/corporate_entities
+	//FIXME: Update an Agent/corporate_entities
+	//FIXME: Delete an Agent/corporate_entities
+	//FIXME: Create an Agent/software
+	//FIXME: Update an Agent/software
+	//FIXME: Delete an Agent/software
+
+}
