@@ -26,6 +26,7 @@ type command struct {
 var (
 	help    = flag.Bool("help", false, "Display the help page")
 	payload = flag.String("input", "", "Use this filepath for the payload")
+	version = flag.Bool("version", false, "Display the version info")
 )
 
 var (
@@ -50,16 +51,16 @@ func usage(msg string, exitCode int) {
 	fmt.Fprintf(os.Stderr, `
   USAGE: %s [OPTIONS] SUBJECT ACTION [PAYLOAD]
 
-  SYNOPSIS: %s is a command line utility for interacting with an ArchivesSpace
+  %s is a command line utility for interacting with an ArchivesSpace
   instance.  The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
+
+  OPTIONS addition flags based parameters appropriate apply to the SUBJECT, ACTION or PAYLOAD
 
   SUBJECT can be %s.
 
   ACTION can be %s.
 
-  PAYLOAD is a JSON expression appropriate to the ACTION on SUBJECT.
-
-  OPTIONS addition flag based options appropriate to the SUBJECT, ACTION or PAYLOAD
+  PAYLOAD is a JSON expression appropriate to SUBJECT and ACTION.
 
 `,
 		appName,
@@ -83,7 +84,7 @@ func usage(msg string, exitCode int) {
 	ASPACE_PASSWORD          %s
 
 
-  Example:
+  EXAMPLES:
 
   	%s repository create '{"repo_code":"MyTest","name":"My Test Repository"}'
 
@@ -167,6 +168,20 @@ func parseCmd(args []string) (*command, error) {
 		cmd.Payload = strings.Join(args[2:], " ")
 	}
 	return cmd, nil
+}
+
+func runInstanceCmd(cmd *command, config map[string]string) (string, error) {
+	api := gospace.New(config["ASPACE_PROTOCOL"], config["ASPACE_HOST"], config["ASPACE_PORT"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	if err := api.Login(); err != nil {
+		return "", err
+	}
+	switch cmd.Action {
+	case "export":
+		return "", api.ExportInstance(cmd.Payload)
+	case "import":
+		return "", api.ImportInstance(cmd.Payload)
+	}
+	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
 func runRepoCmd(cmd *command, config map[string]string) (string, error) {
@@ -253,12 +268,94 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
+func runAgentCmd(cmd *command, config map[string]string) (string, error) {
+	api := gospace.New(config["ASPACE_PROTOCOL"], config["ASPACE_HOST"], config["ASPACE_PORT"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	if err := api.Login(); err != nil {
+		return "", err
+	}
+	switch cmd.Action {
+	case "create":
+		repo := new(gospace.Repository)
+		err := json.Unmarshal([]byte(cmd.Payload), repo)
+		repo, err = api.CreateRepository(repo)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(repo)
+		if err != nil {
+			return "", err
+		}
+		return string(src), nil
+	case "list":
+		if cmd.Payload == "" {
+			repos, err := api.ListRepositories()
+			if err != nil {
+				return "", fmt.Errorf(`{"status": "error", "message": "%s"}`, err)
+			}
+			src, err := json.Marshal(repos)
+			if err != nil {
+				return "", fmt.Errorf(`{"status": "error", "message": "Cannot JSON encode %s %s"}`, cmd.Payload, err)
+			}
+			return string(src), nil
+		}
+		repo := new(gospace.Repository)
+		err := json.Unmarshal([]byte(cmd.Payload), &repo)
+		if err != nil {
+			return "", err
+		}
+		repoID := repo.ID
+		if err != nil {
+			return "", fmt.Errorf(`{"status": "error", "message": "Cannot convert %s to a number %s"}`, cmd.Payload, err)
+		}
+		repo, err = api.GetRepository(repoID)
+		if err != nil {
+			return "", fmt.Errorf(`{"status": "error", "message": "%s"}`, err)
+		}
+		src, err := json.Marshal(repo)
+		if err != nil {
+			return "", fmt.Errorf(`{"status": "error", "message": "Cannot find %s %s"}`, cmd.Payload, err)
+		}
+		return string(src), nil
+	case "update":
+		repo := new(gospace.Repository)
+		err := json.Unmarshal([]byte(cmd.Payload), &repo)
+		if err != nil {
+			return "", err
+		}
+		responseMsg, err := api.UpdateRepository(repo)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	case "delete":
+		repo := new(gospace.Repository)
+		err := json.Unmarshal([]byte(cmd.Payload), &repo)
+		if err != nil {
+			return "", err
+		}
+		repo, err = api.GetRepository(repo.ID)
+		if err != nil {
+			return "", err
+		}
+		responseMsg, err := api.DeleteRepository(repo)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	}
+	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
+}
+
 func runCmd(cmd *command, config map[string]string) (string, error) {
 	switch cmd.Subject {
+	case "instance":
+		return runInstanceCmd(cmd, config)
 	case "repository":
 		return runRepoCmd(cmd, config)
-	case "instance":
-		return runRepoCmd(cmd, config)
+	case "agent":
+		return runAgentCmd(cmd, config)
 	}
 	return "", fmt.Errorf("%s %s not implemented", cmd.Subject, cmd.Action)
 }
@@ -272,7 +369,9 @@ func (c *command) String() string {
 }
 
 func init() {
+	flag.BoolVar(help, "h", false, "Display the help page")
 	flag.StringVar(payload, "i", "", "Use this filepath for the payload")
+	flag.BoolVar(version, "v", false, "Display version info")
 }
 
 func main() {
@@ -282,6 +381,11 @@ func main() {
 
 	if *help == true {
 		usage("", 0)
+	}
+
+	if *version == true {
+		fmt.Printf("Version: %s\n", gospace.Version)
+		os.Exit(0)
 	}
 
 	if len(args) < 2 {

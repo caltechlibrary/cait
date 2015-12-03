@@ -20,6 +20,9 @@ import (
 	"strings"
 )
 
+// The library version
+var Version = "0.0.0"
+
 // ArchivesSpaceAPI is a struct holding the essentials for communicating
 // with the ArchicesSpace REST API
 type ArchivesSpaceAPI struct {
