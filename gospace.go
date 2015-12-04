@@ -66,7 +66,7 @@ type Repository struct {
 // Date an ArchivesSpace Date structure
 type Date struct {
 	JSONModelType  string `json:"jsonmodel_type,omitempty"`
-	LockVersion    int    `json:"lock_version,omitempty"`
+	LockVersion    int    `json:"lock_version"`
 	Begin          string `json:"begin,omitempty"`
 	End            string `json:"end,omitempty"`
 	CreatedBy      string `json:"created_by,omitempty"`
@@ -115,30 +115,43 @@ type NamePerson struct {
 	UseDates             []Date `json:"use_dates,omitempty"`
 }
 
+// AgentContact is a JSONModel for the AgentContacts array/map
+type AgentContact struct {
+	JSONModelType  string   `json:"json_model_type,omitempty"`
+	LockVersion    int      `json:"lock_version"`
+	Name           string   `json:"name,omitempty"`
+	CreatedBy      string   `json:"created_by,omitempty"`
+	CreateTime     string   `json:"create_time,omitempty"`
+	SystemMTime    string   `json:"system_mtime,omitempty"`
+	UserMTime      string   `json:"user_mtime,omitempty"`
+	LastModifiedBy string   `json:"last_modified_by,omitempty"`
+	Telephones     []string `json:"telephones,omitempty"`
+}
+
 // Agent represents an ArchivesSpace complete agent record from the client point of view
 type Agent struct {
-	JSONModelType             string                   `json:"json_model_type,omitempty"`
-	LockVersion               int                      `json:"lock_version"`
-	ID                        int                      `json:"id,omitempty"`
-	Published                 bool                     `json:"publish,omitempty"`
-	CreatedBy                 string                   `json:"created_by,omitempty"`
-	CreateTime                string                   `json:"create_time,omitempty"`
-	SystemMTime               string                   `json:"system_mtime,omitempty"`
-	UserMTime                 string                   `json:"user_mtime,omitempty"`
-	LastModifiedBy            string                   `json:"last_modified_by,omitempty"`
-	AgentType                 string                   `json:"agent_type,omitempty"`
-	URI                       string                   `json:"uri,omitempty"`
-	Title                     string                   `json:"title,omitempty"`
-	IsLinkedToPublishedRecord bool                     `json:"is_linked_to_published_record,omitempty"`
-	Names                     []*NamePerson            `json:"names,omitempty"`
-	DisplayName               *NamePerson              `json:"display_name,omitempty"`
-	RelatedAgents             []map[string]interface{} `json:"related_agents,omitempty"`
-	DatesOfExistance          []Date                   `json:"dates_of_existence,omitempty"`
-	AgentContacts             []map[string]interface{} `json:"agent_contacts,omitempty"`
-	LinkedAgentRoles          []map[string]string      `json:"linked_agent_roles,omitempty"`
-	ExternalDocuments         []map[string]interface{} `json:"external_documents,omitempty"`
-	RightsStatements          []map[string]interface{} `json:"rights_statements,omitempty"`
-	Notes                     []NoteBiogHist           `json:"notes,omitempty"`
+	JSONModelType             string          `json:"json_model_type,omitempty"`
+	LockVersion               int             `json:"lock_version"`
+	ID                        int             `json:"id,omitempty"`
+	Published                 bool            `json:"publish,omitempty"`
+	CreatedBy                 string          `json:"created_by,omitempty"`
+	CreateTime                string          `json:"create_time,omitempty"`
+	SystemMTime               string          `json:"system_mtime,omitempty"`
+	UserMTime                 string          `json:"user_mtime,omitempty"`
+	LastModifiedBy            string          `json:"last_modified_by,omitempty"`
+	AgentType                 string          `json:"agent_type,omitempty"`
+	URI                       string          `json:"uri,omitempty"`
+	Title                     string          `json:"title,omitempty"`
+	IsLinkedToPublishedRecord bool            `json:"is_linked_to_published_record,omitempty"`
+	Names                     []*NamePerson   `json:"names,omitempty"`
+	DisplayName               *NamePerson     `json:"display_name,omitempty"`
+	RelatedAgents             []interface{}   `json:"related_agents,omitempty"`
+	DatesOfExistance          []Date          `json:"dates_of_existence,omitempty"`
+	AgentContacts             []*AgentContact `json:"agent_contacts,omitempty"`
+	LinkedAgentRoles          []interface{}   `json:"linked_agent_roles,omitempty"`
+	ExternalDocuments         []interface{}   `json:"external_documents,omitempty"`
+	RightsStatements          []interface{}   `json:"rights_statements,omitempty"`
+	Notes                     []*NoteBiogHist `json:"notes,omitempty"`
 }
 
 func checkEnv(protocol, host, username, password string) bool {
