@@ -33,17 +33,7 @@ function testAgents {
     # ./aspace agent list '{"uri":"/agents/$aType"}' | sed -E "s/^\[|\]$//g;s/,/ /g"
     for I in $(./aspace agent list '{"uri":"/agents/'$aType'"}' | sed -E "s/^\[|\]$//g;s/,/ /g"); do
         if [ "$I" = "1" ]; then
-            case "$aType" in
-            "people")
-                echo "Not deleting /agents/$aType/$I"
-                ;;
-            "software")
-                echo "Not deleting /agents/$aType/$I"
-                ;;
-            *)
-                ./aspace agent delete '{"id":'$I',"uri":"/agents/'$aType'/'$I'"}'
-                ;;
-            esac
+            echo "Not deleting /agents/$aType/$I"
         else
             ./aspace agent delete '{"id":'$I',"uri":"/agents/'$aType'/'$I'"}'
         fi
