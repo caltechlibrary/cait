@@ -28,3 +28,4 @@ aspace
 *.conf
 data/*
 data-export/*
+*.log
