@@ -25,16 +25,19 @@ if [ "$KEY" != "$INPUT_KEY" ]; then
     echo "Aborting delete of /agents/people"
     exit 1
 fi
-for I in $(./aspace agent list '{"uri":"/agents/people"}' | tr "," " " | sed -E "s/\[|]/ /g"); do 
+START=$(date)
+echo "Deleting /agents/people..."
+# ./aspace agent list '{"uri":"/agents/people"}' | sed -E "s/^\[|\]$//g;s/,/ /g"
+for I in $(./aspace agent list '{"uri":"/agents/people"}' | sed -E "s/^\[|\]$//g;s/,/ /g"); do
     if [ "$I" != "1" ]; then 
         ./aspace agent delete '{"id":'$I',"uri":"/agents/people/'$I'"}'
     fi
 done
 
-
-# Try to import all the people in data/agents/people/*.json
+# Build ./aspace binary to make sure we're testing the most current version
 make build
 
+# Try to import all the people in data/agents/people/*.json
 echo "Loading data from data/agents/people (this will take a while)..."
 find data/agents/people -type f | while read ITEM; do ./aspace -i $ITEM agent create; done > agent-people-import.log
 
@@ -47,4 +50,4 @@ if [ $(wc -l error-import.log | cut -d e -f 1 | sed -e "s/ //g") != "0" ]; then
     cat error-import.log
     exit 1
 fi
-echo "Done!"
+echo "Done! Started: $START Completed: $(date)"
