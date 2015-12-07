@@ -72,6 +72,4 @@ If you're shell is back then @. setup.conf@ setups the variables for a file that
     export ASPACE_PORT=8089
     export ASPACE_USERNAME=admin
     export ASPACE_PASSWORD=admin
-    export ASPACE_REPOSITORY_ID=2
-    export ASPACE_REPOSITORY_NAME=test
 ```
