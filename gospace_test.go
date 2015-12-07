@@ -256,6 +256,8 @@ func TestAgent(t *testing.T) {
 		t.FailNow()
 	}
 
+	//Do we need to specific test for families, corporate_entities, and software?
+	//if so....
 	//FIXME: Create an Agent/families
 	//FIXME: Update an Agent/families
 	//FIXME: Delete an Agent/families
@@ -266,4 +268,8 @@ func TestAgent(t *testing.T) {
 	//FIXME: Update an Agent/software
 	//FIXME: Delete an Agent/software
 
+}
+
+func TestAccession(t *testing.T) {
+	t.Errorf("TestAccession() not implemented")
 }

@@ -154,6 +154,91 @@ type Agent struct {
 	Notes                     []*NoteBiogHist `json:"notes,omitempty"`
 }
 
+// ExternalID represents an external ID as found in Accession records
+type ExternalID struct {
+	JSONModelType  string `json:"json_model_type,omitempty"`
+	ID             string `json:"external_id,omitempty"`
+	Source         string `json:"source,omitempty"`
+	CreatedBy      string `json:"created_by,omitempty"`
+	CreateTime     string `json:"create_time,omitempty"`
+	SystemMTime    string `json:"system_mtime,omitempty"`
+	UserMTime      string `json:"user_mtime,omitempty"`
+	LastModifiedBy string `json:"last_modified_by,omitempty"`
+}
+
+// Extend represents an extends json model found in Accession records
+type Extend struct {
+	JSONModelType   string `json:"json_model_type,omitempty"`
+	LockVersion     int    `json:"lock_version"`
+	CreatedBy       string `json:"created_by,omitempty"`
+	CreateTime      string `json:"create_time,omitempty"`
+	SystemMTime     string `json:"system_mtime,omitempty"`
+	UserMTime       string `json:"user_mtime,omitempty"`
+	LastModifiedBy  string `json:"last_modified_by,omitempty"`
+	Number          string `json:"number,omitempty"`
+	PhysicalDetails string `json:"physical_details"`
+	Portion         string `json:"portion,omitempty"`
+	ExtendType      string `json:"extent_type,omitempty"`
+}
+
+// UserDefined struct used in accession records for holding user defined data.
+type UserDefined struct {
+	JSONModelType  string            `json:"json_model_type,omitempty"`
+	LockVersion    int               `json:"lock_version"`
+	CreatedBy      string            `json:"created_by,omitempty"`
+	CreateTime     string            `json:"create_time,omitempty"`
+	SystemMTime    string            `json:"system_mtime,omitempty"`
+	UserMTime      string            `json:"user_mtime,omitempty"`
+	LastModifiedBy string            `json:"last_modified_by,omitempty"`
+	Boolean1       bool              `json:"boolean_1,omitempty"`
+	Boolean2       bool              `json:"boolean_2,omitempty"`
+	Boolean3       bool              `json:"boolean_3,omitempty"`
+	Boolean4       bool              `json:"boolean_4,omitempty"`
+	Text1          string            `json:"text_1,omitempty"`
+	Text2          string            `json:"test_2,omitempty"`
+	Text3          string            `json:"text_3,omitempty"`
+	Text4          string            `json:"text_4,omitempty"`
+	Repository     map[string]string `json:"repository"`
+}
+
+// Accession represents an accession record in ArchivesSpace from the client point of view
+type Accession struct {
+	JSONModelType       string                   `json:"json_model_type,omitempty"`
+	LockVersion         int                      `json:"lock_version"`
+	Suppressed          bool                     `json:"suppressed,omitempty"`
+	Title               string                   `json:"title,omitempty"`
+	DisplayString       string                   `json:"display_string,omitempty"`
+	Publish             bool                     `json:"publish,omitempty"`
+	ContentDescription  string                   `json:"content_description,omitempty"`
+	Provenance          string                   `json:"provenance,omitempty"`
+	AccessionDate       string                   `json:"accession_date,omitempty"`
+	RestrictionsApply   bool                     `json:"restrictions_apply,omitempty"`
+	UseRestrictions     bool                     `json:"use_restrictions,omitempty"`
+	CreatedBy           string                   `json:"created_by,omitempty,omitempty"`
+	CreateTime          string                   `json:"create_time,omitempty,omitempty"`
+	SystemMTime         string                   `json:"system_mtime,omitempty,omitempty"`
+	UserMTime           string                   `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy      string                   `json:"last_modified_by,omitempty"`
+	ID0                 string                   `json:"id_0,omitempty"`
+	ID1                 string                   `json:"id_1,omitempty"`
+	ExternalIDs         []ExternalID             `json:"external_ids,omitempty"`
+	RelelatedAccessions []map[string]interface{} `json:"related_accessions,omitempty"`
+	Classifications     []map[string]interface{} `json:"classifications,omitempty"`
+	Subjects            []map[string]interface{} `json:"subjects,omitempty"`
+	LinkedEvents        []map[string]interface{} `json:"linked_events,omitempty"`
+	Extends             []Extend                 `json:"extends,omitempty"`
+	Dates               []string                 `json:"dates,omitempty"`
+	ExternalDocuments   []map[string]interface{} `json:"external_documents,omitempty"`
+	RightsStatements    []map[string]interface{} `json:"rights_statements,omitempty"`
+	Deaccessions        []map[string]interface{} `json:"deaccessions,omitempty"`
+	RelelatedResources  []map[string]interface{} `json:"related_resources,omitempty"`
+	LinkedAgents        []Agent                  `json:"linked_agents,omitempty"`
+	Instances           []map[string]interface{} `json:"instances,omitempty"`
+	URI                 string                   `json:"uri,omitempty"`
+	Repository          map[string]string        `json:"repository,omitempty"`
+	UserDefined         map[string]interface{}   `json:"user_defined,omitempty"`
+}
+
 func checkEnv(protocol, host, username, password string) bool {
 	if strings.TrimSpace(protocol) == "" {
 		return false
