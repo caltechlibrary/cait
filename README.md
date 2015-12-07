@@ -57,7 +57,7 @@ The file _setup.conf_ is a shell script which exports the needed environment var
 + ASPACE_USERNAME
 + ASPACE_PASSWORD
 
-If you're shell is back then `. setup.conf` setups the variables for a file that looks like
+If you're shell is back then `. setup.conf` sets up the variables for a file that looks like
 
 ```
     #
