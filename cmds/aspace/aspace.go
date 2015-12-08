@@ -79,9 +79,7 @@ func usage(msg string, exitCode int) {
   %s also relies on the shell environment for information about connecting
   to the ArchivesSpace instance. The following shell variables are used
 
-	ASPACE_PROTOCOL          %s
-	ASPACE_HOST              %s
-	ASPACE_PORT              %s
+	ASPACE_API_URL           %s
 	ASPACE_USERNAME          %s
 	ASPACE_PASSWORD          %s
 
@@ -106,9 +104,7 @@ func usage(msg string, exitCode int) {
 
 `,
 		appName,
-		os.Getenv("ASPACE_PROTOCOL"),
-		os.Getenv("ASPACE_HOST"),
-		os.Getenv("ASPACE_PORT"),
+		os.Getenv("ASPACE_API_URL"),
 		os.Getenv("ASPACE_USERNAME"),
 		os.Getenv("ASPACE_PASSWORD"),
 		appName,
@@ -124,9 +120,7 @@ func usage(msg string, exitCode int) {
 
 func configureApp() (map[string]string, error) {
 	envKeys := []string{
-		"ASPACE_PROTOCOL",
-		"ASPACE_HOST",
-		"ASPACE_PORT",
+		"ASPACE_API_URL",
 		"ASPACE_USERNAME",
 		"ASPACE_PASSWORD",
 	}
@@ -175,7 +169,7 @@ func exportInstance(payload string) error {
 		log.Fatalf("%s -> %s", err, payload)
 	}
 	fmt.Printf("DEBUG config %s\n", config)
-	_, err := url.Parse(config.URL)
+	_, err = url.Parse(config.URL)
 	if err != nil {
 		log.Fatalf("Can't parse the URL %s %s", config.URL, err)
 	}
@@ -228,7 +222,7 @@ func parseCmd(args []string) (*command, error) {
 }
 
 func runInstanceCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_PROTOCOL"], config["ASPACE_HOST"], config["ASPACE_PORT"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -242,7 +236,7 @@ func runInstanceCmd(cmd *command, config map[string]string) (string, error) {
 }
 
 func runRepoCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_PROTOCOL"], config["ASPACE_HOST"], config["ASPACE_PORT"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -330,7 +324,7 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 }
 
 func runAgentCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_PROTOCOL"], config["ASPACE_HOST"], config["ASPACE_PORT"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}
