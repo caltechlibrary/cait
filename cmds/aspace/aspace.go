@@ -150,9 +150,7 @@ func containsElement(src []string, elem string) bool {
 }
 
 type instanceConfig struct {
-	AspaceURL  string `json:"aspace_url,omitempty"`
-	Host       string `json:"aspace_host,omitempty"`
-	Port       string `json:"aspace_port,omitempty"`
+	URL        string `json:"aspace_url,omitempty"`
 	Username   string `json:"username,omitempty"`
 	Password   string `json:"password,omitempty"`
 	AuthToken  string `json:"auth_token,omitempty"`
@@ -177,18 +175,11 @@ func exportInstance(payload string) error {
 		log.Fatalf("%s -> %s", err, payload)
 	}
 	fmt.Printf("DEBUG config %s\n", config)
-	url, err := url.Parse(config.AspaceURL)
+	_, err := url.Parse(config.URL)
 	if err != nil {
-		log.Fatalf("Can't are URL %s -> %s", err, config.AspaceURL)
+		log.Fatalf("Can't parse the URL %s %s", config.URL, err)
 	}
-	if strings.Contains(url.Host, ":") == true {
-		p := strings.Split(url.Host, ":")
-		config.Host, config.Port = p[0], p[1]
-	} else {
-		config.Host = url.Host
-		config.Port = ""
-	}
-	api := aspace.New(url.Scheme, config.Host, config.Port, config.Username, config.Password)
+	api := aspace.New(config.URL, config.Username, config.Password)
 	api.AuthToken = config.AuthToken
 
 	if api.AuthToken == "" {

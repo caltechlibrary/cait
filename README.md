@@ -51,9 +51,7 @@ Here's an example of using the _aspace_ command line tool
 
 The file _setup.conf_ is a shell script which exports the needed environment variables -
 
-+ ASPACE_PROTOCOL
-+ ASPACE_HOST
-+ ASPACE_PORT
++ ASPACE_API_URL
 + ASPACE_USERNAME
 + ASPACE_PASSWORD
 
@@ -67,9 +65,8 @@ If you're shell is back then `. setup.conf` sets up the variables for a file tha
     #
     # Local Development setup
     #
-    export ASPACE_PROTOCOL=http
-    export ASPACE_HOST=localhost
-    export ASPACE_PORT=8089
+    export ASPACE_API_URL=http://localhost:8089
     export ASPACE_USERNAME=admin
     export ASPACE_PASSWORD=admin
 ```
+

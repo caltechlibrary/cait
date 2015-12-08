@@ -27,10 +27,10 @@ var Version = "0.0.0"
 // ArchivesSpaceAPI is a struct holding the essentials for communicating
 // with the ArchicesSpace REST API
 type ArchivesSpaceAPI struct {
-	URL       *url.URL `json:"aspace_url"`
+	URL       *url.URL `json:"api_url"`
 	Username  string   `json:"username,omitempty"`
 	Password  string   `json:"password,omitempty"`
-	AuthToken string   `json:"auth_token,omitempty"`
+	AuthToken string   `json:"token,omitempty"`
 }
 
 // ResponseMsg is a structure to hold the JSON portion of a response from the ArchivesSpaceAPI
@@ -243,11 +243,8 @@ type Accession struct {
 	UserDefined         map[string]interface{}   `json:"user_defined,omitempty"`
 }
 
-func checkEnv(protocol, host, username, password string) bool {
-	if strings.TrimSpace(protocol) == "" {
-		return false
-	}
-	if strings.TrimSpace(host) == "" {
+func checkEnv(apiURL, username, password string) bool {
+	if strings.TrimSpace(apiURL) == "" {
 		return false
 	}
 	if strings.TrimSpace(username) == "" {
@@ -261,21 +258,13 @@ func checkEnv(protocol, host, username, password string) bool {
 
 // New creates a new ArchivesSpaceAPI object for use with most of the functions
 // in the gas package.
-func New(protocol, host, port, username, password string) *ArchivesSpaceAPI {
-	var connectString string
-
+func New(apiURL, username, password string) *ArchivesSpaceAPI {
 	aspace := new(ArchivesSpaceAPI)
-	if checkEnv(protocol, host, username, password) == false {
+	if checkEnv(apiURL, username, password) == false {
 		log.Fatal("Cannot create a new ArchivesSpace API connection")
 	}
 
-	if port == "" {
-		connectString = fmt.Sprintf("%s://%s", protocol, host)
-	} else {
-		connectString = fmt.Sprintf("%s://%s:%s", protocol, host, port)
-	}
-
-	u, err := url.Parse(connectString)
+	u, err := url.Parse(apiURL)
 	if err != nil {
 		log.Fatalf("ArchivesSpace connection not configured, %s", err)
 	}

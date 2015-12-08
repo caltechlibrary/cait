@@ -13,25 +13,15 @@ import (
 
 // Get the environment variables needed for testing.
 var (
-	aspaceProtocol = os.Getenv("ASPACE_PROTOCOL")
-	aspaceHost     = os.Getenv("ASPACE_HOST")
-	aspacePort     = os.Getenv("ASPACE_PORT")
+	aspaceURL      = os.Getenv("ASPACE_API_URL")
 	aspaceUsername = os.Getenv("ASPACE_USERNAME")
 	aspacePassword = os.Getenv("ASPACE_PASSWORD")
 )
 
 func checkConfig(t *testing.T) bool {
 	isSetup := true
-	if aspaceProtocol == "" {
-		t.Error("ASPACE_PROTOCOL environment variable not set.", aspaceProtocol)
-		isSetup = false
-	}
-	if aspaceHost == "" {
-		t.Error("ASPACE_HOST environment variable not set.", aspaceHost)
-		isSetup = false
-	}
-	if aspacePort == "" {
-		t.Error("ASPACE_PORT environment variable not set.", aspacePort)
+	if aspaceURL == "" {
+		t.Error("ASPACE_API_URL environment variable not set.", aspaceURL)
 		isSetup = false
 	}
 	if aspaceUsername == "" {
@@ -62,12 +52,12 @@ func TestArchiveSpaceAPI(t *testing.T) {
 		t.SkipNow()
 	}
 
-	aspace := New(aspaceProtocol, aspaceHost, aspacePort, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
 	if aspace.URL == nil {
-		t.Errorf("%s\t%s://%s:%s", aspace.URL.String(), aspaceProtocol, aspaceHost, aspacePort)
+		t.Errorf("%s\t%s://%s:%s", aspace.URL.String(), aspaceURL)
 	}
-	if strings.Compare(aspace.URL.String(), fmt.Sprintf("%s://%s:%s", aspaceProtocol, aspaceHost, aspacePort)) != 0 {
-		t.Errorf("%s != %s://%s:%s\n", aspace.URL.String(), aspaceProtocol, aspaceHost, aspacePort)
+	if strings.Compare(aspace.URL.String(), fmt.Sprintf("%s", aspaceURL)) != 0 {
+		t.Errorf("%s != %s\n", aspace.URL.String(), aspaceURL)
 	}
 
 	if aspace.IsAuth() == true {
@@ -96,7 +86,7 @@ func TestRepository(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceProtocol, aspaceHost, aspacePort, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
 	tm := time.Now()
 	repoCode := fmt.Sprintf("%d", tm.Unix())
 
@@ -195,7 +185,7 @@ func TestAgent(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceProtocol, aspaceHost, aspacePort, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
 	err := aspace.Login()
 	if err != nil {
 		t.Error(err)
@@ -301,7 +291,7 @@ func TestAccession(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceProtocol, aspaceHost, aspacePort, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
 	err := aspace.Login()
 	if err != nil {
 		t.Error(err)

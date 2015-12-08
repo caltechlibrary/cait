@@ -5,8 +5,6 @@
 #
 # Local Development setup
 #
-export ASPACE_PROTOCOL=http
-export ASPACE_HOST=localhost
-export ASPACE_PORT=8089
+export ASPACE_API_URL=http://localhost:8089
 export ASPACE_USERNAME=admin
 export ASPACE_PASSWORD=admin
