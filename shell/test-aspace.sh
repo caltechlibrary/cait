@@ -3,7 +3,7 @@
 #!/bin/bash
 
 # Sanity check
-if [ "$ASPACE_PROTOCOL" = "" ] || [ "$ASPACE_HOST" = "" ] || [ "$ASPACE_USERNAME" = "" ]; then
+if [ "$ASPACE_API_URL" = "" ] || [ "$ASPACE_USERNAME" = "" ]; then
     echo "You need to setup your environment variables for accessing your ArchivesSpace deployment"
     exit 1
 fi

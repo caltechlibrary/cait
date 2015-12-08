@@ -2,23 +2,23 @@
 #
 
 # Sanity check
-if [ "$ASPACE_PROTOCOL" = "" ] || [ "$ASPACE_HOST" = "" ] || [ "$ASPACE_USERNAME" = "" ]; then
+if [ "$ASPACE_API_URL" = "" ] || [ "$ASPACE_USERNAME" = "" ]; then
     echo "You need to setup your environment variables for accessing your ArchivesSpace deployment"
     exit 1
 fi
 
-ASPACE_URL="$ASPACE_PROTOCOL://$ASPACE_HOST:$ASPACE_PORT"
-echo "Accessing ArchivesSpace via $ASPACE_URL"
+ASPACE_API_URL="$ASPACE_PROTOCOL://$ASPACE_HOST:$ASPACE_PORT"
+echo "Accessing ArchivesSpace via $ASPACE_API_URL"
 
 # Login
-export TOKEN=$(curl -Fpassword=$ASPACE_PASSWORD $ASPACE_URL/users/$ASPACE_USERNAME/login | jq -r '.session')
+export TOKEN=$(curl -Fpassword=$ASPACE_PASSWORD $ASPACE_API_URL/users/$ASPACE_USERNAME/login | jq -r '.session')
 echo 'export TOKEN='$TOKEN
-echo 'curl -H "X-ArchicesSpace-Session: $TOKEN" '$ASPACE_URL
+echo 'curl -H "X-ArchicesSpace-Session: $TOKEN" '$ASPACE_API_URL
 echo ""
 
 # Remove in stale /agents/people
 KEY=$(date +%s)
-echo "This is a destructive test. You are deleting data from $ASPACE_URL!!!!"
+echo "This is a destructive test. You are deleting data from $ASPACE_API_URL!!!!"
 echo "Enter key to proceed: $KEY"
 read INPUT_KEY
 if [ "$KEY" != "$INPUT_KEY" ]; then
