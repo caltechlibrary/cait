@@ -1,5 +1,5 @@
 
-# gospace
+# aspace
 
 ## Golang ArchivesSpace package and utility
 

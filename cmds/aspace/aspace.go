@@ -15,7 +15,7 @@ import (
 	"path"
 	"strings"
 
-	"../../../gospace"
+	"../../../aspace"
 )
 
 type command struct {
@@ -188,7 +188,7 @@ func exportInstance(payload string) error {
 		config.Host = url.Host
 		config.Port = ""
 	}
-	api := gospace.New(url.Scheme, config.Host, config.Port, config.Username, config.Password)
+	api := aspace.New(url.Scheme, config.Host, config.Port, config.Username, config.Password)
 	api.AuthToken = config.AuthToken
 
 	if api.AuthToken == "" {
@@ -237,7 +237,7 @@ func parseCmd(args []string) (*command, error) {
 }
 
 func runInstanceCmd(cmd *command, config map[string]string) (string, error) {
-	api := gospace.New(config["ASPACE_PROTOCOL"], config["ASPACE_HOST"], config["ASPACE_PORT"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_PROTOCOL"], config["ASPACE_HOST"], config["ASPACE_PORT"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -251,13 +251,13 @@ func runInstanceCmd(cmd *command, config map[string]string) (string, error) {
 }
 
 func runRepoCmd(cmd *command, config map[string]string) (string, error) {
-	api := gospace.New(config["ASPACE_PROTOCOL"], config["ASPACE_HOST"], config["ASPACE_PORT"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_PROTOCOL"], config["ASPACE_HOST"], config["ASPACE_PORT"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}
 	switch cmd.Action {
 	case "create":
-		repo := new(gospace.Repository)
+		repo := new(aspace.Repository)
 		err := json.Unmarshal([]byte(cmd.Payload), repo)
 		response, err := api.CreateRepository(repo)
 		if err != nil {
@@ -284,7 +284,7 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 			}
 			return string(src), nil
 		}
-		repo := new(gospace.Repository)
+		repo := new(aspace.Repository)
 		err := json.Unmarshal([]byte(cmd.Payload), &repo)
 		if err != nil {
 			return "", err
@@ -303,7 +303,7 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 		}
 		return string(src), nil
 	case "update":
-		repo := new(gospace.Repository)
+		repo := new(aspace.Repository)
 		err := json.Unmarshal([]byte(cmd.Payload), &repo)
 		if err != nil {
 			return "", err
@@ -315,7 +315,7 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "delete":
-		repo := new(gospace.Repository)
+		repo := new(aspace.Repository)
 		err := json.Unmarshal([]byte(cmd.Payload), &repo)
 		if err != nil {
 			return "", err
@@ -339,12 +339,12 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 }
 
 func runAgentCmd(cmd *command, config map[string]string) (string, error) {
-	api := gospace.New(config["ASPACE_PROTOCOL"], config["ASPACE_HOST"], config["ASPACE_PORT"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_PROTOCOL"], config["ASPACE_HOST"], config["ASPACE_PORT"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}
 	//FIXME: figure out how I want to pass in agent type
-	agent := new(gospace.Agent)
+	agent := new(aspace.Agent)
 	err := json.Unmarshal([]byte(cmd.Payload), &agent)
 	if err != nil {
 		return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
@@ -400,7 +400,7 @@ func runAgentCmd(cmd *command, config map[string]string) (string, error) {
 		}
 		return string(src), nil
 	case "update":
-		agent := new(gospace.Agent)
+		agent := new(aspace.Agent)
 		err := json.Unmarshal([]byte(cmd.Payload), &agent)
 		if err != nil {
 			return "", err
@@ -412,7 +412,7 @@ func runAgentCmd(cmd *command, config map[string]string) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "delete":
-		agent := new(gospace.Agent)
+		agent := new(aspace.Agent)
 		err := json.Unmarshal([]byte(cmd.Payload), &agent)
 		if err != nil {
 			return "", err
@@ -467,7 +467,7 @@ func main() {
 	}
 
 	if *version == true {
-		fmt.Printf("Version: %s\n", gospace.Version)
+		fmt.Printf("Version: %s\n", aspace.Version)
 		os.Exit(0)
 	}
 

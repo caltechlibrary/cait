@@ -1,12 +1,12 @@
 //
-// Package gospace is a collection of structures and functions
+// Package aspace is a collection of structures and functions
 // for interacting with ArchivesSpace's REST API
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
 // copyright (c) 2015
 // Caltech Library
 //
-package gospace
+package aspace
 
 import (
 	"bytes"
@@ -753,7 +753,7 @@ func (aspace *ArchivesSpaceAPI) ListAccessions(repositoryID int) ([]int, error) 
 }
 
 //
-// String functions for gospace public structures
+// String functions for aspace public structures
 //
 
 // String convert an ArchicesSpaceAPI struct as a JSON formatted string

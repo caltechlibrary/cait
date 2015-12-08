@@ -1,7 +1,7 @@
 /**
- * gospace_test.go - Test routines for gospace.go
+ * aspace_test.go - Test routines for aspace.go
  */
-package gospace
+package aspace
 
 import (
 	"fmt"

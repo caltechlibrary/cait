@@ -20,7 +20,7 @@ Found these tools in _Data Science at the Command Line_. For a complete list che
 
 + [ashtin](https://www.npmjs.com/package/ashtin) a NPM module for working with Solr
     + [Project at Github](https://github.com/quoideneuf/ashtin)
-    + Might be interesting to fold some of this into gospace
+    + Might be interesting to fold some of this into aspace
 
 Install ashtin
 
@@ -101,11 +101,9 @@ Accessions are accessed in the context of a specific repository only.
     curl -H "X-ArchivesSpace-Session: $TOKEN" http://localhost:8089/repositories/3/accessions?all_ids=true
 ```
 
-# Refactoring gospace.go
+# Refactoring aspace.go
 
 Things to consider
 
 + With the exception of Get*() other methods on API should "return *ResponseMsg, string, err" where string is the Unmarshal value of the returned requested content
 + Should args to GetAgents() and CreateAgents() pass in the Agent.URI value or a string representing agent type?
-
-
