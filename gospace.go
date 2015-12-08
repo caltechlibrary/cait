@@ -12,6 +12,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -26,10 +27,10 @@ var Version = "0.0.0"
 // ArchivesSpaceAPI is a struct holding the essentials for communicating
 // with the ArchicesSpace REST API
 type ArchivesSpaceAPI struct {
-	URL       *url.URL
-	Username  string
-	Password  string
-	AuthToken string
+	URL       *url.URL `json:"aspace_url"`
+	Username  string   `json:"username,omitempty"`
+	Password  string   `json:"password,omitempty"`
+	AuthToken string   `json:"auth_token,omitempty"`
 }
 
 // ResponseMsg is a structure to hold the JSON portion of a response from the ArchivesSpaceAPI
@@ -154,6 +155,94 @@ type Agent struct {
 	Notes                     []*NoteBiogHist `json:"notes,omitempty"`
 }
 
+// ExternalID represents an external ID as found in Accession records
+type ExternalID struct {
+	JSONModelType  string `json:"json_model_type,omitempty"`
+	ID             string `json:"external_id,omitempty"`
+	Source         string `json:"source,omitempty"`
+	CreatedBy      string `json:"created_by,omitempty"`
+	CreateTime     string `json:"create_time,omitempty"`
+	SystemMTime    string `json:"system_mtime,omitempty"`
+	UserMTime      string `json:"user_mtime,omitempty"`
+	LastModifiedBy string `json:"last_modified_by,omitempty"`
+}
+
+// Extent represents an extends json model found in Accession records
+type Extent struct {
+	JSONModelType   string `json:"json_model_type,omitempty"`
+	LockVersion     int    `json:"lock_version"`
+	CreatedBy       string `json:"created_by,omitempty"`
+	CreateTime      string `json:"create_time,omitempty"`
+	SystemMTime     string `json:"system_mtime,omitempty"`
+	UserMTime       string `json:"user_mtime,omitempty"`
+	LastModifiedBy  string `json:"last_modified_by,omitempty"`
+	Number          string `json:"number,omitempty"`
+	PhysicalDetails string `json:"physical_details"`
+	Portion         string `json:"portion,omitempty"`
+	ExtendType      string `json:"extent_type,omitempty"`
+}
+
+// UserDefined struct used in accession records for holding user defined data.
+type UserDefined struct {
+	JSONModelType  string            `json:"json_model_type,omitempty"`
+	LockVersion    int               `json:"lock_version"`
+	CreatedBy      string            `json:"created_by,omitempty"`
+	CreateTime     string            `json:"create_time,omitempty"`
+	SystemMTime    string            `json:"system_mtime,omitempty"`
+	UserMTime      string            `json:"user_mtime,omitempty"`
+	LastModifiedBy string            `json:"last_modified_by,omitempty"`
+	Boolean1       bool              `json:"boolean_1,omitempty"`
+	Boolean2       bool              `json:"boolean_2,omitempty"`
+	Boolean3       bool              `json:"boolean_3,omitempty"`
+	Boolean4       bool              `json:"boolean_4,omitempty"`
+	Boolean5       bool              `json:"boolean_5,omitempty"`
+	Text1          string            `json:"text_1,omitempty"`
+	Text2          string            `json:"test_2,omitempty"`
+	Text3          string            `json:"text_3,omitempty"`
+	Text4          string            `json:"text_4,omitempty"`
+	Text5          string            `json:"text_5,omitempty"`
+	Repository     map[string]string `json:"repository"`
+}
+
+// Accession represents an accession record in ArchivesSpace from the client point of view
+type Accession struct {
+	JSONModelType       string                   `json:"json_model_type,omitempty"`
+	LockVersion         int                      `json:"lock_version"`
+	ID                  int                      `json:"id,omitempty"`
+	Suppressed          bool                     `json:"suppressed,omitempty"`
+	Title               string                   `json:"title,omitempty"`
+	DisplayString       string                   `json:"display_string,omitempty"`
+	Publish             bool                     `json:"publish,omitempty"`
+	ContentDescription  string                   `json:"content_description,omitempty"`
+	Provenance          string                   `json:"provenance,omitempty"`
+	AccessionDate       string                   `json:"accession_date,omitempty"`
+	RestrictionsApply   bool                     `json:"restrictions_apply,omitempty"`
+	UseRestrictions     bool                     `json:"use_restrictions,omitempty"`
+	CreatedBy           string                   `json:"created_by,omitempty,omitempty"`
+	CreateTime          string                   `json:"create_time,omitempty,omitempty"`
+	SystemMTime         string                   `json:"system_mtime,omitempty,omitempty"`
+	UserMTime           string                   `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy      string                   `json:"last_modified_by,omitempty"`
+	ID0                 string                   `json:"id_0,omitempty"`
+	ID1                 string                   `json:"id_1,omitempty"`
+	ExternalIDs         []ExternalID             `json:"external_ids,omitempty"`
+	RelelatedAccessions []map[string]interface{} `json:"related_accessions,omitempty"`
+	Classifications     []map[string]interface{} `json:"classifications,omitempty"`
+	Subjects            []map[string]interface{} `json:"subjects,omitempty"`
+	LinkedEvents        []map[string]interface{} `json:"linked_events,omitempty"`
+	Extents             []Extent                 `json:"extents,omitempty"`
+	Dates               []string                 `json:"dates,omitempty"`
+	ExternalDocuments   []map[string]interface{} `json:"external_documents,omitempty"`
+	RightsStatements    []map[string]interface{} `json:"rights_statements,omitempty"`
+	Deaccessions        []map[string]interface{} `json:"deaccessions,omitempty"`
+	RelelatedResources  []map[string]interface{} `json:"related_resources,omitempty"`
+	LinkedAgents        []Agent                  `json:"linked_agents,omitempty"`
+	Instances           []map[string]interface{} `json:"instances,omitempty"`
+	URI                 string                   `json:"uri,omitempty"`
+	Repository          map[string]string        `json:"repository,omitempty"`
+	UserDefined         map[string]interface{}   `json:"user_defined,omitempty"`
+}
+
 func checkEnv(protocol, host, username, password string) bool {
 	if strings.TrimSpace(protocol) == "" {
 		return false
@@ -212,6 +301,8 @@ func (aspace *ArchivesSpaceAPI) Login() error {
 	// Command line example: curl -F "password=admin" "http://localhost:8089/users/admin/login"
 	var data map[string]interface{}
 
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
 	aspace.URL.Path = fmt.Sprintf("/users/%s/login", aspace.Username)
 	form := url.Values{}
 	form.Add("password", aspace.Password)
@@ -239,6 +330,8 @@ func (aspace *ArchivesSpaceAPI) Login() error {
 
 // Logout clear the authentication token for the session with the API
 func (aspace *ArchivesSpaceAPI) Logout() error {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
 	aspace.URL.Path = `/logout`
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", aspace.URL.String(), nil)
@@ -254,58 +347,28 @@ func (aspace *ArchivesSpaceAPI) Logout() error {
 	return nil
 }
 
-// CreateRepository will create a respository via the REST API for the
-// ArchivesSpace instance defined in the ArchivesSpaceAPI struct.
-// It will return the created record.
-func (aspace *ArchivesSpaceAPI) CreateRepository(repoRequest *Repository) (*Repository, error) {
-	aspace.URL.Path = "/repositories"
-	payload, err := json.Marshal(repoRequest)
-	if err != nil {
-		return nil, err
-	}
+// API the common HTTP request processing for interacting with ArchivesSpaceAPI
+func (aspace *ArchivesSpaceAPI) API(method string, url string, payload io.Reader) ([]byte, error) {
 	client := &http.Client{}
-	req, err := http.NewRequest("POST", aspace.URL.String(), bytes.NewReader(payload))
+	req, err := http.NewRequest(method, url, payload)
 	if err != nil {
 		return nil, fmt.Errorf("Can't create request: %s", err)
 	}
 	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
 	req.Header.Set("Content-Type", "application/json")
 
-	res, err := client.Do(req)
-	defer res.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("Request error: %s", err)
+	if method == "POST" {
+		res, err := client.Do(req)
+		defer res.Body.Close()
+		if err != nil {
+			return nil, fmt.Errorf("Request error: %s", err)
+		}
+		content, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return nil, fmt.Errorf("Read body error: %s", err)
+		}
+		return content, nil
 	}
-	content, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Read body error: %s", err)
-	}
-	// content should look something like
-	// {"status":"Created","id":3,"lock_version":0,"stale":null,"uri":"/repositories/3","warnings":[]}
-	data := new(ResponseMsg)
-	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), data)
-	if err != nil {
-		return nil, err
-	}
-	if data.Status == "Created" {
-		// We created the repository so let's fetch and return the newly created record
-		return aspace.GetRepository(data.ID)
-	}
-	return nil, fmt.Errorf("%s", data)
-}
-
-// GetRepository returns the repository details based on Id
-func (aspace *ArchivesSpaceAPI) GetRepository(id int) (*Repository, error) {
-	aspace.URL.Path = fmt.Sprintf(`/repositories/%d`, id)
-
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", aspace.URL.String(), nil)
-	if err != nil {
-		return nil, fmt.Errorf("Can't get repository: %s", err)
-	}
-	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
-	req.Header.Set("Content-Type", "application/json")
-
 	res, err := client.Do(req)
 	defer res.Body.Close()
 	if err != nil {
@@ -318,9 +381,47 @@ func (aspace *ArchivesSpaceAPI) GetRepository(id int) (*Repository, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Read body error: %s", err)
 	}
+	return content, nil
+}
+
+// CreateRepository will create a respository via the REST API for the
+// ArchivesSpace instance defined in the ArchivesSpaceAPI struct.
+// It will return the created record.
+func (aspace *ArchivesSpaceAPI) CreateRepository(repo *Repository) (*ResponseMsg, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
+	aspace.URL.Path = "/repositories"
+	payload, err := json.Marshal(repo)
+	if err != nil {
+		return nil, err
+	}
+	content, err := aspace.API("POST", aspace.URL.String(), bytes.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+	// content should look something like
+	// {"status":"Created","id":3,"lock_version":0,"stale":null,"uri":"/repositories/3","warnings":[]}
+	data := new(ResponseMsg)
+	err = json.Unmarshal(content, data)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+// GetRepository returns the repository details based on Id
+func (aspace *ArchivesSpaceAPI) GetRepository(id int) (*Repository, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
+	aspace.URL.Path = fmt.Sprintf(`/repositories/%d`, id)
+
+	content, err := aspace.API("GET", aspace.URL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 	repo := new(Repository)
 	repo.ID = id
-	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), repo)
+	err = json.Unmarshal(content, repo)
 	if err != nil {
 		return nil, err
 	}
@@ -329,35 +430,23 @@ func (aspace *ArchivesSpaceAPI) GetRepository(id int) (*Repository, error) {
 
 // UpdateRepository takes a respository structure and sends it to the ArchivesSpace REST API
 func (aspace *ArchivesSpaceAPI) UpdateRepository(repo *Repository) (*ResponseMsg, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
 	aspace.URL.Path = repo.URI
-	jsonSrc, err := json.Marshal(repo)
+	payload, err := json.Marshal(repo)
 	if err != nil {
 		return nil, fmt.Errorf("Can't JSON encode update %v %s", repo, err)
 	}
-	payload := strings.NewReader(fmt.Sprintf("%s", jsonSrc))
-
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", aspace.URL.String(), payload)
+	content, err := aspace.API("POST", aspace.URL.String(), bytes.NewReader(payload))
 	if err != nil {
-		return nil, fmt.Errorf("Can't POST update request: %s", err)
-	}
-	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
-	req.Header.Set("Content-Type", "application/json")
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("Request error: %s", err)
-	}
-	defer res.Body.Close()
-	content, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Read body error: %s", err)
+		return nil, err
 	}
 	// content should look something like
 	// {"status":"Created","id":3,"lock_version":0,"stale":null,"uri":"/repositories/3","warnings":[]}
 	// OR
 	// {"error":"Some error message here"}
 	data := new(ResponseMsg)
-	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), data)
+	err = json.Unmarshal(content, data)
 	if err != nil {
 		return nil, fmt.Errorf("Could not unpack UpdateRepository() response [%s] %s", content, err)
 	}
@@ -373,28 +462,20 @@ func (aspace *ArchivesSpaceAPI) DeleteRepository(repo *Repository) (*ResponseMsg
 		Example Delete the repo with curl:
 			curl -H "X-ArchivesSpace-Session: $TOKEN" -d '{"repo_code": "1448043078"}' --request DELETE "http://localhost:8089/repositories/8" | python -m json.tool
 	*/
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
 	aspace.URL.Path = fmt.Sprintf("/repositories/%d", repo.ID)
-	payload := strings.NewReader(fmt.Sprintf(`{"repo_code":%q}`, repo.RepoCode))
+	payload, err := json.Marshal(repo)
+	if err != nil {
+		return nil, fmt.Errorf("Can't JSON encode update %v %s", repo, err)
+	}
+	content, err := aspace.API("DELETE", aspace.URL.String(), bytes.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
 
-	client := &http.Client{}
-	req, err := http.NewRequest("DELETE", aspace.URL.String(), payload)
-	if err != nil {
-		return nil, fmt.Errorf("Can't create request: %s", err)
-	}
-	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
-	req.Header.Set("Content-Type", "application/json")
-
-	res, err := client.Do(req)
-	defer res.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("Request error: %s", err)
-	}
-	content, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Read body error: %s", err)
-	}
 	data := new(ResponseMsg)
-	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), data)
+	err = json.Unmarshal(content, data)
 	if err != nil {
 		return nil, fmt.Errorf("Cannnot decode DeleteRepository() response %s", err)
 	}
@@ -403,32 +484,19 @@ func (aspace *ArchivesSpaceAPI) DeleteRepository(repo *Repository) (*ResponseMsg
 
 // ListRepositories returns a list of repositories available via the ArchivesSpace REST API
 func (aspace *ArchivesSpaceAPI) ListRepositories() ([]Repository, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
 	aspace.URL.Path = `/repositories`
 
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", aspace.URL.String(), nil)
+	content, err := aspace.API("GET", aspace.URL.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("Can't get repository: %s", err)
+		return nil, err
 	}
-	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
-	req.Header.Set("Content-Type", "application/json")
 
-	res, err := client.Do(req)
-	defer res.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("Request error: %s", err)
-	}
-	if res.Status != "200 OK" {
-		return nil, fmt.Errorf("ArchiveSpace API error %s", res.Status)
-	}
-	content, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Read body error: %s", err)
-	}
 	// content should look something like
 	// {"lock_version":0,"repo_code":"1447893780","name":"This is a test generated from go_test","created_by":"admin","last_modified_by":"admin","create_time":"2015-11-19T00:43:00Z","system_mtime":"2015-11-19T00:43:00Z","user_mtime":"2015-11-19T00:43:00Z","jsonmodel_type":"repository","uri":"/repositories/16","agent_representation":{"ref":"/agents/corporate_entities/15"}}
 	var repos []Repository
-	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), &repos)
+	err = json.Unmarshal(content, &repos)
 	if err != nil {
 		return nil, err
 	}
@@ -442,69 +510,39 @@ func (aspace *ArchivesSpaceAPI) ListRepositories() ([]Repository, error) {
 }
 
 // CreateAgent creates a Agent recod via the ArchivesSpace API
-func (aspace *ArchivesSpaceAPI) CreateAgent(aType string, agentRequest *Agent) (*Agent, error) {
+func (aspace *ArchivesSpaceAPI) CreateAgent(aType string, agent *Agent) (*ResponseMsg, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
 	aspace.URL.Path = fmt.Sprintf("/agents/%s", aType)
-	payload, err := json.Marshal(agentRequest)
+	payload, err := json.Marshal(agent)
 	if err != nil {
 		return nil, err
 	}
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", aspace.URL.String(), bytes.NewReader(payload))
-	if err != nil {
-		return nil, fmt.Errorf("Can't create request: %s", err)
-	}
-	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
-	req.Header.Set("Content-Type", "application/json")
+	content, err := aspace.API("POST", aspace.URL.String(), bytes.NewReader(payload))
 
-	res, err := client.Do(req)
-	defer res.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("Request error: %s", err)
-	}
-	content, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Read body error: %s", err)
-	}
 	// content should look something like
 	// {"status":"Created","id":5,"lock_version":0,"stale":true,"uri":"/agents/people/5","warnings":[]}
 	data := new(ResponseMsg)
-	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), data)
+	err = json.Unmarshal(content, data)
 	if err != nil {
 		return nil, err
 	}
-	if data.Status == "Created" {
-		// We created the repository so let's fetch and return the newly created record
-		return aspace.GetAgent(aType, data.ID)
-	}
-	return nil, fmt.Errorf("%s", data)
+	return data, nil
 }
 
 // GetAgent return an Agent via the ArchivesSpace API
 func (aspace *ArchivesSpaceAPI) GetAgent(agentType string, agentID int) (*Agent, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
 	aspace.URL.Path = fmt.Sprintf(`/agents/%s/%d`, agentType, agentID)
 
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", aspace.URL.String(), nil)
+	content, err := aspace.API("GET", aspace.URL.String(), nil)
 	if err != nil {
-		return nil, fmt.Errorf("Can't get repository: %s", err)
+		return nil, err
 	}
-	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
-	req.Header.Set("Content-Type", "application/json")
 
-	res, err := client.Do(req)
-	defer res.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("Request error: %s", err)
-	}
-	if res.Status != "200 OK" {
-		return nil, fmt.Errorf("ArchiveSpace API error %s", res.Status)
-	}
-	content, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Read body error: %s", err)
-	}
 	agent := new(Agent)
-	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), &agent)
+	err = json.Unmarshal(bytes.TrimSpace(content), &agent)
 	if err != nil {
 		return nil, err
 	}
@@ -519,73 +557,47 @@ func (aspace *ArchivesSpaceAPI) GetAgent(agentType string, agentID int) (*Agent,
 }
 
 // UpdateAgent creates a Agent recod via the ArchivesSpace API
-func (aspace *ArchivesSpaceAPI) UpdateAgent(agentRequest *Agent) (*Agent, error) {
+func (aspace *ArchivesSpaceAPI) UpdateAgent(agentRequest *Agent) (*ResponseMsg, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
 	aspace.URL.Path = agentRequest.URI
 	payload, err := json.Marshal(agentRequest)
 	if err != nil {
 		return nil, err
 	}
-	client := &http.Client{}
-	req, err := http.NewRequest("POST", aspace.URL.String(), bytes.NewReader(payload))
-	if err != nil {
-		return nil, fmt.Errorf("Can't create request: %s", err)
-	}
-	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
-	req.Header.Set("Content-Type", "application/json")
-
-	res, err := client.Do(req)
-	defer res.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("Request error: %s", err)
-	}
-	content, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Read body error: %s", err)
-	}
-	// content should look something like
-	// {"status":"Updated","id":13,"lock_version":1,"stale":true,"uri":"/agents/people/13"}
-	data := new(ResponseMsg)
-	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), data)
+	content, err := aspace.API("POST", aspace.URL.String(), bytes.NewReader(payload))
 	if err != nil {
 		return nil, err
 	}
-	if data.Status == "Updated" {
-		// We created the repository so let's fetch and return the newly created record
-		p := strings.Split(agentRequest.URI, "/")
-		aType := p[len(p)-2]
-		return aspace.GetAgent(aType, data.ID)
+
+	// content should look something like
+	// {"status":"Updated","id":13,"lock_version":1,"stale":true,"uri":"/agents/people/13"}
+	data := new(ResponseMsg)
+	err = json.Unmarshal(content, data)
+	if err != nil {
+		return nil, err
 	}
-	return nil, fmt.Errorf("%s", data)
+	return data, nil
 }
 
 // DeleteAgent creates a Agent record via the ArchivesSpace API
 func (aspace *ArchivesSpaceAPI) DeleteAgent(agentRequest *Agent) (*ResponseMsg, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
 	aspace.URL.Path = agentRequest.URI
 	payload, err := json.Marshal(agentRequest)
 	if err != nil {
 		return nil, err
 	}
-	client := &http.Client{}
-	req, err := http.NewRequest("DELETE", aspace.URL.String(), bytes.NewReader(payload))
+	content, err := aspace.API("DELETE", aspace.URL.String(), bytes.NewReader(payload))
 	if err != nil {
-		return nil, fmt.Errorf("Can't create request: %s", err)
+		return nil, err
 	}
-	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
-	req.Header.Set("Content-Type", "application/json")
 
-	res, err := client.Do(req)
-	defer res.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("Request error: %s", err)
-	}
-	content, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Read body error: %s", err)
-	}
 	// content should look something like
 	// {"status":"Deleted","id":13}
 	data := new(ResponseMsg)
-	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), data)
+	err = json.Unmarshal(content, data)
 	if err != nil {
 		return nil, fmt.Errorf("Cannot decode DeleteAgent() %s", err)
 	}
@@ -594,51 +606,150 @@ func (aspace *ArchivesSpaceAPI) DeleteAgent(agentRequest *Agent) (*ResponseMsg, 
 
 // ListAgents return an array of Agents via the ArchivesSpace API
 func (aspace *ArchivesSpaceAPI) ListAgents(agentType string) ([]int, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
 	aspace.URL.Path = fmt.Sprintf(`/agents/%s`, agentType)
 	q := aspace.URL.Query()
 	q.Set("all_ids", "true")
 	aspace.URL.RawQuery = q.Encode()
 
-	client := &http.Client{}
-	req, err := http.NewRequest("GET", aspace.URL.String(), nil)
-	if err != nil {
-		return nil, fmt.Errorf("Can't get repository: %s", err)
-	}
-	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
-	req.Header.Set("Content-Type", "application/json")
-
-	res, err := client.Do(req)
-	defer res.Body.Close()
-	if err != nil {
-		return nil, fmt.Errorf("Request error: %s", err)
-	}
-	if res.Status != "200 OK" {
-		return nil, fmt.Errorf("ArchiveSpace API error %s", res.Status)
-	}
-	content, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return nil, fmt.Errorf("Read body error: %s", err)
-	}
-	// content should look something like
-	// [1,2,3,4]
-	var agentIds []int
-	err = json.Unmarshal(bytes.TrimSpace([]byte(content)), &agentIds)
+	content, err := aspace.API("GET", aspace.URL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
-	return agentIds, nil
+
+	// content should look something like
+	// [1,2,3,4]
+	var agentIDs []int
+	err = json.Unmarshal(content, &agentIDs)
+	if err != nil {
+		return nil, err
+	}
+	return agentIDs, nil
 }
 
-// ExportInstance using an aspace structure export all the agents, repositories and accessions
-// in an ArchivesSpace deployment.
-func (aspace *ArchivesSpaceAPI) ExportInstance(outputDirectory string) error {
-	return fmt.Errorf("ExportInstance() not implemented %v", aspace)
+// CreateAccession creates a new Accession record in a Repository
+func (aspace *ArchivesSpaceAPI) CreateAccession(repoID int, accession *Accession) (*ResponseMsg, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
+	aspace.URL.Path = fmt.Sprintf("/repositories/%d/accessions", repoID)
+	payload, err := json.Marshal(accession)
+	if err != nil {
+		return nil, err
+	}
+	content, err := aspace.API("POST", aspace.URL.String(), bytes.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+
+	// content should look something like
+	// {"status":"Created","id":5,"lock_version":0,"stale":true,"uri":"/repositories/28/accessions/5","warnings":[]}
+	data := new(ResponseMsg)
+	err = json.Unmarshal(content, data)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
-// ImportInstance using an aspace structure and an inputDirectory read all the JSON blobs
-// and populate an ArchivesSpace instance through the ArchivesSpace API
-func (aspace *ArchivesSpaceAPI) ImportInstance(inputDirectory string) error {
-	return fmt.Errorf("ImportInstance() not implemented %v", aspace)
+// GetAccession retrieves an Accession record from a Repository
+func (aspace *ArchivesSpaceAPI) GetAccession(repoID, accessionID int) (*Accession, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
+	aspace.URL.Path = fmt.Sprintf("/repositories/%d/accessions/%d", repoID, accessionID)
+
+	content, err := aspace.API("GET", aspace.URL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// content should look something like
+	// {"status":"Created","id":5,"lock_version":0,"stale":true,"uri":"/repositories/2/accessions/5","warnings":[]}
+	accession := new(Accession)
+	err = json.Unmarshal(content, accession)
+	if err != nil {
+		return nil, err
+	}
+	p := strings.Split(accession.URI, "/")
+	accession.ID, err = strconv.Atoi(p[len(p)-1])
+	if err != nil {
+		return accession, fmt.Errorf("Accession ID parse error %d %s", accession.ID, err)
+	}
+	return accession, nil
+}
+
+// UpdateAccession updates an existing Accession record in a Repository
+func (aspace *ArchivesSpaceAPI) UpdateAccession(accession *Accession) (*ResponseMsg, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
+	aspace.URL.Path = accession.URI
+	payload, err := json.Marshal(accession)
+	if err != nil {
+		return nil, fmt.Errorf("Can't JSON encode update %v %s", accession, err)
+	}
+	content, err := aspace.API("POST", aspace.URL.String(), bytes.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+
+	// content should look something like
+	// {"status":"Created","id":3,"lock_version":0,"stale":null,"uri":"/repositories/3","warnings":[]}
+	// OR
+	// {"error":"Some error message here"}
+	data := new(ResponseMsg)
+	err = json.Unmarshal(content, data)
+	if err != nil {
+		return nil, fmt.Errorf("Could not unpack UpdateRepository() response [%s] %s", content, err)
+	}
+	return data, nil
+}
+
+// DeleteAccession deleted an Accession record from a Repository
+func (aspace *ArchivesSpaceAPI) DeleteAccession(accession *Accession) (*ResponseMsg, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
+	aspace.URL.Path = accession.URI
+	payload, err := json.Marshal(accession)
+	if err != nil {
+		return nil, err
+	}
+	content, err := aspace.API("DELETE", aspace.URL.String(), bytes.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+
+	// content should look something like
+	// {"status":"Deleted","id":13}
+	data := new(ResponseMsg)
+	err = json.Unmarshal(bytes.TrimSpace(content), data)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot decode DeleteAccession() %s", err)
+	}
+	return data, nil
+}
+
+// ListAccessions return a list of Accession IDs from a Repository
+func (aspace *ArchivesSpaceAPI) ListAccessions(repositoryID int) ([]int, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
+	aspace.URL.Path = fmt.Sprintf(`/repositories/%d/accessions`, repositoryID)
+	q := aspace.URL.Query()
+	q.Set("all_ids", "true")
+	aspace.URL.RawQuery = q.Encode()
+
+	content, err := aspace.API("GET", aspace.URL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// content should look something like
+	// [1,2,3,4]
+	var accessionIDs []int
+	err = json.Unmarshal(content, &accessionIDs)
+	if err != nil {
+		return nil, err
+	}
+	return accessionIDs, nil
 }
 
 //
@@ -666,5 +777,29 @@ func (agent *Agent) String() string {
 // String return a ResponseMsg
 func (responseMsg *ResponseMsg) String() string {
 	src, _ := json.Marshal(responseMsg)
+	return string(src)
+}
+
+// String return a UserDefined
+func (userDefined *UserDefined) String() string {
+	src, _ := json.Marshal(userDefined)
+	return string(src)
+}
+
+// String return a ExternalID
+func (externalID *ExternalID) String() string {
+	src, _ := json.Marshal(externalID)
+	return string(src)
+}
+
+// String return an Extent
+func (extent *Extent) String() string {
+	src, _ := json.Marshal(extent)
+	return string(src)
+}
+
+// String return an Accession
+func (accession *Accession) String() string {
+	src, _ := json.Marshal(accession)
 	return string(src)
 }

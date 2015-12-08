@@ -69,6 +69,7 @@ function getRepository {
 }
 
 
+STARTED=$(date)
 mkdir -p data-export
 touch data-export/export.log
 echo -e "$(date)\tExporting data from $ASPACE_URL\tstarted" >> data-export/export.log
@@ -102,4 +103,4 @@ done
 echo -e "$(date)\tExporting accessions by repositories\tfinished" >> data-export/export.log
 echo -e "$(date)\tExporting data from $ASPACE_URL\tfinished" >> data-export/export.log
 echo ""
-echo "Done."
+echo "Done. Started: $STARTED, Completed: $(date)"

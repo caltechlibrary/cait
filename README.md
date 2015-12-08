@@ -56,10 +56,8 @@ The file _setup.conf_ is a shell script which exports the needed environment var
 + ASPACE_PORT
 + ASPACE_USERNAME
 + ASPACE_PASSWORD
-+ ASPACE_REPOSITORY_ID
-+ ASPACE_REPOSITORY_NAME
 
-If you're shell is back then @. setup.conf@ setups the variables for a file that looks like
+If you're shell is back then `. setup.conf` sets up the variables for a file that looks like
 
 ```
     #
@@ -74,6 +72,4 @@ If you're shell is back then @. setup.conf@ setups the variables for a file that
     export ASPACE_PORT=8089
     export ASPACE_USERNAME=admin
     export ASPACE_PASSWORD=admin
-    export ASPACE_REPOSITORY_ID=2
-    export ASPACE_REPOSITORY_NAME=test
 ```
