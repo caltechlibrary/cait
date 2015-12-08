@@ -40,6 +40,71 @@ if [ "$T" = "" ];then
     echo $RESPONSE
     exit 1
 fi
+
+find test/data/agents/people -type f | while read ITEM; do
+    CHECK_NAME=$(echo $ITEM | grep -vE "/1.json$")
+    if [ "$CHECK_NAME" != "" ];then
+        echo "Importing $ITEM"
+        RESPONSE=$(./aspace agent create -i $ITEM)
+        ERROR=$(echo $RESPONSE | jq -r ".error")
+        STATUS=$(echo $RESPONSE | jq -r ".status")
+        if [ "$ERROR" != "null" ] ||  [ "$STATUS" != "Created" ]; then
+            echo $RESPONSE
+            exit 1
+        fi
+    fi
+done
+
+EXIT_CODE=$?
+if [ "$EXIT_CODE" != "0" ]; then
+    echo "Error importing agents/people"
+    exit 1
+fi
+
+find test/data/agents/corporate_entities -type f | while read ITEM; do
+    CHECK_NAME=$(echo $ITEM | grep -vE "/1.json$")
+    if [ "$CHECK_NAME" != "" ];then
+        echo "Importing $ITEM"
+        RESPONSE=$(./aspace agent create -i $ITEM)
+        ERROR=$(echo $RESPONSE | jq -r ".error")
+        STATUS=$(echo $RESPONSE | jq -r ".status")
+        if [ "$ERROR" != "null" ] || [ "$STATUS" != "Created" ]; then
+            echo $RESPONSE
+            exit 1
+        fi
+    fi
+done
+
+EXIT_CODE=$?
+if [ "$EXIT_CODE" != "0" ]; then
+    echo "Error importing agents/corporate_entities"
+    exit 1
+fi
+
+find test/data/agents/families -type f | while read ITEM; do
+    CHECK_NAME=$(echo $ITEM | grep -vE "/1.json$")
+    if [ "$CHECK_NAME" != "" ];then
+        echo "Importing $ITEM"
+        RESPONSE=$(./aspace agent create -i $ITEM)
+        ERROR=$(echo $RESPONSE | jq -r ".error")
+        STATUS=$(echo $RESPONSE | jq -r ".status")
+        if [ "$ERROR" != "null" ] || [ "$STATUS" != "Created" ]; then
+            echo $RESPONSE
+            exit 1
+        fi
+    fi
+done
+
+EXIT_CODE=$?
+if [ "$EXIT_CODE" != "0" ]; then
+    echo "Error importing agents/families"
+    exit 1
+fi
+
+#find test/data/repositories/2/accessions -type f | while read ITEM; do
+#    echo "Importing $ITEM"
+#done
+
 echo ./aspace repository delete '{"id": '$REPO_ID'}'
 REPONSE=$(./aspace repository delete '{"id": '$REPO_ID'}')
 T=$(echo $RESPONSE | jq -r ".status")

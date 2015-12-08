@@ -12,7 +12,6 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"path"
 	"strings"
 
 	"../../../aspace"
@@ -49,9 +48,9 @@ var (
 )
 
 func usage(msg string, exitCode int) {
-	appName := path.Base(os.Args[0])
+	appName := "aspace" //path.Base(os.Args[0])
 	fmt.Fprintf(os.Stderr, `
-  USAGE: %s [OPTIONS] SUBJECT ACTION [PAYLOAD]
+  USAGE: %s SUBJECT ACTION [OPTIONS] [PAYLOAD]
 
   %s is a command line utility for interacting with an ArchivesSpace
   instance.  The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
@@ -202,7 +201,7 @@ func parseCmd(args []string) (*command, error) {
 	cmd := new(command)
 
 	if len(args) < 2 {
-		return nil, fmt.Errorf("Commands have the form SUBJECT ACTION [OBJECT] [OPTIONS]")
+		return nil, fmt.Errorf("Commands have the form SUBJECT ACTION [OPTIONS] [PAYLOAD]")
 	}
 
 	if containsElement(subjects, args[0]) == false {
@@ -249,10 +248,11 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 			return "", err
 		}
 		if response.Status != "Created" {
-			return "", fmt.Errorf("Unexpected response %s", response)
+			return "", fmt.Errorf("%s", response)
 		}
-		repo, err = api.GetRepository(response.ID)
-		src, err := json.Marshal(repo)
+		// repo, err = api.GetRepository(response.ID)
+		// src, err := json.Marshal(repo)
+		src, err := json.Marshal(response)
 		if err != nil {
 			return "", err
 		}
@@ -348,13 +348,14 @@ func runAgentCmd(cmd *command, config map[string]string) (string, error) {
 			return "", err
 		}
 		if response.Status != "Created" {
-			return "", fmt.Errorf("Unexpected response %s", response)
+			return "", fmt.Errorf("%s", response)
 		}
-		agent, err = api.GetAgent(aType, response.ID)
-		if err != nil {
-			return "", err
-		}
-		src, err := json.Marshal(agent)
+		// agent, err = api.GetAgent(aType, response.ID)
+		// if err != nil {
+		// 	return "", err
+		// }
+		// src, err := json.Marshal(agent)
+		src, err := json.Marshal(response)
 		if err != nil {
 			return "", err
 		}
@@ -444,9 +445,6 @@ func init() {
 
 func main() {
 	flag.Parse()
-
-	args := flag.Args()
-
 	if *help == true {
 		usage("", 0)
 	}
@@ -456,6 +454,7 @@ func main() {
 		os.Exit(0)
 	}
 
+	args := os.Args[1:]
 	if len(args) < 2 {
 		usage("aspace is a command line tool for interacting with an ArchivesSpace installation.", 1)
 	}
@@ -466,6 +465,18 @@ func main() {
 	cmd, err := parseCmd(args)
 	if err != nil {
 		usage(fmt.Sprintf("%s", err), 1)
+	}
+	os.Args = args[1:]
+
+	flag.Parse()
+
+	if *help == true {
+		usage("", 0)
+	}
+
+	if *version == true {
+		fmt.Printf("Version: %s\n", aspace.Version)
+		os.Exit(0)
 	}
 
 	if *payload != "" {
