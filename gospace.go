@@ -27,10 +27,10 @@ var Version = "0.0.0"
 // ArchivesSpaceAPI is a struct holding the essentials for communicating
 // with the ArchicesSpace REST API
 type ArchivesSpaceAPI struct {
-	URL       *url.URL
-	Username  string
-	Password  string
-	AuthToken string
+	URL       *url.URL `json:"aspace_url"`
+	Username  string   `json:"username,omitempty"`
+	Password  string   `json:"password,omitempty"`
+	AuthToken string   `json:"auth_token,omitempty"`
 }
 
 // ResponseMsg is a structure to hold the JSON portion of a response from the ArchivesSpaceAPI

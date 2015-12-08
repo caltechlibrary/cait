@@ -9,6 +9,8 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"net/url"
 	"os"
 	"path"
 	"strings"
@@ -147,6 +149,66 @@ func containsElement(src []string, elem string) bool {
 	return false
 }
 
+type instanceConfig struct {
+	AspaceURL  string `json:"aspace_url"`
+	Host       string `json:"aspace_host,omitempty"`
+	Port       string `json:"aspace_port"`
+	Username   string `json:"username"`
+	Password   string `json:"password,omitempty"`
+	AuthToken  string `json:"auth_token,omitempty"`
+	ExportPath string `json:"export_path,omitempty"`
+	ImportPath string `jsin:"import_path,omitempty"`
+}
+
+func (i *instanceConfig) String() string {
+	src, _ := json.Marshal(i)
+	return string(src)
+}
+
+func importInstance(payload string) error {
+	return fmt.Errorf(`importInstance("%s") not implemented`, payload)
+}
+
+func exportInstance(payload string) error {
+	config := new(instanceConfig)
+	fmt.Printf("DEBUG config %s\n", config)
+	err := json.Unmarshal([]byte(payload), &config)
+	if err != nil {
+		log.Fatalf("%s -> %s", err, payload)
+	}
+	url, err := url.Parse(config.AspaceURL)
+	if err != nil {
+		log.Fatalf("Can't are URL %s -> %s", err, config.AspaceURL)
+	}
+	if strings.Contains(url.Host, ":") == true {
+		p := strings.Split(url.Host, ":")
+		config.Host, config.Port = p[0], p[1]
+	} else {
+		config.Host = url.Host
+		config.Port = ""
+	}
+	api := gospace.New(url.Scheme, config.Host, config.Port, config.Username, config.Password)
+	api.AuthToken = config.AuthToken
+
+	if api.AuthToken == "" {
+		log.Println("Logging into ", api.URL)
+		err = api.Login()
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("Login completed")
+	} else {
+		log.Printf("Using AuthToken %s", api.AuthToken)
+	}
+
+	err = api.Logout()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return fmt.Errorf(`exportInstance("%s") not implemented fully %s`, payload, api)
+}
+
 func parseCmd(args []string) (*command, error) {
 	cmd := new(command)
 
@@ -177,9 +239,9 @@ func runInstanceCmd(cmd *command, config map[string]string) (string, error) {
 	}
 	switch cmd.Action {
 	case "export":
-		return "", api.ExportInstance(cmd.Payload)
+		return "", exportInstance(cmd.Payload)
 	case "import":
-		return "", api.ImportInstance(cmd.Payload)
+		return "", importInstance(cmd.Payload)
 	}
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
@@ -193,10 +255,14 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 	case "create":
 		repo := new(gospace.Repository)
 		err := json.Unmarshal([]byte(cmd.Payload), repo)
-		repo, err = api.CreateRepository(repo)
+		response, err := api.CreateRepository(repo)
 		if err != nil {
 			return "", err
 		}
+		if response.Status != "Created" {
+			return "", fmt.Errorf("Unexpected response %s", response)
+		}
+		repo, err = api.GetRepository(response.ID)
 		src, err := json.Marshal(repo)
 		if err != nil {
 			return "", err
@@ -261,9 +327,9 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "export":
-		return "", api.ExportInstance(cmd.Payload)
+		return "", exportInstance(cmd.Payload)
 	case "import":
-		return "", api.ImportInstance(cmd.Payload)
+		return "", importInstance(cmd.Payload)
 	}
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
@@ -288,7 +354,14 @@ func runAgentCmd(cmd *command, config map[string]string) (string, error) {
 	aType := p[2]
 	switch cmd.Action {
 	case "create":
-		agent, err = api.CreateAgent(aType, agent)
+		response, err := api.CreateAgent(aType, agent)
+		if err != nil {
+			return "", err
+		}
+		if response.Status != "Created" {
+			return "", fmt.Errorf("Unexpected response %s", response)
+		}
+		agent, err = api.GetAgent(aType, response.ID)
 		if err != nil {
 			return "", err
 		}
