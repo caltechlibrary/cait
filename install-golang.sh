@@ -30,11 +30,24 @@ function setupGolang {
     echo
 }
 
+cat <<EOF
+
+    This script will check to see if go is installed. If go is missing
+    then this script will attempt to download go from the golang Github
+    repository, compile version 1.4.2 and then use 1.4.2 to compile the 
+    current development version of go. These will install to your home 
+    directory.
+
+    Often it is easier to install Go from precompiled binaries at 
+    golang.org or using your systems' package manager.
+
+EOF
+
 GO_CMD=$(which go)
 if [ "$GO_CMD" = "" ]; then
     setupGolang
 else
     echo "Go installed at $GO_CMD"
     echo "Version is "$(go version)
-    echo "Gospace needs version 1.5 or better to compile"
+    echo "Gospace needs version 1.5 or better to compile."
 fi
