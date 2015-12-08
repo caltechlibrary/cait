@@ -150,14 +150,14 @@ func containsElement(src []string, elem string) bool {
 }
 
 type instanceConfig struct {
-	AspaceURL  string `json:"aspace_url"`
+	AspaceURL  string `json:"aspace_url,omitempty"`
 	Host       string `json:"aspace_host,omitempty"`
-	Port       string `json:"aspace_port"`
-	Username   string `json:"username"`
+	Port       string `json:"aspace_port,omitempty"`
+	Username   string `json:"username,omitempty"`
 	Password   string `json:"password,omitempty"`
 	AuthToken  string `json:"auth_token,omitempty"`
 	ExportPath string `json:"export_path,omitempty"`
-	ImportPath string `jsin:"import_path,omitempty"`
+	ImportPath string `json:"import_path,omitempty"`
 }
 
 func (i *instanceConfig) String() string {
@@ -176,6 +176,7 @@ func exportInstance(payload string) error {
 	if err != nil {
 		log.Fatalf("%s -> %s", err, payload)
 	}
+	fmt.Printf("DEBUG config %s\n", config)
 	url, err := url.Parse(config.AspaceURL)
 	if err != nil {
 		log.Fatalf("Can't are URL %s -> %s", err, config.AspaceURL)
@@ -194,19 +195,22 @@ func exportInstance(payload string) error {
 		log.Println("Logging into ", api.URL)
 		err = api.Login()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("%s, error %s", api.URL, err)
 		}
-		log.Println("Login completed")
+		log.Printf("export TOKEN=%s\n", api.AuthToken)
 	} else {
 		log.Printf("Using AuthToken %s", api.AuthToken)
 	}
 
-	err = api.Logout()
-	if err != nil {
-		log.Fatal(err)
-	}
+	//FIXME: fetch repostories and save the JSON blobs to config.ExportPath + "/repositories/"
+	//FIXME: fetch agents/people and save the JSON blobs to config.ExportPath + "/agents/people/"
+	//FIXME: fetch agents/corporate_entities and save the JSON blobs to config.ExportPath + "/agents/corporate_entities/"
+	//FIXME: fetch agents/families and save the JSON blobs to config.ExportPath + "/agents/families/"
+	//FIXME: fetch agents/software and save the JSON blobs to config.ExportPath + "/agents/software/"
+	//FIXME: fetch repositories/*/accessions and save the JSON blobs to config.ExportPath + "/repositories/*/accessions/"
+	//FIXME: Add other types as we start to use them
 
-	return fmt.Errorf(`exportInstance("%s") not implemented fully %s`, payload, api)
+	return fmt.Errorf(`exportInstance("%s") not implemented fully %s`, config, api)
 }
 
 func parseCmd(args []string) (*command, error) {
