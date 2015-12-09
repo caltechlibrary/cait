@@ -5,6 +5,8 @@ package aspace
 
 import (
 	"fmt"
+	"log"
+	"net/url"
 	"os"
 	"strings"
 	"testing"
@@ -39,9 +41,17 @@ func TestSetup(t *testing.T) {
 	// Get the environment variables needed for testing.
 	isSetup := checkConfig(t)
 	if isSetup == false {
-		t.Error("Environment variables needed to run tests not configured")
-		t.FailNow()
+		log.Fatalf("Environment variables needed to run tests not configured")
 	}
+	// Make sure we're not talking to a named system (should be localhost)
+	u, err := url.Parse(aspaceURL)
+	if err != nil {
+		log.Fatalf("aspaceURL value doesn't make sense %s %s", aspaceURL, err)
+	}
+	if strings.Contains(u.Host, "localhost:") == false {
+		log.Fatalf("Tests expect to run on http://localhost:8089 not %s", aspaceURL)
+	}
+	log.Printf("Test setup completed\n")
 }
 
 func TestArchiveSpaceAPI(t *testing.T) {
@@ -54,7 +64,7 @@ func TestArchiveSpaceAPI(t *testing.T) {
 
 	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
 	if aspace.URL == nil {
-		t.Errorf("%s\t%s://%s:%s", aspace.URL.String(), aspaceURL)
+		t.Errorf("%s\t%s", aspace.URL.String(), aspaceURL)
 	}
 	if strings.Compare(aspace.URL.String(), fmt.Sprintf("%s", aspaceURL)) != 0 {
 		t.Errorf("%s != %s\n", aspace.URL.String(), aspaceURL)
@@ -389,4 +399,34 @@ func TestAccession(t *testing.T) {
 		//FIXME: Need tests for UpdateAccession() and DeleteAccession()
 		//FIXME: should add more tests for additional fields.
 	}
+}
+
+func TestSubjects(t *testing.T) {
+	// Get the environment variables needed for testing.
+	isSetup := checkConfig(t)
+	if isSetup == false {
+		t.Error("Environment variables needed to run tests not configured", isSetup)
+		t.Skip()
+	}
+
+	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
+	err := aspace.Login()
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	term := new(Term)
+	term.Term = "Hello World"
+	term.TermType = "topical"
+	term.Vocabulary = "/vocabularies/1"
+	subject := new(Subject)
+	subject.Source = "local"
+	subject.Terms = append(subject.Terms, term)
+	subject.Vocabulary = "/vocabularies/1"
+	response, err := aspace.CreateSubject(subject)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	fmt.Printf("DEBUG aspace.CreateSubject() --> %s\n", response)
 }

@@ -101,9 +101,17 @@ if [ "$EXIT_CODE" != "0" ]; then
     exit 1
 fi
 
-#find test/data/repositories/2/accessions -type f | while read ITEM; do
-#    echo "Importing $ITEM"
-#done
+find test/data/repositories/*/accessions -type f | while read ITEM; do
+    REPO_ID=$(echo "$ITEM" | col -d / -f 4)
+    echo "Importing Repo ID: $REPO_ID item: $ITEM"
+    RESPONSE=$(./aspace accession create -i $ITEM)
+    ERROR=$(echo $RESPONSE | jq -r ".error")
+    STATUS=$(echo $RESPONSE | jq -r ".status")
+    if [ "$ERROR" != "null" ] || [ "$STATUS" != "Created" ]; then
+         echo $RESPONSE
+         exit 1
+    fi
+done
 
 echo ./aspace repository delete '{"id": '$REPO_ID'}'
 REPONSE=$(./aspace repository delete '{"id": '$REPO_ID'}')

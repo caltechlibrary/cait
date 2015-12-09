@@ -12,7 +12,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -68,6 +67,7 @@ type Repository struct {
 type Date struct {
 	JSONModelType  string `json:"jsonmodel_type,omitempty"`
 	LockVersion    int    `json:"lock_version"`
+	Expression     string `json:"expression,omitempty"`
 	Begin          string `json:"begin,omitempty"`
 	End            string `json:"end,omitempty"`
 	CreatedBy      string `json:"created_by,omitempty"`
@@ -88,32 +88,32 @@ type NoteText struct {
 
 // NoteBiogHist - Notes Biographical Historical
 type NoteBiogHist struct {
-	JSONModelType string     `json:"jsonmodel_type,omitempty"`
-	Label         string     `json:"label,omitempty"`
-	PersistentID  string     `json:"persistent_id,omitempty"`
-	SubNotes      []NoteText `json:"subnotes,omitempty"`
-	Publish       bool       `json:"publish,omitempty"`
+	JSONModelType string      `json:"jsonmodel_type,omitempty"`
+	Label         string      `json:"label,omitempty"`
+	PersistentID  string      `json:"persistent_id,omitempty"`
+	SubNotes      []*NoteText `json:"subnotes,omitempty"`
+	Publish       bool        `json:"publish,omitempty"`
 }
 
 // NamePerson a single agent name structure
 type NamePerson struct {
-	JSONModelType        string `json:"json_model_type,omitempty"`
-	LockVersion          int    `json:"lock_version"`
-	PrimaryName          string `json:"primary_name,omitempty"`
-	RestOfName           string `json:"rest_of_name,omitempty"`
-	SortName             string `json:"sort_name,omitempty"`
-	SortNameAutoGenerate bool   `json:"sort_name_auto_generate,omitempty"`
-	CreatedBy            string `json:"created_by,omitempty"`
-	CreateTime           string `json:"create_time,omitempty"`
-	SystemMTime          string `json:"system_mtime,omitempty"`
-	UserMTime            string `json:"user_mtime,omitempty"`
-	LastModifiedBy       string `json:"last_modified_by,omitempty"`
-	Authorized           bool   `json:"authorized,omitempty"`
-	IsDisplayName        bool   `json:"is_display_name,omitempty"`
-	Source               string `json:"source,omitempty"`
-	Rules                string `json:"rules,omitempty"`
-	NameOrder            string `json:"name_order,omitempty"`
-	UseDates             []Date `json:"use_dates,omitempty"`
+	JSONModelType        string  `json:"json_model_type,omitempty"`
+	LockVersion          int     `json:"lock_version"`
+	PrimaryName          string  `json:"primary_name,omitempty"`
+	RestOfName           string  `json:"rest_of_name,omitempty"`
+	SortName             string  `json:"sort_name,omitempty"`
+	SortNameAutoGenerate bool    `json:"sort_name_auto_generate,omitempty"`
+	CreatedBy            string  `json:"created_by,omitempty"`
+	CreateTime           string  `json:"create_time,omitempty"`
+	SystemMTime          string  `json:"system_mtime,omitempty"`
+	UserMTime            string  `json:"user_mtime,omitempty"`
+	LastModifiedBy       string  `json:"last_modified_by,omitempty"`
+	Authorized           bool    `json:"authorized,omitempty"`
+	IsDisplayName        bool    `json:"is_display_name,omitempty"`
+	Source               string  `json:"source,omitempty"`
+	Rules                string  `json:"rules,omitempty"`
+	NameOrder            string  `json:"name_order,omitempty"`
+	UseDates             []*Date `json:"use_dates,omitempty"`
 }
 
 // AgentContact is a JSONModel for the AgentContacts array/map
@@ -147,7 +147,7 @@ type Agent struct {
 	Names                     []*NamePerson   `json:"names,omitempty"`
 	DisplayName               *NamePerson     `json:"display_name,omitempty"`
 	RelatedAgents             []interface{}   `json:"related_agents,omitempty"`
-	DatesOfExistance          []Date          `json:"dates_of_existence,omitempty"`
+	DatesOfExistance          []*Date         `json:"dates_of_existence,omitempty"`
 	AgentContacts             []*AgentContact `json:"agent_contacts,omitempty"`
 	LinkedAgentRoles          []interface{}   `json:"linked_agent_roles,omitempty"`
 	ExternalDocuments         []interface{}   `json:"external_documents,omitempty"`
@@ -177,7 +177,7 @@ type Extent struct {
 	UserMTime       string `json:"user_mtime,omitempty"`
 	LastModifiedBy  string `json:"last_modified_by,omitempty"`
 	Number          string `json:"number,omitempty"`
-	PhysicalDetails string `json:"physical_details"`
+	PhysicalDetails string `json:"physical_details,omitempty"`
 	Portion         string `json:"portion,omitempty"`
 	ExtendType      string `json:"extent_type,omitempty"`
 }
@@ -201,7 +201,23 @@ type UserDefined struct {
 	Text3          string            `json:"text_3,omitempty"`
 	Text4          string            `json:"text_4,omitempty"`
 	Text5          string            `json:"text_5,omitempty"`
-	Repository     map[string]string `json:"repository"`
+	Repository     map[string]string `json:"repository,omitempty"`
+}
+
+// RightsStatement records an Accession Rights' statement in a data structure
+type RightsStatement struct {
+	JSONModelType     string                   `json:"json_model_type,omitempty"`
+	LockVersion       int                      `json:"lock_version"`
+	Active            bool                     `json:"active,omitemtpy"`
+	CreatedBy         string                   `json:"created_by,omitempty,omitempty"`
+	CreateTime        string                   `json:"create_time,omitempty,omitempty"`
+	SystemMTime       string                   `json:"system_mtime,omitempty,omitempty"`
+	UserMTime         string                   `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy    string                   `json:"last_modified_by,omitempty"`
+	ExternalDocuments []map[string]interface{} `json:"external_documents,omitempty"`
+	Identifier        string                   `json:"identifier,omitempty"`
+	Restrictions      string                   `json:"restrictions,omitempty"`
+	RightsType        string                   `json:"rights_type,omitempty"`
 }
 
 // Accession represents an accession record in ArchivesSpace from the client point of view
@@ -225,22 +241,65 @@ type Accession struct {
 	LastModifiedBy      string                   `json:"last_modified_by,omitempty"`
 	ID0                 string                   `json:"id_0,omitempty"`
 	ID1                 string                   `json:"id_1,omitempty"`
-	ExternalIDs         []ExternalID             `json:"external_ids,omitempty"`
+	ExternalIDs         []*ExternalID            `json:"external_ids,omitempty"`
 	RelelatedAccessions []map[string]interface{} `json:"related_accessions,omitempty"`
 	Classifications     []map[string]interface{} `json:"classifications,omitempty"`
 	Subjects            []map[string]interface{} `json:"subjects,omitempty"`
 	LinkedEvents        []map[string]interface{} `json:"linked_events,omitempty"`
-	Extents             []Extent                 `json:"extents,omitempty"`
-	Dates               []string                 `json:"dates,omitempty"`
+	Extents             []*Extent                `json:"extents,omitempty"`
+	Dates               []*Date                  `json:"dates,omitempty"`
 	ExternalDocuments   []map[string]interface{} `json:"external_documents,omitempty"`
-	RightsStatements    []map[string]interface{} `json:"rights_statements,omitempty"`
+	RightsStatements    []RightsStatement        `json:"rights_statements,omitempty"`
 	Deaccessions        []map[string]interface{} `json:"deaccessions,omitempty"`
 	RelelatedResources  []map[string]interface{} `json:"related_resources,omitempty"`
-	LinkedAgents        []Agent                  `json:"linked_agents,omitempty"`
+	LinkedAgents        []*Agent                 `json:"linked_agents,omitempty"`
 	Instances           []map[string]interface{} `json:"instances,omitempty"`
 	URI                 string                   `json:"uri,omitempty"`
 	Repository          map[string]string        `json:"repository,omitempty"`
 	UserDefined         map[string]interface{}   `json:"user_defined,omitempty"`
+}
+
+// Vocabulary defines a structure used in both Term and Subject
+type Vocabulary struct {
+	JSONModelType string `json:"json_model_type,omitempty"`
+	LockVersion   int    `json:"lock_version"`
+}
+
+// Term is used in defining a Subject
+type Term struct {
+	JSONModelType  string      `json:"json_model_type,omitempty"`
+	LockVersion    int         `json:"lock_version"`
+	ID             int         `json:"id,omitempty"`
+	CreatedBy      string      `json:"created_by,omitempty,omitempty"`
+	CreateTime     string      `json:"create_time,omitempty,omitempty"`
+	SystemMTime    string      `json:"system_mtime,omitempty,omitempty"`
+	UserMTime      string      `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy string      `json:"last_modified_by,omitempty"`
+	Term           string      `json:"term,omitempty"`
+	TermType       string      `json:"term_type,omitempty"`
+	URI            string      `json:"uri,omitempty"`
+	Vocabulary     *Vocabulary `json:"vocabulary,omitempty"`
+}
+
+// Subject represents a subject that can be associated with an accession in a repository
+type Subject struct {
+	JSONModelType             string                   `json:"json_model_type,omitempty"`
+	LockVersion               int                      `json:"lock_version"`
+	ID                        int                      `json:"id,omitempty"`
+	CreatedBy                 string                   `json:"created_by,omitempty,omitempty"`
+	CreateTime                string                   `json:"create_time,omitempty,omitempty"`
+	SystemMTime               string                   `json:"system_mtime,omitempty,omitempty"`
+	UserMTime                 string                   `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy            string                   `json:"last_modified_by,omitempty"`
+	ExternalDocuments         []map[string]interface{} `json:"external_documents,omitempty"`
+	ExternalIDs               []*ExternalID            `json:"external_ids,omitempty"`
+	IsLinkedToPublishedRecord bool                     `json:"is_linked_to_published_record"`
+	Publish                   bool                     `json:"publish,omitempty"`
+	Source                    string                   `json:"source,omitempty"`
+	Terms                     []*Term                  `json:"terms,omitempty"`
+	Title                     string                   `json:"title,omitempty"`
+	URI                       string                   `json:"uri,omitempty"`
+	Vocabulary                *Vocabulary              `json:"vocabulary,omitempty"`
 }
 
 func checkEnv(apiURL, username, password string) bool {
@@ -337,9 +396,19 @@ func (aspace *ArchivesSpaceAPI) Logout() error {
 }
 
 // API the common HTTP request processing for interacting with ArchivesSpaceAPI
-func (aspace *ArchivesSpaceAPI) API(method string, url string, payload io.Reader) ([]byte, error) {
+func (aspace *ArchivesSpaceAPI) API(method string, url string, data interface{}) ([]byte, error) {
+	var (
+		payload []byte
+		err     error
+	)
+	if data != nil {
+		payload, err = json.Marshal(data)
+		if err != nil {
+			return nil, err
+		}
+	}
 	client := &http.Client{}
-	req, err := http.NewRequest(method, url, payload)
+	req, err := http.NewRequest(method, url, bytes.NewReader(payload))
 	if err != nil {
 		return nil, fmt.Errorf("Can't create request: %s", err)
 	}
@@ -380,11 +449,7 @@ func (aspace *ArchivesSpaceAPI) CreateRepository(repo *Repository) (*ResponseMsg
 	aspace.URL.RawPath = ""
 	aspace.URL.RawQuery = ""
 	aspace.URL.Path = "/repositories"
-	payload, err := json.Marshal(repo)
-	if err != nil {
-		return nil, err
-	}
-	content, err := aspace.API("POST", aspace.URL.String(), bytes.NewReader(payload))
+	content, err := aspace.API("POST", aspace.URL.String(), repo)
 	if err != nil {
 		return nil, err
 	}
@@ -422,11 +487,7 @@ func (aspace *ArchivesSpaceAPI) UpdateRepository(repo *Repository) (*ResponseMsg
 	aspace.URL.RawPath = ""
 	aspace.URL.RawQuery = ""
 	aspace.URL.Path = repo.URI
-	payload, err := json.Marshal(repo)
-	if err != nil {
-		return nil, fmt.Errorf("Can't JSON encode update %v %s", repo, err)
-	}
-	content, err := aspace.API("POST", aspace.URL.String(), bytes.NewReader(payload))
+	content, err := aspace.API("POST", aspace.URL.String(), repo)
 	if err != nil {
 		return nil, err
 	}
@@ -454,11 +515,7 @@ func (aspace *ArchivesSpaceAPI) DeleteRepository(repo *Repository) (*ResponseMsg
 	aspace.URL.RawPath = ""
 	aspace.URL.RawQuery = ""
 	aspace.URL.Path = fmt.Sprintf("/repositories/%d", repo.ID)
-	payload, err := json.Marshal(repo)
-	if err != nil {
-		return nil, fmt.Errorf("Can't JSON encode update %v %s", repo, err)
-	}
-	content, err := aspace.API("DELETE", aspace.URL.String(), bytes.NewReader(payload))
+	content, err := aspace.API("DELETE", aspace.URL.String(), repo)
 	if err != nil {
 		return nil, err
 	}
@@ -503,11 +560,10 @@ func (aspace *ArchivesSpaceAPI) CreateAgent(aType string, agent *Agent) (*Respon
 	aspace.URL.RawPath = ""
 	aspace.URL.RawQuery = ""
 	aspace.URL.Path = fmt.Sprintf("/agents/%s", aType)
-	payload, err := json.Marshal(agent)
+	content, err := aspace.API("POST", aspace.URL.String(), agent)
 	if err != nil {
 		return nil, err
 	}
-	content, err := aspace.API("POST", aspace.URL.String(), bytes.NewReader(payload))
 
 	// content should look something like
 	// {"status":"Created","id":5,"lock_version":0,"stale":true,"uri":"/agents/people/5","warnings":[]}
@@ -546,15 +602,11 @@ func (aspace *ArchivesSpaceAPI) GetAgent(agentType string, agentID int) (*Agent,
 }
 
 // UpdateAgent creates a Agent recod via the ArchivesSpace API
-func (aspace *ArchivesSpaceAPI) UpdateAgent(agentRequest *Agent) (*ResponseMsg, error) {
+func (aspace *ArchivesSpaceAPI) UpdateAgent(agent *Agent) (*ResponseMsg, error) {
 	aspace.URL.RawPath = ""
 	aspace.URL.RawQuery = ""
-	aspace.URL.Path = agentRequest.URI
-	payload, err := json.Marshal(agentRequest)
-	if err != nil {
-		return nil, err
-	}
-	content, err := aspace.API("POST", aspace.URL.String(), bytes.NewReader(payload))
+	aspace.URL.Path = agent.URI
+	content, err := aspace.API("POST", aspace.URL.String(), agent)
 	if err != nil {
 		return nil, err
 	}
@@ -570,15 +622,11 @@ func (aspace *ArchivesSpaceAPI) UpdateAgent(agentRequest *Agent) (*ResponseMsg, 
 }
 
 // DeleteAgent creates a Agent record via the ArchivesSpace API
-func (aspace *ArchivesSpaceAPI) DeleteAgent(agentRequest *Agent) (*ResponseMsg, error) {
+func (aspace *ArchivesSpaceAPI) DeleteAgent(agent *Agent) (*ResponseMsg, error) {
 	aspace.URL.RawPath = ""
 	aspace.URL.RawQuery = ""
-	aspace.URL.Path = agentRequest.URI
-	payload, err := json.Marshal(agentRequest)
-	if err != nil {
-		return nil, err
-	}
-	content, err := aspace.API("DELETE", aspace.URL.String(), bytes.NewReader(payload))
+	aspace.URL.Path = agent.URI
+	content, err := aspace.API("DELETE", aspace.URL.String(), agent)
 	if err != nil {
 		return nil, err
 	}
@@ -622,11 +670,7 @@ func (aspace *ArchivesSpaceAPI) CreateAccession(repoID int, accession *Accession
 	aspace.URL.RawPath = ""
 	aspace.URL.RawQuery = ""
 	aspace.URL.Path = fmt.Sprintf("/repositories/%d/accessions", repoID)
-	payload, err := json.Marshal(accession)
-	if err != nil {
-		return nil, err
-	}
-	content, err := aspace.API("POST", aspace.URL.String(), bytes.NewReader(payload))
+	content, err := aspace.API("POST", aspace.URL.String(), accession)
 	if err != nil {
 		return nil, err
 	}
@@ -653,7 +697,7 @@ func (aspace *ArchivesSpaceAPI) GetAccession(repoID, accessionID int) (*Accessio
 	}
 
 	// content should look something like
-	// {"status":"Created","id":5,"lock_version":0,"stale":true,"uri":"/repositories/2/accessions/5","warnings":[]}
+	// {"lock_version":2,"suppressed":false,"title":"Some title here","display_string":"some display string","publish":false,"content_description":"some description here","provenance":"some provenance","accession_date":"2015-11-24","restrictions_apply":true,"access_restrictions":true,"access_restrictions_note":"some access restriction note","use_restrictions":true,"use_restrictions_note":"some use restrictions note","created_by":"janedoe","last_modified_by":"johndoe","create_time":"2015-11-24T19:55:26Z","system_mtime":"2015-11-25T18:07:02Z","user_mtime":"2015-11-25T18:07:02Z","id_0":"2015","id_1":"00053","jsonmodel_type":"accession","external_ids":[],"related_accessions":[],"classifications":[],"subjects":[],"linked_events":[],"extents":[{"lock_version":0,"number":"1","created_by":"johndoe","last_modified_by":"janedoe","create_time":"2015-11-25T18:07:02Z","system_mtime":"2015-11-25T18:07:02Z","user_mtime":"2015-11-25T18:07:02Z","portion":"whole","extent_type":"DVD","jsonmodel_type":"extent"}],"dates":[{"lock_version":0,"expression":"2015 August 1","created_by":"johndoe","last_modified_by":"janedoe","create_time":"2015-11-25T18:07:02Z","system_mtime":"2015-11-25T18:07:02Z","user_mtime":"2015-11-25T18:07:02Z","date_type":"single","label":"creation","jsonmodel_type":"date"}],"external_documents":[],"rights_statements":[{"lock_version":0,"identifier":"z0z0z0z0z0z0z0z0z0z0z0z0z0z0","active":true,"restrictions":"some restriction statement","created_by":"janedoe","last_modified_by":"johndoe","create_time":"2015-11-25T18:07:02Z","system_mtime":"2015-11-25T18:07:02Z","user_mtime":"2015-11-25T18:07:02Z","rights_type":"institutional_policy","jsonmodel_type":"rights_statement","external_documents":[]}],"deaccessions":[],"related_resources":[],"linked_agents":[],"instances":[],"uri":"/repositories/2/accessions/8547","repository":{"ref":"/repositories/2"}}
 	accession := new(Accession)
 	err = json.Unmarshal(content, accession)
 	if err != nil {
@@ -672,11 +716,7 @@ func (aspace *ArchivesSpaceAPI) UpdateAccession(accession *Accession) (*Response
 	aspace.URL.RawPath = ""
 	aspace.URL.RawQuery = ""
 	aspace.URL.Path = accession.URI
-	payload, err := json.Marshal(accession)
-	if err != nil {
-		return nil, fmt.Errorf("Can't JSON encode update %v %s", accession, err)
-	}
-	content, err := aspace.API("POST", aspace.URL.String(), bytes.NewReader(payload))
+	content, err := aspace.API("POST", aspace.URL.String(), accession)
 	if err != nil {
 		return nil, err
 	}
@@ -698,11 +738,7 @@ func (aspace *ArchivesSpaceAPI) DeleteAccession(accession *Accession) (*Response
 	aspace.URL.RawPath = ""
 	aspace.URL.RawQuery = ""
 	aspace.URL.Path = accession.URI
-	payload, err := json.Marshal(accession)
-	if err != nil {
-		return nil, err
-	}
-	content, err := aspace.API("DELETE", aspace.URL.String(), bytes.NewReader(payload))
+	content, err := aspace.API("DELETE", aspace.URL.String(), accession)
 	if err != nil {
 		return nil, err
 	}
@@ -739,6 +775,118 @@ func (aspace *ArchivesSpaceAPI) ListAccessions(repositoryID int) ([]int, error) 
 		return nil, err
 	}
 	return accessionIDs, nil
+}
+
+// CreateSubject creates a new Subject in ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) CreateSubject(subject *Subject) (*ResponseMsg, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
+	aspace.URL.Path = "/subjects"
+	content, err := aspace.API("POST", aspace.URL.String(), subject)
+	if err != nil {
+		return nil, err
+	}
+
+	// content should look something like
+	// {"status":"Created","id":5,"lock_version":0,"stale":true,"uri":"/subjects/28","warnings":[]}
+	data := new(ResponseMsg)
+	err = json.Unmarshal(content, data)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+// GetSubject retrieves a subject record from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) GetSubject(subjectID int) (*Subject, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
+	aspace.URL.Path = fmt.Sprintf("/subjects/%d", subjectID)
+
+	content, err := aspace.API("GET", aspace.URL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// content should look something like
+	// {"lock_version":121,"title":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T23:16:19Z","user_mtime":"2015-10-19T22:45:07Z","source":"local","jsonmodel_type":"subject","external_ids":[],"publish":true,"terms":[{"lock_version":0,"term":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T22:45:07Z","user_mtime":"2015-10-19T22:45:07Z","term_type":"function","jsonmodel_type":"term","uri":"/terms/1","vocabulary":"/vocabularies/1"}],"external_documents":[],"uri":"/subjects/1","is_linked_to_published_record":true,"vocabulary":"/vocabularies/1"}
+	subject := new(Subject)
+	err = json.Unmarshal(content, subject)
+	if err != nil {
+		return nil, err
+	}
+	p := strings.Split(subject.URI, "/")
+	subject.ID, err = strconv.Atoi(p[len(p)-1])
+	if err != nil {
+		return subject, fmt.Errorf("Accession ID parse error %d %s", subject.ID, err)
+	}
+	return subject, nil
+}
+
+// UpdateSubject updates an existing subject record in an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) UpdateSubject(subject *Subject) (*ResponseMsg, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
+	aspace.URL.Path = subject.URI
+	content, err := aspace.API("POST", aspace.URL.String(), subject)
+	if err != nil {
+		return nil, err
+	}
+
+	// content should look something like
+	// {"status":"Created","id":3,"lock_version":0,"stale":null,"uri":"/subjects/3","warnings":[]}
+	// OR
+	// {"error":"Some error message here"}
+	data := new(ResponseMsg)
+	err = json.Unmarshal(content, data)
+	if err != nil {
+		return nil, fmt.Errorf("Could not unpack UpdateSubject() response [%s] %s", content, err)
+	}
+	return data, nil
+}
+
+// DeleteSubject deletes a subject from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) DeleteSubject(subject *Subject) (*ResponseMsg, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
+	aspace.URL.Path = subject.URI
+	content, err := aspace.API("DELETE", aspace.URL.String(), subject)
+	if err != nil {
+		return nil, err
+	}
+
+	// content should look something like
+	// {"status":"Deleted","id":13}
+	data := new(ResponseMsg)
+	err = json.Unmarshal(bytes.TrimSpace(content), data)
+	if err != nil {
+		return nil, fmt.Errorf("Cannot decode DeleteSubject() %s", err)
+	}
+	return data, nil
+}
+
+// ListSubjects return a list of Subject IDs from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) ListSubjects() ([]int, error) {
+	aspace.URL.RawPath = ""
+	aspace.URL.RawQuery = ""
+	aspace.URL.Path = `/subjects`
+	q := aspace.URL.Query()
+	q.Set("all_ids", "true")
+	aspace.URL.RawQuery = q.Encode()
+
+	content, err := aspace.API("GET", aspace.URL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// content should look something like
+	// [1,2,3,4]
+	var subjectIDs []int
+	err = json.Unmarshal(content, &subjectIDs)
+	if err != nil {
+		return nil, err
+	}
+	return subjectIDs, nil
 }
 
 //
@@ -790,5 +938,11 @@ func (extent *Extent) String() string {
 // String return an Accession
 func (accession *Accession) String() string {
 	src, _ := json.Marshal(accession)
+	return string(src)
+}
+
+//String return a Subject
+func (subject *Subject) String() string {
+	src, _ := json.Marshal(subject)
 	return string(src)
 }

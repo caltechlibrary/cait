@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
 	"../../../aspace"
@@ -36,6 +37,7 @@ var (
 		"repository",
 		"agent",
 		"accession",
+		"subject",
 	}
 	actions = []string{
 		"create",
@@ -50,18 +52,18 @@ var (
 func usage(msg string, exitCode int) {
 	appName := "aspace" //path.Base(os.Args[0])
 	fmt.Fprintf(os.Stderr, `
-  USAGE: %s SUBJECT ACTION [OPTIONS] [PAYLOAD]
+  USAGE: %s SUBJECT ACTION [OPTIONS|PAYLOAD]
 
   %s is a command line utility for interacting with an ArchivesSpace
   instance.  The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
-
-  OPTIONS addition flags based parameters appropriate apply to the SUBJECT, ACTION or PAYLOAD
 
   SUBJECT can be %s.
 
   ACTION can be %s.
 
   PAYLOAD is a JSON expression appropriate to SUBJECT and ACTION.
+
+  OPTIONS addition flags based parameters appropriate apply to the SUBJECT, ACTION or PAYLOAD
 
 `,
 		appName,
@@ -74,14 +76,12 @@ func usage(msg string, exitCode int) {
 	})
 
 	fmt.Fprintf(os.Stderr, `
-
   %s also relies on the shell environment for information about connecting
   to the ArchivesSpace instance. The following shell variables are used
 
-	ASPACE_API_URL           %s
-	ASPACE_USERNAME          %s
-	ASPACE_PASSWORD          %s
-
+	ASPACE_API_URL           (e.g. http://localhost:8089)
+	ASPACE_USERNAME          (e.g. admin)
+	ASPACE_PASSWORD          (e.g. admin)
 
   EXAMPLES:
 
@@ -101,11 +101,10 @@ func usage(msg string, exitCode int) {
 
     %s repository list '{"id": 2}'
 
+  Other SUBJECTS and ACTIONS work in a similar fashion.
+
 `,
 		appName,
-		os.Getenv("ASPACE_API_URL"),
-		os.Getenv("ASPACE_USERNAME"),
-		os.Getenv("ASPACE_PASSWORD"),
 		appName,
 		appName,
 		appName)
@@ -386,11 +385,6 @@ func runAgentCmd(cmd *command, config map[string]string) (string, error) {
 		}
 		return string(src), nil
 	case "update":
-		agent := new(aspace.Agent)
-		err := json.Unmarshal([]byte(cmd.Payload), &agent)
-		if err != nil {
-			return "", err
-		}
 		responseMsg, err := api.UpdateAgent(agent)
 		if err != nil {
 			return "", err
@@ -398,16 +392,177 @@ func runAgentCmd(cmd *command, config map[string]string) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "delete":
-		agent := new(aspace.Agent)
-		err := json.Unmarshal([]byte(cmd.Payload), &agent)
-		if err != nil {
-			return "", err
-		}
 		agent, err = api.GetAgent(aType, agent.ID)
 		if err != nil {
 			return "", err
 		}
 		responseMsg, err := api.DeleteAgent(agent)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	}
+	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
+}
+
+func runAccessionCmd(cmd *command, config map[string]string) (string, error) {
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	if err := api.Login(); err != nil {
+		return "", err
+	}
+	//FIXME: figure out how I want to pass in repo id for the accession
+	accession := new(aspace.Accession)
+	err := json.Unmarshal([]byte(cmd.Payload), &accession)
+	if err != nil {
+		return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
+	}
+	repoID := 0
+	accessionID := accession.ID
+	ref, ok := accession.Repository["ref"]
+	if ok {
+		p := strings.Split(ref, "/")
+		repoID, err = strconv.Atoi(p[len(p)-1])
+		if err != nil {
+			repoID = 0
+		}
+	}
+	if repoID == 0 {
+		p := strings.Split(accession.URI, "/")
+		if len(p) > 2 {
+			repoID, err = strconv.Atoi(p[2])
+			if err != nil {
+				return "", fmt.Errorf(`{"error":"Could not determine repository id"}`)
+			}
+		}
+	}
+	if accessionID == 0 {
+		p := strings.Split(accession.URI, "/")
+		if len(p) > 4 {
+			accessionID, err = strconv.Atoi(p[4])
+			if err != nil {
+				return "", fmt.Errorf(`{"error":"Could not determine accession id"}`)
+			}
+		}
+	}
+	switch cmd.Action {
+	case "create":
+		response, err := api.CreateAccession(repoID, accession)
+		if err != nil {
+			return "", err
+		}
+		if response.Status != "Created" {
+			return "", fmt.Errorf("%s", response)
+		}
+		src, err := json.Marshal(response)
+		if err != nil {
+			return "", err
+		}
+		return string(src), nil
+	case "list":
+		if accession.ID == 0 {
+			accessions, err := api.ListAccessions(repoID)
+			if err != nil {
+				return "", fmt.Errorf(`{"error": "%s"}`, err)
+			}
+			src, err := json.Marshal(accessions)
+			if err != nil {
+				return "", fmt.Errorf(`{"error": "Cannot JSON encode %s %s"}`, cmd.Payload, err)
+			}
+			return string(src), nil
+		}
+		accession, err = api.GetAccession(repoID, accessionID)
+		if err != nil {
+			fmt.Printf("DEBUG api.GetAccession(%d, %d) --> %s\n", repoID, accessionID, accession)
+			return "", fmt.Errorf(`{"error": "%s"}`, err)
+		}
+		src, err := json.Marshal(accession)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": "Cannot find %s %s"}`, cmd.Payload, err)
+		}
+		return string(src), nil
+	case "update":
+		responseMsg, err := api.UpdateAccession(accession)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	case "delete":
+		accession, err = api.GetAccession(repoID, accession.ID)
+		if err != nil {
+			return "", err
+		}
+		responseMsg, err := api.DeleteAccession(accession)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	}
+	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
+}
+
+func runSubjectCmd(cmd *command, config map[string]string) (string, error) {
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	if err := api.Login(); err != nil {
+		return "", err
+	}
+	subject := new(aspace.Subject)
+	if cmd.Payload != "" {
+		err := json.Unmarshal([]byte(cmd.Payload), &subject)
+		if err != nil {
+			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
+		}
+	}
+	switch cmd.Action {
+	case "create":
+		response, err := api.CreateSubject(subject)
+		if err != nil {
+			return "", err
+		}
+		if response.Status != "Created" {
+			return "", fmt.Errorf("%s", response)
+		}
+		src, err := json.Marshal(response)
+		if err != nil {
+			return "", err
+		}
+		return string(src), nil
+	case "list":
+		if subject.ID == 0 {
+			subjects, err := api.ListSubjects()
+			if err != nil {
+				return "", fmt.Errorf(`{"error": "%s"}`, err)
+			}
+			src, err := json.Marshal(subjects)
+			if err != nil {
+				return "", fmt.Errorf(`{"error": "Cannot JSON encode %s %s"}`, cmd.Payload, err)
+			}
+			return string(src), nil
+		}
+		subject, err := api.GetSubject(subject.ID)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": "%s"}`, err)
+		}
+		src, err := json.Marshal(subject)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": "Cannot find %s %s"}`, cmd.Payload, err)
+		}
+		return string(src), nil
+	case "update":
+		responseMsg, err := api.UpdateSubject(subject)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	case "delete":
+		subject, err := api.GetSubject(subject.ID)
+		if err != nil {
+			return "", err
+		}
+		responseMsg, err := api.DeleteSubject(subject)
 		if err != nil {
 			return "", err
 		}
@@ -425,6 +580,10 @@ func runCmd(cmd *command, config map[string]string) (string, error) {
 		return runRepoCmd(cmd, config)
 	case "agent":
 		return runAgentCmd(cmd, config)
+	case "accession":
+		return runAccessionCmd(cmd, config)
+	case "subject":
+		return runSubjectCmd(cmd, config)
 	}
 	return "", fmt.Errorf("%s %s not implemented", cmd.Subject, cmd.Action)
 }

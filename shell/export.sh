@@ -67,6 +67,24 @@ function getRepository {
     echo "Completed repositories export"
 }
 
+function getSubjects {
+    echo "Setting up data directory for repositories"
+    mkdir -p data-export/subjects
+    # Get a list of all agents ids
+    echo "Getting ids for /subjects"
+    curl -H "X-ArchivesSpace-Session: $TOKEN" $ASPACE_API_URL/subjects?all_ids=true | sed -E "s/\[//;s/,/ /g;s/]//" | tr " " "\n" >  data-export/subject-ids.txt
+
+    # Now for each agent id in data-export/agents-*-ids.txt get a full record.
+    echo "Reading subjects and fetch their JSON records "
+    cat data-export/subject-ids.txt | while read SUBJECT_ID; do
+        if [ "$SUBJECT_ID" != "" ]; then
+            curl -H "X-ArchivesSpace-Session: $TOKEN" $ASPACE_API_URL/subjects/$SUBJECT_ID > data-export/subjects/$SUBJECT_ID.json
+        fi
+    done
+    echo "Completed subjects export"
+
+}
+
 
 STARTED=$(date)
 mkdir -p data-export
@@ -88,6 +106,10 @@ echo -e "$(date)\tExporting /agents/families\tfinished" >> data-export/export.lo
 echo -e "$(date)\tExporting /agents/software\tstarted" >> data-export/export.log
 getAgents software
 echo -e "$(date)\tExporting /agents/software\tfinished" >> data-export/export.log
+
+echo -e "$(date)\tExporting /subjects\tstarted" >> data-export/export.log
+getSubjects
+echo -e "$(date)\tExporting /subjects\tfinished" >> data-export/export.log
 
 echo -e "$(date)\tExporting /repositories\tstarted" >> data-export/export.log
 getRepository
