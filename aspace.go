@@ -287,6 +287,7 @@ type Accession struct {
 type Vocabulary struct {
 	JSONModelType  string  `json:"json_model_type,omitempty"`
 	LockVersion    int     `json:"lock_version"`
+	ID             int     `json:"id,omitempty"`
 	CreatedBy      string  `json:"created_by,omitempty,omitempty"`
 	CreateTime     string  `json:"create_time,omitempty,omitempty"`
 	SystemMTime    string  `json:"system_mtime,omitempty,omitempty"`
@@ -333,6 +334,20 @@ type Subject struct {
 	Title                     string                   `json:"title,omitempty"`
 	URI                       string                   `json:"uri,omitempty"`
 	Vocabulary                *Vocabulary              `json:"vocabulary,omitempty"`
+}
+
+// Location represents a item location possible in the archive
+type Location struct {
+	JSONModelType  string `json:"json_model_type,omitempty"`
+	LockVersion    int    `json:"lock_version"`
+	ID             int    `json:"id,omitempty"`
+	CreatedBy      string `json:"created_by,omitempty,omitempty"`
+	CreateTime     string `json:"create_time,omitempty,omitempty"`
+	SystemMTime    string `json:"system_mtime,omitempty,omitempty"`
+	UserMTime      string `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy string `json:"last_modified_by,omitempty"`
+	URI            string `json:"uri,omitempty"`
+	//FIXME: figure out what fields actually happen for location.
 }
 
 func checkEnv(apiURL, username, password string) bool {
@@ -382,13 +397,12 @@ func (aspace *ArchivesSpaceAPI) Login() error {
 	// Command line example: curl -F "password=admin" "http://localhost:8089/users/admin/login"
 	var data map[string]interface{}
 
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = fmt.Sprintf("/users/%s/login", aspace.Username)
+	u := aspace.URL
+	u.Path = fmt.Sprintf("/users/%s/login", aspace.Username)
 	form := url.Values{}
 	form.Add("password", aspace.Password)
 
-	res, err := http.PostForm(aspace.URL.String(), form)
+	res, err := http.PostForm(u.String(), form)
 	if err != nil {
 		return err
 	}
@@ -411,11 +425,10 @@ func (aspace *ArchivesSpaceAPI) Login() error {
 
 // Logout clear the authentication token for the session with the API
 func (aspace *ArchivesSpaceAPI) Logout() error {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = `/logout`
+	u := aspace.URL
+	u.Path = `/logout`
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", aspace.URL.String(), nil)
+	req, err := http.NewRequest("GET", u.String(), nil)
 	if err != nil {
 		return err
 	}
@@ -475,19 +488,12 @@ func (aspace *ArchivesSpaceAPI) API(method string, url string, data interface{})
 	return content, nil
 }
 
-// CreateRepository will create a respository via the REST API for the
-// ArchivesSpace instance defined in the ArchivesSpaceAPI struct.
-// It will return the created record.
-func (aspace *ArchivesSpaceAPI) CreateRepository(repo *Repository) (*ResponseMsg, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = "/repositories"
-	content, err := aspace.API("POST", aspace.URL.String(), repo)
+// CreateAPI is a generalized call to create an object form an interface.
+func (aspace *ArchivesSpaceAPI) CreateAPI(url string, obj interface{}) (*ResponseMsg, error) {
+	content, err := aspace.API("POST", url, obj)
 	if err != nil {
 		return nil, err
 	}
-	// content should look something like
-	// {"status":"Created","id":3,"lock_version":0,"stale":null,"uri":"/repositories/3","warnings":[]}
 	data := new(ResponseMsg)
 	err = json.Unmarshal(content, data)
 	if err != nil {
@@ -496,78 +502,108 @@ func (aspace *ArchivesSpaceAPI) CreateRepository(repo *Repository) (*ResponseMsg
 	return data, nil
 }
 
+// GetAPI is a generalized call to get a specific object from an interface
+// obj is modified as a side effect
+func (aspace *ArchivesSpaceAPI) GetAPI(url string, obj interface{}) error {
+	content, err := aspace.API("GET", url, nil)
+	if err != nil {
+		return err
+	}
+	err = json.Unmarshal(content, obj)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// UpdateAPI is a generalized call to update an object from an interface.
+func (aspace *ArchivesSpaceAPI) UpdateAPI(url string, obj interface{}) (*ResponseMsg, error) {
+	content, err := aspace.API("POST", url, obj)
+	if err != nil {
+		return nil, err
+	}
+	data := new(ResponseMsg)
+	err = json.Unmarshal(content, data)
+	if err != nil {
+		return nil, fmt.Errorf("Could not unpack UpdateAPI() response [%s] %s", content, err)
+	}
+	return data, nil
+}
+
+// DeleteAPI is a generalized call to update an object form an interface
+func (aspace *ArchivesSpaceAPI) DeleteAPI(url string, obj interface{}) (*ResponseMsg, error) {
+	content, err := aspace.API("DELETE", url, obj)
+	if err != nil {
+		return nil, err
+	}
+
+	data := new(ResponseMsg)
+	err = json.Unmarshal(content, data)
+	if err != nil {
+		return nil, fmt.Errorf("Cannnot decode DeleteAPI() response %s", err)
+	}
+	return data, nil
+}
+
+// ListAPI return a list of IDs from an ArchivesSpace instance for given URL
+func (aspace *ArchivesSpaceAPI) ListAPI(url string) ([]int, error) {
+	content, err := aspace.API("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// content should look something like
+	// [1,2,3,4]
+	var ids []int
+	err = json.Unmarshal(content, &ids)
+	if err != nil {
+		return nil, err
+	}
+	return ids, nil
+}
+
+// CreateRepository will create a respository via the REST API for the
+// ArchivesSpace instance defined in the ArchivesSpaceAPI struct.
+// It will return the created record.
+func (aspace *ArchivesSpaceAPI) CreateRepository(repo *Repository) (*ResponseMsg, error) {
+	u := *aspace.URL
+	u.Path = "/repositories"
+	return aspace.CreateAPI(u.String(), repo)
+}
+
 // GetRepository returns the repository details based on Id
 func (aspace *ArchivesSpaceAPI) GetRepository(id int) (*Repository, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = fmt.Sprintf(`/repositories/%d`, id)
-
-	content, err := aspace.API("GET", aspace.URL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
+	u := *aspace.URL
+	u.Path = fmt.Sprintf(`/repositories/%d`, id)
 	repo := new(Repository)
-	repo.ID = id
-	err = json.Unmarshal(content, repo)
+	err := aspace.GetAPI(u.String(), repo)
 	if err != nil {
 		return nil, err
 	}
+	repo.ID = id
 	return repo, nil
 }
 
 // UpdateRepository takes a respository structure and sends it to the ArchivesSpace REST API
 func (aspace *ArchivesSpaceAPI) UpdateRepository(repo *Repository) (*ResponseMsg, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = repo.URI
-	content, err := aspace.API("POST", aspace.URL.String(), repo)
-	if err != nil {
-		return nil, err
-	}
-	// content should look something like
-	// {"status":"Created","id":3,"lock_version":0,"stale":null,"uri":"/repositories/3","warnings":[]}
-	// OR
-	// {"error":"Some error message here"}
-	data := new(ResponseMsg)
-	err = json.Unmarshal(content, data)
-	if err != nil {
-		return nil, fmt.Errorf("Could not unpack UpdateRepository() response [%s] %s", content, err)
-	}
-	return data, nil
+	u := *aspace.URL
+	u.Path = repo.URI
+	return aspace.UpdateAPI(u.String(), repo)
 }
 
 // DeleteRepository takes a respository structure and sends it to the ArchivesSpace REST API
 func (aspace *ArchivesSpaceAPI) DeleteRepository(repo *Repository) (*ResponseMsg, error) {
-	/*
-		Example Listing the repo with curl:
-			curl -H "X-ArchivesSpace-Session: $TOKEN" --request GET "http://localhost:8089/repositories" | python -m json.tool
-
-		Example Delete the repo with curl:
-			curl -H "X-ArchivesSpace-Session: $TOKEN" -d '{"repo_code": "1448043078"}' --request DELETE "http://localhost:8089/repositories/8" | python -m json.tool
-	*/
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = fmt.Sprintf("/repositories/%d", repo.ID)
-	content, err := aspace.API("DELETE", aspace.URL.String(), repo)
-	if err != nil {
-		return nil, err
-	}
-
-	data := new(ResponseMsg)
-	err = json.Unmarshal(content, data)
-	if err != nil {
-		return nil, fmt.Errorf("Cannnot decode DeleteRepository() response %s", err)
-	}
-	return data, nil
+	u := *aspace.URL
+	u.Path = fmt.Sprintf("/repositories/%d", repo.ID)
+	return aspace.DeleteAPI(u.String(), repo)
 }
 
 // ListRepositories returns a list of repositories available via the ArchivesSpace REST API
 func (aspace *ArchivesSpaceAPI) ListRepositories() ([]Repository, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = `/repositories`
+	u := *aspace.URL
+	u.Path = `/repositories`
 
-	content, err := aspace.API("GET", aspace.URL.String(), nil)
+	content, err := aspace.API("GET", u.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -590,40 +626,22 @@ func (aspace *ArchivesSpaceAPI) ListRepositories() ([]Repository, error) {
 
 // CreateAgent creates a Agent recod via the ArchivesSpace API
 func (aspace *ArchivesSpaceAPI) CreateAgent(aType string, agent *Agent) (*ResponseMsg, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = fmt.Sprintf("/agents/%s", aType)
-	content, err := aspace.API("POST", aspace.URL.String(), agent)
-	if err != nil {
-		return nil, err
-	}
-
-	// content should look something like
-	// {"status":"Created","id":5,"lock_version":0,"stale":true,"uri":"/agents/people/5","warnings":[]}
-	data := new(ResponseMsg)
-	err = json.Unmarshal(content, data)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
+	u := *aspace.URL
+	u.Path = fmt.Sprintf("/agents/%s", aType)
+	return aspace.CreateAPI(u.String(), agent)
 }
 
 // GetAgent return an Agent via the ArchivesSpace API
 func (aspace *ArchivesSpaceAPI) GetAgent(agentType string, agentID int) (*Agent, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = fmt.Sprintf(`/agents/%s/%d`, agentType, agentID)
-
-	content, err := aspace.API("GET", aspace.URL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
+	u := *aspace.URL
+	u.Path = fmt.Sprintf(`/agents/%s/%d`, agentType, agentID)
 
 	agent := new(Agent)
-	err = json.Unmarshal(bytes.TrimSpace(content), &agent)
+	err := aspace.GetAPI(u.String(), agent)
 	if err != nil {
 		return nil, err
 	}
+
 	// Make sure the ID comes from agent.URI
 	p := strings.Split(agent.URI, "/")
 	id, err := strconv.Atoi(p[len(p)-1])
@@ -636,103 +654,42 @@ func (aspace *ArchivesSpaceAPI) GetAgent(agentType string, agentID int) (*Agent,
 
 // UpdateAgent creates a Agent recod via the ArchivesSpace API
 func (aspace *ArchivesSpaceAPI) UpdateAgent(agent *Agent) (*ResponseMsg, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = agent.URI
-	content, err := aspace.API("POST", aspace.URL.String(), agent)
-	if err != nil {
-		return nil, err
-	}
-
-	// content should look something like
-	// {"status":"Updated","id":13,"lock_version":1,"stale":true,"uri":"/agents/people/13"}
-	data := new(ResponseMsg)
-	err = json.Unmarshal(content, data)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
+	u := *aspace.URL
+	u.Path = agent.URI
+	return aspace.UpdateAPI(u.String(), agent)
 }
 
 // DeleteAgent creates a Agent record via the ArchivesSpace API
 func (aspace *ArchivesSpaceAPI) DeleteAgent(agent *Agent) (*ResponseMsg, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = agent.URI
-	content, err := aspace.API("DELETE", aspace.URL.String(), agent)
-	if err != nil {
-		return nil, err
-	}
-
-	// content should look something like
-	// {"status":"Deleted","id":13}
-	data := new(ResponseMsg)
-	err = json.Unmarshal(content, data)
-	if err != nil {
-		return nil, fmt.Errorf("Cannot decode DeleteAgent() %s", err)
-	}
-	return data, nil
+	u := *aspace.URL
+	u.Path = agent.URI
+	return aspace.DeleteAPI(u.String(), agent)
 }
 
 // ListAgents return an array of Agents via the ArchivesSpace API
 func (aspace *ArchivesSpaceAPI) ListAgents(agentType string) ([]int, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = fmt.Sprintf(`/agents/%s`, agentType)
-	q := aspace.URL.Query()
+	u := *aspace.URL
+	u.Path = fmt.Sprintf(`/agents/%s`, agentType)
+	q := u.Query()
 	q.Set("all_ids", "true")
-	aspace.URL.RawQuery = q.Encode()
-
-	content, err := aspace.API("GET", aspace.URL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// content should look something like
-	// [1,2,3,4]
-	var agentIDs []int
-	err = json.Unmarshal(content, &agentIDs)
-	if err != nil {
-		return nil, err
-	}
-	return agentIDs, nil
+	u.RawQuery = q.Encode()
+	return aspace.ListAPI(u.String())
 }
 
 // CreateAccession creates a new Accession record in a Repository
 func (aspace *ArchivesSpaceAPI) CreateAccession(repoID int, accession *Accession) (*ResponseMsg, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = fmt.Sprintf("/repositories/%d/accessions", repoID)
-	content, err := aspace.API("POST", aspace.URL.String(), accession)
-	if err != nil {
-		return nil, err
-	}
-
-	// content should look something like
-	// {"status":"Created","id":5,"lock_version":0,"stale":true,"uri":"/repositories/28/accessions/5","warnings":[]}
-	data := new(ResponseMsg)
-	err = json.Unmarshal(content, data)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
+	u := *aspace.URL
+	u.Path = fmt.Sprintf("/repositories/%d/accessions", repoID)
+	return aspace.CreateAPI(u.String(), accession)
 }
 
 // GetAccession retrieves an Accession record from a Repository
 func (aspace *ArchivesSpaceAPI) GetAccession(repoID, accessionID int) (*Accession, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = fmt.Sprintf("/repositories/%d/accessions/%d", repoID, accessionID)
+	u := *aspace.URL
+	u.Path = fmt.Sprintf("/repositories/%d/accessions/%d", repoID, accessionID)
 
-	content, err := aspace.API("GET", aspace.URL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// content should look something like
-	// {"lock_version":2,"suppressed":false,"title":"Some title here","display_string":"some display string","publish":false,"content_description":"some description here","provenance":"some provenance","accession_date":"2015-11-24","restrictions_apply":true,"access_restrictions":true,"access_restrictions_note":"some access restriction note","use_restrictions":true,"use_restrictions_note":"some use restrictions note","created_by":"janedoe","last_modified_by":"johndoe","create_time":"2015-11-24T19:55:26Z","system_mtime":"2015-11-25T18:07:02Z","user_mtime":"2015-11-25T18:07:02Z","id_0":"2015","id_1":"00053","jsonmodel_type":"accession","external_ids":[],"related_accessions":[],"classifications":[],"subjects":[],"linked_events":[],"extents":[{"lock_version":0,"number":"1","created_by":"johndoe","last_modified_by":"janedoe","create_time":"2015-11-25T18:07:02Z","system_mtime":"2015-11-25T18:07:02Z","user_mtime":"2015-11-25T18:07:02Z","portion":"whole","extent_type":"DVD","jsonmodel_type":"extent"}],"dates":[{"lock_version":0,"expression":"2015 August 1","created_by":"johndoe","last_modified_by":"janedoe","create_time":"2015-11-25T18:07:02Z","system_mtime":"2015-11-25T18:07:02Z","user_mtime":"2015-11-25T18:07:02Z","date_type":"single","label":"creation","jsonmodel_type":"date"}],"external_documents":[],"rights_statements":[{"lock_version":0,"identifier":"z0z0z0z0z0z0z0z0z0z0z0z0z0z0","active":true,"restrictions":"some restriction statement","created_by":"janedoe","last_modified_by":"johndoe","create_time":"2015-11-25T18:07:02Z","system_mtime":"2015-11-25T18:07:02Z","user_mtime":"2015-11-25T18:07:02Z","rights_type":"institutional_policy","jsonmodel_type":"rights_statement","external_documents":[]}],"deaccessions":[],"related_resources":[],"linked_agents":[],"instances":[],"uri":"/repositories/2/accessions/8547","repository":{"ref":"/repositories/2"}}
 	accession := new(Accession)
-	err = json.Unmarshal(content, accession)
+	err := aspace.GetAPI(u.String(), accession)
 	if err != nil {
 		return nil, err
 	}
@@ -746,108 +703,44 @@ func (aspace *ArchivesSpaceAPI) GetAccession(repoID, accessionID int) (*Accessio
 
 // UpdateAccession updates an existing Accession record in a Repository
 func (aspace *ArchivesSpaceAPI) UpdateAccession(accession *Accession) (*ResponseMsg, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = accession.URI
-	content, err := aspace.API("POST", aspace.URL.String(), accession)
-	if err != nil {
-		return nil, err
-	}
-
-	// content should look something like
-	// {"status":"Created","id":3,"lock_version":0,"stale":null,"uri":"/repositories/3","warnings":[]}
-	// OR
-	// {"error":"Some error message here"}
-	data := new(ResponseMsg)
-	err = json.Unmarshal(content, data)
-	if err != nil {
-		return nil, fmt.Errorf("Could not unpack UpdateRepository() response [%s] %s", content, err)
-	}
-	return data, nil
+	u := *aspace.URL
+	u.Path = accession.URI
+	return aspace.UpdateAPI(u.String(), accession)
 }
 
 // DeleteAccession deleted an Accession record from a Repository
 func (aspace *ArchivesSpaceAPI) DeleteAccession(accession *Accession) (*ResponseMsg, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = accession.URI
-	content, err := aspace.API("DELETE", aspace.URL.String(), accession)
-	if err != nil {
-		return nil, err
-	}
-
-	// content should look something like
-	// {"status":"Deleted","id":13}
-	data := new(ResponseMsg)
-	err = json.Unmarshal(bytes.TrimSpace(content), data)
-	if err != nil {
-		return nil, fmt.Errorf("Cannot decode DeleteAccession() %s", err)
-	}
-	return data, nil
+	u := *aspace.URL
+	u.Path = accession.URI
+	return aspace.DeleteAPI(u.String(), accession)
 }
 
 // ListAccessions return a list of Accession IDs from a Repository
 func (aspace *ArchivesSpaceAPI) ListAccessions(repositoryID int) ([]int, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = fmt.Sprintf(`/repositories/%d/accessions`, repositoryID)
-	q := aspace.URL.Query()
+	u := *aspace.URL
+	u.Path = fmt.Sprintf(`/repositories/%d/accessions`, repositoryID)
+	q := u.Query()
 	q.Set("all_ids", "true")
-	aspace.URL.RawQuery = q.Encode()
-
-	content, err := aspace.API("GET", aspace.URL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// content should look something like
-	// [1,2,3,4]
-	var accessionIDs []int
-	err = json.Unmarshal(content, &accessionIDs)
-	if err != nil {
-		return nil, err
-	}
-	return accessionIDs, nil
+	u.RawQuery = q.Encode()
+	return aspace.ListAPI(u.String())
 }
 
 // CreateSubject creates a new Subject in ArchivesSpace instance
 func (aspace *ArchivesSpaceAPI) CreateSubject(subject *Subject) (*ResponseMsg, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = "/subjects"
-	content, err := aspace.API("POST", aspace.URL.String(), subject)
-	if err != nil {
-		return nil, err
-	}
-
-	// content should look something like
-	// {"status":"Created","id":5,"lock_version":0,"stale":true,"uri":"/subjects/28","warnings":[]}
-	data := new(ResponseMsg)
-	err = json.Unmarshal(content, data)
-	if err != nil {
-		return nil, err
-	}
-	return data, nil
+	u := *aspace.URL
+	u.Path = "/subjects"
+	return aspace.CreateAPI(u.String(), subject)
 }
 
 // GetSubject retrieves a subject record from an ArchivesSpace instance
 func (aspace *ArchivesSpaceAPI) GetSubject(subjectID int) (*Subject, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = fmt.Sprintf("/subjects/%d", subjectID)
-
-	content, err := aspace.API("GET", aspace.URL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
+	u := *aspace.URL
+	u.Path = fmt.Sprintf("/subjects/%d", subjectID)
 
 	// content should look something like
 	// {"lock_version":121,"title":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T23:16:19Z","user_mtime":"2015-10-19T22:45:07Z","source":"local","jsonmodel_type":"subject","external_ids":[],"publish":true,"terms":[{"lock_version":0,"term":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T22:45:07Z","user_mtime":"2015-10-19T22:45:07Z","term_type":"function","jsonmodel_type":"term","uri":"/terms/1","vocabulary":"/vocabularies/1"}],"external_documents":[],"uri":"/subjects/1","is_linked_to_published_record":true,"vocabulary":"/vocabularies/1"}
 	subject := new(Subject)
-	err = json.Unmarshal(content, subject)
-	if err != nil {
-		return nil, err
-	}
+	err := aspace.GetAPI(u.String(), subject)
 	p := strings.Split(subject.URI, "/")
 	subject.ID, err = strconv.Atoi(p[len(p)-1])
 	if err != nil {
@@ -858,127 +751,240 @@ func (aspace *ArchivesSpaceAPI) GetSubject(subjectID int) (*Subject, error) {
 
 // UpdateSubject updates an existing subject record in an ArchivesSpace instance
 func (aspace *ArchivesSpaceAPI) UpdateSubject(subject *Subject) (*ResponseMsg, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = subject.URI
-	content, err := aspace.API("POST", aspace.URL.String(), subject)
-	if err != nil {
-		return nil, err
-	}
-
-	// content should look something like
-	// {"status":"Created","id":3,"lock_version":0,"stale":null,"uri":"/subjects/3","warnings":[]}
-	// OR
-	// {"error":"Some error message here"}
-	data := new(ResponseMsg)
-	err = json.Unmarshal(content, data)
-	if err != nil {
-		return nil, fmt.Errorf("Could not unpack UpdateSubject() response [%s] %s", content, err)
-	}
-	return data, nil
+	u := *aspace.URL
+	u.Path = subject.URI
+	return aspace.UpdateAPI(u.String(), subject)
 }
 
 // DeleteSubject deletes a subject from an ArchivesSpace instance
 func (aspace *ArchivesSpaceAPI) DeleteSubject(subject *Subject) (*ResponseMsg, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = subject.URI
-	content, err := aspace.API("DELETE", aspace.URL.String(), subject)
-	if err != nil {
-		return nil, err
-	}
-
-	// content should look something like
-	// {"status":"Deleted","id":13}
-	data := new(ResponseMsg)
-	err = json.Unmarshal(bytes.TrimSpace(content), data)
-	if err != nil {
-		return nil, fmt.Errorf("Cannot decode DeleteSubject() %s", err)
-	}
-	return data, nil
+	u := *aspace.URL
+	u.Path = subject.URI
+	return aspace.DeleteAPI(u.String(), subject)
 }
 
 // ListSubjects return a list of Subject IDs from an ArchivesSpace instance
 func (aspace *ArchivesSpaceAPI) ListSubjects() ([]int, error) {
-	aspace.URL.RawPath = ""
-	aspace.URL.RawQuery = ""
-	aspace.URL.Path = `/subjects`
-	q := aspace.URL.Query()
+	u := *aspace.URL
+	u.Path = `/subjects`
+	q := u.Query()
 	q.Set("all_ids", "true")
-	aspace.URL.RawQuery = q.Encode()
-
-	content, err := aspace.API("GET", aspace.URL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// content should look something like
-	// [1,2,3,4]
-	var subjectIDs []int
-	err = json.Unmarshal(content, &subjectIDs)
-	if err != nil {
-		return nil, err
-	}
-	return subjectIDs, nil
+	u.RawQuery = q.Encode()
+	return aspace.ListAPI(u.String())
 }
 
-//FIXME: need Create, Get, Update, Delete, List functions for Vocabulary, Terms, User, Resource, Group, DigitalObject,
+// CreateVocabulary creates a new Vocabulary in ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) CreateVocabulary(vocabulary *Vocabulary) (*ResponseMsg, error) {
+	u := *aspace.URL
+	u.Path = "/vocabularies"
+	return aspace.CreateAPI(u.String(), vocabulary)
+}
+
+// GetVocabulary retrieves a vocabulary record from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) GetVocabulary(vocabularyID int) (*Vocabulary, error) {
+	u := *aspace.URL
+	u.Path = fmt.Sprintf("/vocabularies/%d", vocabularyID)
+
+	// content should look something like
+	// {"lock_version":121,"title":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T23:16:19Z","user_mtime":"2015-10-19T22:45:07Z","source":"local","jsonmodel_type":"vocabulary","external_ids":[],"publish":true,"terms":[{"lock_version":0,"term":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T22:45:07Z","user_mtime":"2015-10-19T22:45:07Z","term_type":"function","jsonmodel_type":"term","uri":"/terms/1","vocabulary":"/vocabularies/1"}],"external_documents":[],"uri":"/vocabularys/1","is_linked_to_published_record":true,"vocabulary":"/vocabularies/1"}
+	vocabulary := new(Vocabulary)
+	err := aspace.GetAPI(u.String(), vocabulary)
+	p := strings.Split(vocabulary.URI, "/")
+	vocabulary.ID, err = strconv.Atoi(p[len(p)-1])
+	if err != nil {
+		return vocabulary, fmt.Errorf("Accession ID parse error %d %s", vocabulary.ID, err)
+	}
+	return vocabulary, nil
+}
+
+// UpdateVocabulary updates an existing vocabulary record in an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) UpdateVocabulary(vocabulary *Vocabulary) (*ResponseMsg, error) {
+	u := *aspace.URL
+	u.Path = vocabulary.URI
+	return aspace.UpdateAPI(u.String(), vocabulary)
+}
+
+// DeleteVocabulary deletes a vocabulary from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) DeleteVocabulary(vocabulary *Vocabulary) (*ResponseMsg, error) {
+	u := *aspace.URL
+	u.Path = vocabulary.URI
+	return aspace.DeleteAPI(u.String(), vocabulary)
+}
+
+// ListVocabularies return a list of Vocabulary IDs from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) ListVocabularies() ([]int, error) {
+	u := *aspace.URL
+	u.Path = `/vocabularies`
+	q := u.Query()
+	q.Set("all_ids", "true")
+	u.RawQuery = q.Encode()
+	return aspace.ListAPI(u.String())
+}
+
+// CreateTerm creates a new Term in ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) CreateTerm(vocabularyID int, term *Term) (*ResponseMsg, error) {
+	u := *aspace.URL
+	u.Path = fmt.Sprintf("/vocabularies/%d/terms", vocabularyID)
+	return aspace.CreateAPI(u.String(), term)
+}
+
+// GetTerm retrieves a term record from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) GetTerm(vocabularyID, termID int) (*Term, error) {
+	u := *aspace.URL
+	u.Path = fmt.Sprintf("/vocabularies/%d/terms/%d", vocabularyID, termID)
+
+	// content should look something like
+	// {"lock_version":121,"title":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T23:16:19Z","user_mtime":"2015-10-19T22:45:07Z","source":"local","jsonmodel_type":"term","external_ids":[],"publish":true,"terms":[{"lock_version":0,"term":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T22:45:07Z","user_mtime":"2015-10-19T22:45:07Z","term_type":"function","jsonmodel_type":"term","uri":"/terms/1","term":"/terms/1"}],"external_documents":[],"uri":"/terms/1","is_linked_to_published_record":true,"term":"/terms/1"}
+	term := new(Term)
+	err := aspace.GetAPI(u.String(), term)
+	if err != nil {
+		return nil, err
+	}
+	p := strings.Split(term.URI, "/")
+	term.ID, err = strconv.Atoi(p[len(p)-1])
+	if err != nil {
+		return term, fmt.Errorf("Accession ID parse error %d %s", term.ID, err)
+	}
+	return term, nil
+}
+
+// UpdateTerm updates an existing term record in an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) UpdateTerm(term *Term) (*ResponseMsg, error) {
+	u := aspace.URL
+	u.Path = term.URI
+	return aspace.UpdateAPI(u.String(), term)
+}
+
+// DeleteTerm deletes a term from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) DeleteTerm(term *Term) (*ResponseMsg, error) {
+	u := aspace.URL
+	u.Path = term.URI
+	return aspace.DeleteAPI(u.String(), term)
+}
+
+// ListTerms return a list of Term IDs from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) ListTerms(vocabularyID int) ([]int, error) {
+	u := aspace.URL
+	u.Path = fmt.Sprintf(`/vocabularies/%d/terms`, vocabularyID)
+	q := u.Query()
+	q.Set("all_ids", "true")
+	u.RawQuery = q.Encode()
+	return aspace.ListAPI(u.String())
+}
+
+// CreateLocation creates a new Location in ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) CreateLocation(location *Location) (*ResponseMsg, error) {
+	u := *aspace.URL
+	u.Path = fmt.Sprintf("/locations")
+	return aspace.CreateAPI(u.String(), location)
+}
+
+// GetLocation retrieves a location record from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) GetLocation(ID int) (*Location, error) {
+	u := *aspace.URL
+	u.Path = fmt.Sprintf("/locations/%d", ID)
+
+	// content should look something like
+	// {"lock_version":121,"title":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T23:16:19Z","user_mtime":"2015-10-19T22:45:07Z","source":"local","jsonmodel_type":"location","external_ids":[],"publish":true,"locations":[{"lock_version":0,"location":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T22:45:07Z","user_mtime":"2015-10-19T22:45:07Z","location_type":"function","jsonmodel_type":"location","uri":"/locations/1","location":"/locations/1"}],"external_documents":[],"uri":"/locations/1","is_linked_to_published_record":true,"location":"/locations/1"}
+	location := new(Location)
+	err := aspace.GetAPI(u.String(), location)
+	if err != nil {
+		return nil, err
+	}
+	p := strings.Split(location.URI, "/")
+	location.ID, err = strconv.Atoi(p[len(p)-1])
+	if err != nil {
+		return location, fmt.Errorf("Accession ID parse error %d %s", location.ID, err)
+	}
+	return location, nil
+}
+
+// UpdateLocation updates an existing location record in an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) UpdateLocation(location *Location) (*ResponseMsg, error) {
+	u := aspace.URL
+	u.Path = location.URI
+	return aspace.UpdateAPI(u.String(), location)
+}
+
+// DeleteLocation deletes a location from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) DeleteLocation(location *Location) (*ResponseMsg, error) {
+	u := aspace.URL
+	u.Path = location.URI
+	return aspace.DeleteAPI(u.String(), location)
+}
+
+// ListLocations return a list of Location IDs from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) ListLocations() ([]int, error) {
+	u := aspace.URL
+	u.Path = fmt.Sprintf(`/locations`)
+	q := u.Query()
+	q.Set("all_ids", "true")
+	u.RawQuery = q.Encode()
+	return aspace.ListAPI(u.String())
+}
+
+//FIXME: need Create, Get, Update, Delete, List functions for Location, Resource, Group, DigitalObject,
 //FIXME: Need Get/query methods for /terms, /search/*
 
 //
 // String functions for aspace public structures
 //
+func stringify(o interface{}) string {
+	src, _ := json.Marshal(o)
+	return string(src)
+}
 
 // String convert an ArchicesSpaceAPI struct as a JSON formatted string
 func (aspace *ArchivesSpaceAPI) String() string {
-	src, _ := json.Marshal(aspace)
-	return string(src)
+	return stringify(aspace)
 }
 
 // String return a Repository as a JSON formatted string
 func (repository *Repository) String() string {
-	src, _ := json.Marshal(repository)
-	return string(src)
+	return stringify(repository)
 }
 
 // String return an Agent as a JSON formatted string
 func (agent *Agent) String() string {
-	src, _ := json.Marshal(agent)
-	return string(src)
+	return stringify(agent)
 }
 
 // String return a ResponseMsg
 func (responseMsg *ResponseMsg) String() string {
-	src, _ := json.Marshal(responseMsg)
-	return string(src)
+	return stringify(responseMsg)
 }
 
 // String return a UserDefined
 func (userDefined *UserDefined) String() string {
-	src, _ := json.Marshal(userDefined)
-	return string(src)
+	return stringify(userDefined)
 }
 
 // String return a ExternalID
 func (externalID *ExternalID) String() string {
-	src, _ := json.Marshal(externalID)
-	return string(src)
+	return stringify(externalID)
 }
 
 // String return an Extent
 func (extent *Extent) String() string {
-	src, _ := json.Marshal(extent)
-	return string(src)
+	return stringify(extent)
 }
 
 // String return an Accession
 func (accession *Accession) String() string {
-	src, _ := json.Marshal(accession)
-	return string(src)
+	return stringify(accession)
 }
 
 //String return a Subject
 func (subject *Subject) String() string {
-	src, _ := json.Marshal(subject)
-	return string(src)
+	return stringify(subject)
+}
+
+//String return a Vocabulary
+func (vocabulary *Vocabulary) String() string {
+	return stringify(vocabulary)
+}
+
+//String return a Term
+func (term *Term) String() string {
+	return stringify(term)
 }

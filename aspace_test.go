@@ -272,7 +272,7 @@ func TestAgent(t *testing.T) {
 	}
 	response, err = aspace.DeleteAgent(agent2)
 	if err != nil {
-		t.Errorf("DaleteAgent(%s), error: %s", agent2, err)
+		t.Errorf("DeleteAgent(%s), error: %s", agent2, err)
 		t.FailNow()
 	}
 	if response.Status != "Deleted" {
@@ -401,6 +401,7 @@ func TestAccession(t *testing.T) {
 	}
 }
 
+/*
 func TestSubjects(t *testing.T) {
 	// Get the environment variables needed for testing.
 	isSetup := checkConfig(t)
@@ -430,5 +431,6 @@ func TestSubjects(t *testing.T) {
 	}
 	fmt.Printf("DEBUG aspace.CreateSubject() --> %s\n", response)
 }
+*/
 
 //FIXME: Needs tests for Subject, Term, Vocalary, User, Search
