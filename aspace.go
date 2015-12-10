@@ -116,6 +116,30 @@ type NamePerson struct {
 	UseDates             []*Date `json:"use_dates,omitempty"`
 }
 
+// User is a JSONModel used to administer ArchivesSpace
+type User struct {
+	JSONModelType  string                   `json:"json_model_type,omitempty"`
+	LockVersion    int                      `json:"lock_version"`
+	AgentRecord    map[string]interface{}   `json:"agent_record,omitempty"`
+	CreatedBy      string                   `json:"created_by,omitempty"`
+	CreateTime     string                   `json:"create_time,omitempty"`
+	SystemMTime    string                   `json:"system_mtime,omitempty"`
+	UserMTime      string                   `json:"user_mtime,omitempty"`
+	LastModifiedBy string                   `json:"last_modified_by,omitempty"`
+	Department     string                   `json:"department,omitempty"`
+	EMail          string                   `json:"email,omitempty"`
+	Name           string                   `json:"name,omitempty"`
+	FirstName      string                   `json:"first_name,omitempty"`
+	LastName       string                   `json:"last_name,omitempty"`
+	Groups         []map[string]interface{} `json:"groups,omitempty"`
+	IsAdmin        bool                     `json:"is_admin,omitempty"`
+	IsSystemUser   bool                     `json:"is_system_user,omitempty"`
+	Permissions    map[string]string        `json:"permissions,omitempty"`
+	Telephone      string                   `json:"telephone,omitempty"`
+	Title          string                   `json:"title,omitempty"`
+	URI            string                   `json:"uri,omitempty"`
+}
+
 // AgentContact is a JSONModel for the AgentContacts array/map
 type AgentContact struct {
 	JSONModelType  string   `json:"json_model_type,omitempty"`
@@ -261,8 +285,17 @@ type Accession struct {
 
 // Vocabulary defines a structure used in both Term and Subject
 type Vocabulary struct {
-	JSONModelType string `json:"json_model_type,omitempty"`
-	LockVersion   int    `json:"lock_version"`
+	JSONModelType  string  `json:"json_model_type,omitempty"`
+	LockVersion    int     `json:"lock_version"`
+	CreatedBy      string  `json:"created_by,omitempty,omitempty"`
+	CreateTime     string  `json:"create_time,omitempty,omitempty"`
+	SystemMTime    string  `json:"system_mtime,omitempty,omitempty"`
+	UserMTime      string  `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy string  `json:"last_modified_by,omitempty"`
+	Name           string  `json:"name,omitempty"`
+	RefID          string  `json:"ref_id,omitempty"`
+	Terms          []*Term `json:"terms,omitempty"`
+	URI            string  `json:"uri,omitempty"`
 }
 
 // Term is used in defining a Subject
@@ -888,6 +921,9 @@ func (aspace *ArchivesSpaceAPI) ListSubjects() ([]int, error) {
 	}
 	return subjectIDs, nil
 }
+
+//FIXME: need Create, Get, Update, Delete, List functions for Vocabulary, Terms, User, Resource, Group, DigitalObject,
+//FIXME: Need Get/query methods for /terms, /search/*
 
 //
 // String functions for aspace public structures

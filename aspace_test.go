@@ -430,3 +430,5 @@ func TestSubjects(t *testing.T) {
 	}
 	fmt.Printf("DEBUG aspace.CreateSubject() --> %s\n", response)
 }
+
+//FIXME: Needs tests for Subject, Term, Vocalary, User, Search
