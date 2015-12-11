@@ -38,6 +38,9 @@ var (
 		"agent",
 		"accession",
 		"subject",
+		"vocabulary",
+		"term",
+		"location",
 	}
 	actions = []string{
 		"create",
@@ -191,6 +194,7 @@ func exportInstance(payload string) error {
 	//FIXME: fetch agents/families and save the JSON blobs to config.ExportPath + "/agents/families/"
 	//FIXME: fetch agents/software and save the JSON blobs to config.ExportPath + "/agents/software/"
 	//FIXME: fetch repositories/*/accessions and save the JSON blobs to config.ExportPath + "/repositories/*/accessions/"
+	//FIXME: Fetch subjects, locations, vocabularies and terms
 	//FIXME: Add other types as we start to use them
 
 	return fmt.Errorf(`exportInstance("%s") not implemented fully %s`, config, api)
@@ -572,6 +576,228 @@ func runSubjectCmd(cmd *command, config map[string]string) (string, error) {
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
+func runLocationCmd(cmd *command, config map[string]string) (string, error) {
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	if err := api.Login(); err != nil {
+		return "", err
+	}
+	location := new(aspace.Location)
+	if cmd.Payload != "" {
+		err := json.Unmarshal([]byte(cmd.Payload), &location)
+		if err != nil {
+			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
+		}
+	}
+	switch cmd.Action {
+	case "create":
+		response, err := api.CreateLocation(location)
+		if err != nil {
+			return "", err
+		}
+		if response.Status != "Created" {
+			return "", fmt.Errorf("%s", response)
+		}
+		src, err := json.Marshal(response)
+		if err != nil {
+			return "", err
+		}
+		return string(src), nil
+	case "list":
+		if location.ID == 0 {
+			locations, err := api.ListLocations()
+			if err != nil {
+				return "", fmt.Errorf(`{"error": "%s"}`, err)
+			}
+			src, err := json.Marshal(locations)
+			if err != nil {
+				return "", fmt.Errorf(`{"error": "Cannot JSON encode %s %s"}`, cmd.Payload, err)
+			}
+			return string(src), nil
+		}
+		location, err := api.GetLocation(location.ID)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": "%s"}`, err)
+		}
+		src, err := json.Marshal(location)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": "Cannot find %s %s"}`, cmd.Payload, err)
+		}
+		return string(src), nil
+	case "update":
+		responseMsg, err := api.UpdateLocation(location)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	case "delete":
+		location, err := api.GetLocation(location.ID)
+		if err != nil {
+			return "", err
+		}
+		responseMsg, err := api.DeleteLocation(location)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	}
+	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
+}
+
+func runVocabularyCmd(cmd *command, config map[string]string) (string, error) {
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	if err := api.Login(); err != nil {
+		return "", err
+	}
+	vocabulary := new(aspace.Vocabulary)
+	if cmd.Payload != "" {
+		err := json.Unmarshal([]byte(cmd.Payload), &vocabulary)
+		if err != nil {
+			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
+		}
+	}
+	switch cmd.Action {
+	case "create":
+		response, err := api.CreateVocabulary(vocabulary)
+		if err != nil {
+			return "", err
+		}
+		if response.Status != "Created" {
+			return "", fmt.Errorf("%s", response)
+		}
+		src, err := json.Marshal(response)
+		if err != nil {
+			return "", err
+		}
+		return string(src), nil
+	case "list":
+		if vocabulary.ID == 0 {
+			var ids []int
+			ids, err := api.ListVocabularies()
+			if err != nil {
+				return "", fmt.Errorf(`{"error": "%s"}`, err)
+			}
+			src, err := json.Marshal(ids)
+			if err != nil {
+				return "", fmt.Errorf(`{"error": "Cannot JSON encode %s %s"}`, cmd.Payload, err)
+			}
+			return string(src), nil
+		}
+		vocabulary, err := api.GetVocabulary(vocabulary.ID)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": "%s"}`, err)
+		}
+		src, err := json.Marshal(vocabulary)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": "Cannot find %s %s"}`, cmd.Payload, err)
+		}
+		return string(src), nil
+	case "update":
+		responseMsg, err := api.UpdateVocabulary(vocabulary)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	case "delete":
+		vocabulary, err := api.GetVocabulary(vocabulary.ID)
+		if err != nil {
+			return "", err
+		}
+		responseMsg, err := api.DeleteVocabulary(vocabulary)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	}
+	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
+}
+
+func runTermCmd(cmd *command, config map[string]string) (string, error) {
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	if err := api.Login(); err != nil {
+		return "", err
+	}
+	term := new(aspace.Term)
+	if cmd.Payload != "" {
+		err := json.Unmarshal([]byte(cmd.Payload), &term)
+		if err != nil {
+			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
+		}
+	}
+	var (
+		vocabularyID int
+		err          error
+	)
+	p := strings.Split(term.URI, "/")
+	if len(p) > 3 {
+		vocabularyID, err = strconv.Atoi(p[2])
+		if err != nil {
+			return "", fmt.Errorf(`{"error":%q}`, err)
+		}
+	}
+	switch cmd.Action {
+	case "create":
+		response, err := api.CreateTerm(vocabularyID, term)
+		if err != nil {
+			return "", err
+		}
+		if response.Status != "Created" {
+			return "", fmt.Errorf("%s", response)
+		}
+		src, err := json.Marshal(response)
+		if err != nil {
+			return "", err
+		}
+		return string(src), nil
+	case "list":
+		//FIXME: calculate the vocabulary ID
+		if term.ID == 0 {
+			var ids []int
+			ids, err := api.ListTerms(vocabularyID)
+			if err != nil {
+				return "", fmt.Errorf(`{"error": "%s"}`, err)
+			}
+			src, err := json.Marshal(ids)
+			if err != nil {
+				return "", fmt.Errorf(`{"error": "Cannot JSON encode %s %s"}`, cmd.Payload, err)
+			}
+			return string(src), nil
+		}
+		term, err := api.GetTerm(vocabularyID, term.ID)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": "%s"}`, err)
+		}
+		src, err := json.Marshal(term)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": "Cannot find %s %s"}`, cmd.Payload, err)
+		}
+		return string(src), nil
+	case "update":
+		responseMsg, err := api.UpdateTerm(term)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	case "delete":
+		//FIXME: calculate the vocabulary ID
+		term, err := api.GetTerm(vocabularyID, term.ID)
+		if err != nil {
+			return "", err
+		}
+		responseMsg, err := api.DeleteTerm(term)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	}
+	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
+}
+
 func runCmd(cmd *command, config map[string]string) (string, error) {
 	switch cmd.Subject {
 	case "instance":
@@ -584,6 +810,12 @@ func runCmd(cmd *command, config map[string]string) (string, error) {
 		return runAccessionCmd(cmd, config)
 	case "subject":
 		return runSubjectCmd(cmd, config)
+	case "location":
+		return runLocationCmd(cmd, config)
+	case "vocabulary":
+		return runVocabularyCmd(cmd, config)
+	case "term":
+		return runTermCmd(cmd, config)
 	}
 	return "", fmt.Errorf("%s %s not implemented", cmd.Subject, cmd.Action)
 }

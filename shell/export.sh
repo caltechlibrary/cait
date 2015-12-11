@@ -68,13 +68,13 @@ function getRepository {
 }
 
 function getSubjects {
-    echo "Setting up data directory for repositories"
+    echo "Setting up data directory for subjects"
     mkdir -p data-export/subjects
-    # Get a list of all agents ids
+    # Get a list of all subject ids
     echo "Getting ids for /subjects"
     curl -H "X-ArchivesSpace-Session: $TOKEN" $ASPACE_API_URL/subjects?all_ids=true | sed -E "s/\[//;s/,/ /g;s/]//" | tr " " "\n" >  data-export/subject-ids.txt
 
-    # Now for each agent id in data-export/agents-*-ids.txt get a full record.
+    # Now for each id in data-export/subject-ids.txt get a full record.
     echo "Reading subjects and fetch their JSON records "
     cat data-export/subject-ids.txt | while read SUBJECT_ID; do
         if [ "$SUBJECT_ID" != "" ]; then
@@ -85,11 +85,70 @@ function getSubjects {
 
 }
 
+function getLocations {
+    echo "Setting up data directory for locations"
+    mkdir -p data-export/locations
+    # Get a list of all location ids
+    echo "Getting ids for /locations"
+    curl -H "X-ArchivesSpace-Session: $TOKEN" $ASPACE_API_URL/locations?all_ids=true | sed -E "s/\[//;s/,/ /g;s/]//" | tr " " "\n" >  data-export/location-ids.txt
+
+    # Now for each id in data-export/location-ids.txt get a full record.
+    echo "Reading locations and fetch their JSON records "
+    cat data-export/location-ids.txt | while read ID; do
+        if [ "$ID" != "" ]; then
+            curl -H "X-ArchivesSpace-Session: $TOKEN" $ASPACE_API_URL/locations/$ID > data-export/locations/$ID.json
+        fi
+    done
+    echo "Completed locations export"
+
+}
+
+function getVocabularies {
+    echo "Setting up data directory for vocabularies"
+    mkdir -p data-export/vocabularies
+    # Get a list of all ids
+    echo "Getting ids for /vocabularies"
+    curl -H "X-ArchivesSpace-Session: $TOKEN" $ASPACE_API_URL/vocabularies?all_ids=true | jq -r '.[].uri' | cut -d / -f 3 >  data-export/vocabulary-ids.txt
+
+    # Now for each id in data-export/vocabulary-ids.txt get a full record.
+    echo "Read and fetch the JSON records "
+    cat data-export/vocabulary-ids.txt | while read ID; do
+        if [ "$ID" != "" ]; then
+            curl -H "X-ArchivesSpace-Session: $TOKEN" $ASPACE_API_URL/vocabularies/$ID > data-export/vocabularies/$ID.json
+        fi
+    done
+    echo "Completed locations export"
+
+}
+
+function getTerms {
+    echo "Getting terms for each vocabulary"
+    cat data-export/vocabulary-ids.txt | while read vocID; do
+        echo "Setting up data directory for /vocabularies/$vocID"
+        mkdir -p data-export/vocabularies/$vocID
+        # Get a list of all ids
+        echo "Getting /vocabularies/$vocID/terms.json"
+        curl -H "X-ArchivesSpace-Session: $TOKEN" $ASPACE_API_URL/vocabularies/$vocID/terms >  data-export/vocabularies/$vocID/terms.json
+    done
+    echo "Completed terms export"
+}
 
 STARTED=$(date)
 mkdir -p data-export
 touch data-export/export.log
 echo -e "$(date)\tExporting data from $ASPACE_API_URL\tstarted" >> data-export/export.log
+
+echo -e "$(date)\tExporting /vocabularies\tstarted" >> data-export/export.log
+getVocabularies
+echo -e "$(date)\tExporting /vocabularies\tfinished" >> data-export/export.log
+
+echo -e "$(date)\tExporting /vocabularies/.../terms\tstarted" >> data-export/export.log
+getTerms
+echo -e "$(date)\tExporting /vocabularies/.../terms\tfinished" >> data-export/export.log
+
+echo -e "$(date)\tExporting /locations\tstarted" >> data-export/export.log
+getLocations
+echo -e "$(date)\tExporting /locations\tfinished" >> data-export/export.log
 
 echo -e "$(date)\tExporting /agents/people\tstarted" >> data-export/export.log
 getAgents people

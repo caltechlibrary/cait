@@ -338,16 +338,29 @@ type Subject struct {
 
 // Location represents a item location possible in the archive
 type Location struct {
-	JSONModelType  string `json:"json_model_type,omitempty"`
-	LockVersion    int    `json:"lock_version"`
-	ID             int    `json:"id,omitempty"`
-	CreatedBy      string `json:"created_by,omitempty,omitempty"`
-	CreateTime     string `json:"create_time,omitempty,omitempty"`
-	SystemMTime    string `json:"system_mtime,omitempty,omitempty"`
-	UserMTime      string `json:"user_mtime,omitempty,omitempty"`
-	LastModifiedBy string `json:"last_modified_by,omitempty"`
-	URI            string `json:"uri,omitempty"`
-	//FIXME: figure out what fields actually happen for location.
+	JSONModelType        string        `json:"json_model_type,omitempty"`
+	LockVersion          int           `json:"lock_version"`
+	ID                   int           `json:"id,omitempty"`
+	CreatedBy            string        `json:"created_by,omitempty,omitempty"`
+	CreateTime           string        `json:"create_time,omitempty,omitempty"`
+	SystemMTime          string        `json:"system_mtime,omitempty,omitempty"`
+	UserMTime            string        `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy       string        `json:"last_modified_by,omitempty"`
+	URI                  string        `json:"uri,omitempty"`
+	Area                 string        `json:"area"`
+	Barcode              string        `json:"barcode"`
+	Building             string        `json:"building,omitempty"`
+	Classification       string        `json:"classification,omitempty"`
+	Coordinate1Indicator string        `json:"coordinate_1_indicator,omitempty"`
+	Coordinate1Label     string        `json:"coordinate_1_label,omitempty"`
+	Coordinate2Indicator string        `json:"coordinate_2_indicator,omitempty"`
+	Coordinate2Label     string        `json:"coordinate_2_label,omitempty"`
+	Coordinate3Indicator string        `json:"coordinate_3_indicator,omitempty"`
+	Coordinate3Label     string        `json:"coordinate_3_label,omitempty"`
+	ExternalIDs          []*ExternalID `json:"external_ids,omitempty"`
+	Floor                string        `json:"floor,omitempty"`
+	Room                 string        `json:"room,omitempty"`
+	Title                string        `json:"title,omitempty"`
 }
 
 func checkEnv(apiURL, username, password string) bool {
@@ -815,10 +828,29 @@ func (aspace *ArchivesSpaceAPI) DeleteVocabulary(vocabulary *Vocabulary) (*Respo
 func (aspace *ArchivesSpaceAPI) ListVocabularies() ([]int, error) {
 	u := *aspace.URL
 	u.Path = `/vocabularies`
-	q := u.Query()
-	q.Set("all_ids", "true")
-	u.RawQuery = q.Encode()
-	return aspace.ListAPI(u.String())
+	/*
+		q := u.Query()
+		q.Set("all_ids", "true")
+		u.RawQuery = q.Encode()
+	*/
+	content, err := aspace.API("GET", u.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+	var (
+		ids          []int
+		vocabularies []Vocabulary
+	)
+	err = json.Unmarshal([]byte(content), &vocabularies)
+	for _, val := range vocabularies {
+		p := strings.Split(val.URI, "/")
+		id, err := strconv.Atoi(p[len(p)-1])
+		if err != nil {
+			return nil, err
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
 }
 
 // CreateTerm creates a new Term in ArchivesSpace instance
@@ -923,7 +955,7 @@ func (aspace *ArchivesSpaceAPI) ListLocations() ([]int, error) {
 	return aspace.ListAPI(u.String())
 }
 
-//FIXME: need Create, Get, Update, Delete, List functions for Location, Resource, Group, DigitalObject,
+//FIXME: need Create, Get, Update, Delete, List functions for DigitalObject, Instances, Extents, Resource, Group, Users
 //FIXME: Need Get/query methods for /terms, /search/*
 
 //
