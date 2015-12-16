@@ -1,7 +1,17 @@
 
+# Current dev docs on the ArchivesSpace
+
++ [Intro](http://archivesspace.github.io/archivesspace/api/)
++ [Auth](http://archivesspace.github.io/archivesspace/api/#authentication)
++ [REST API](http://archivesspace.github.io/archivesspace/api/#archivesspace-rest-api)
++ [Schema](http://archivesspace.github.io/archivesspace/api/#schemas)
++ [Errors](http://archivesspace.github.io/archivesspace/api/#errors)
+
+
 # Curl Examples for working with ArchivesSpace
 
 The ruby centric docs are in the ArchicesSpace [File API](https://archivesspace.github.io/archivesspace/doc/file.API.html)
+
 
 ## Useful tools
 
