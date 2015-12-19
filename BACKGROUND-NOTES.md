@@ -8,12 +8,7 @@
 + [Errors](http://archivesspace.github.io/archivesspace/api/#errors)
 
 
-# Curl Examples for working with ArchivesSpace
-
-The ruby centric docs are in the ArchicesSpace [File API](https://archivesspace.github.io/archivesspace/doc/file.API.html)
-
-
-## Useful tools
+## Other possibly useful tools
 
 Found these tools in _Data Science at the Command Line_. For a complete list check "Appendix A. A Complete List of Tools"
 
@@ -110,10 +105,3 @@ Accessions are accessed in the context of a specific repository only.
 ```
     curl -H "X-ArchivesSpace-Session: $TOKEN" http://localhost:8089/repositories/3/accessions?all_ids=true
 ```
-
-# Refactoring aspace.go
-
-Things to consider
-
-+ With the exception of Get*() other methods on API should "return *ResponseMsg, string, err" where string is the Unmarshal value of the returned requested content
-+ Should args to GetAgents() and CreateAgents() pass in the Agent.URI value or a string representing agent type?

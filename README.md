@@ -10,25 +10,20 @@ A proof of concept Golang package for working with ArchivesSpace REST API.
 + A working ArchivesSpace instance reachable on the network
 + Golang 1.5 or better to compile
 
-If you want to run the shell scripts used to prototype the API interactions then you'll also need Bash, curl, cut, tr, sed, and jq.
 See NOTES.md for more details.
 
+If you want to run the shell scripts see [github.com/caltechlibrary/aspace-shell-scripts](https://github.com/caltechlibrary/aspace-shell-scripts).
 
-## Initial prototypes implemented via bash, curl, cut, sed, tr, and jq
+You can setup the environment to use the _aspace_ command by sourcing _shell/api-login.sh_
 
-The scripts in the shell directory were used to dump examples from a populated ArchivesSpace instance for determining the appropriate structures needed in Go. They are retained in this repository because they are useful and illustrate basic ArchivesSpace File API concepts.
-
-+ shell/get-agents.sh - will dump all the agent records for people, corporate_entities, families and software
-+ shell/get-repositories.sh - will dump the currently defined repositories in the target ArchivesSpace instance
-+ shell/get-accessions.sh - will dump all the accessions for a specific repository
-
-Data collect by these scripts are placed in the data/* directory hierarchy created when the scripts are run.
+```
+    . shell/api-login.sh # Answer the prompts to set things up
+```
 
 
+## _aspace_ command examples
 
-## aspace command examples
-
-Current aspace supports operations on repositories. It supports
+Current _aspace_ supports operations on repositories. It supports
 
 + create
 + list (individually or all repositories)
@@ -38,7 +33,7 @@ Current aspace supports operations on repositories. It supports
 Here's an example of using the _aspace_ command line tool
 
 ```shell
-    . setup.conf # Load the connection info into the environment
+    . shell/api-login.sh # Load the connection info into the environment
     aspace repository create "My Archive" "This is an example of my archive"
     aspace repository list all # show a list of archives, for example purposes we'll use archive ID of 11
     aspace repository list 11   # Show only the archive JSON for repository ID equal to 11,
@@ -49,13 +44,14 @@ Here's an example of using the _aspace_ command line tool
     aspace repository delete 11 # remove repository ID 2
 ```
 
-The file _setup.conf_ is a shell script which exports the needed environment variables -
+The _aspace_ commands uses the following environment variables
 
 + ASPACE_API_URL
++ ASPACE_API_TOKEN
 + ASPACE_USERNAME
 + ASPACE_PASSWORD
 
-If you're shell is back then `. setup.conf` sets up the variables for a file that looks like
+You could put these in a shell script such as _setup.sh_ and source them `. setup.sh`
 
 ```
     #
@@ -69,4 +65,3 @@ If you're shell is back then `. setup.conf` sets up the variables for a file tha
     export ASPACE_USERNAME=admin
     export ASPACE_PASSWORD=admin
 ```
-

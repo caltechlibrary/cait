@@ -16,6 +16,7 @@ import (
 // Get the environment variables needed for testing.
 var (
 	aspaceURL      = os.Getenv("ASPACE_API_URL")
+	aspaceToken = os.Getenv("ASPACE_API_TOKEN")
 	aspaceUsername = os.Getenv("ASPACE_USERNAME")
 	aspacePassword = os.Getenv("ASPACE_PASSWORD")
 )
@@ -24,6 +25,10 @@ func checkConfig(t *testing.T) bool {
 	isSetup := true
 	if aspaceURL == "" {
 		t.Error("ASPACE_API_URL environment variable not set.", aspaceURL)
+		isSetup = false
+	}
+	if aspaceToken != "" {
+		t.Error("ASPACE_API_TOKEN already set, should be empty for tests.", aspaceToken)
 		isSetup = false
 	}
 	if aspaceUsername == "" {
@@ -62,7 +67,7 @@ func TestArchiveSpaceAPI(t *testing.T) {
 		t.SkipNow()
 	}
 
-	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceToken, aspaceUsername, aspacePassword)
 	if aspace.URL == nil {
 		t.Errorf("%s\t%s", aspace.URL.String(), aspaceURL)
 	}
@@ -96,7 +101,7 @@ func TestRepository(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceToken, aspaceUsername, aspacePassword)
 	tm := time.Now()
 	repoCode := fmt.Sprintf("%d", tm.Unix())
 
@@ -195,7 +200,7 @@ func TestAgent(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceToken, aspaceUsername, aspacePassword)
 	err := aspace.Login()
 	if err != nil {
 		t.Error(err)
@@ -301,7 +306,7 @@ func TestAccession(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceToken, aspaceUsername, aspacePassword)
 	err := aspace.Login()
 	if err != nil {
 		t.Error(err)

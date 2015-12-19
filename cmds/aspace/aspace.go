@@ -83,8 +83,10 @@ func usage(msg string, exitCode int) {
   to the ArchivesSpace instance. The following shell variables are used
 
 	ASPACE_API_URL           (e.g. http://localhost:8089)
-	ASPACE_USERNAME          (e.g. admin)
-	ASPACE_PASSWORD          (e.g. admin)
+	ASPACE_API_TOKEN         (e.g. long token string of letters and numbers)
+
+  If ASPACE_API_TOKEN is not set then ASPACE_USERNAME and ASPACE_PASSWORD
+  are used if available.
 
   EXAMPLES:
 
@@ -122,13 +124,14 @@ func usage(msg string, exitCode int) {
 func configureApp() (map[string]string, error) {
 	envKeys := []string{
 		"ASPACE_API_URL",
+		"ASPACE_API_TOKEN",
 		"ASPACE_USERNAME",
 		"ASPACE_PASSWORD",
 	}
 	conf := make(map[string]string)
 	for _, ky := range envKeys {
 		conf[ky] = os.Getenv(ky)
-		if conf[ky] == "" {
+		if ky != "ASPACE_API_TOKEN" && conf[ky] == "" {
 			return nil, fmt.Errorf("%s is undefined in the enviroment (e.g. try export %s=SOME_VALUE_FOR_%s)", ky, ky, ky)
 		}
 	}
@@ -174,7 +177,7 @@ func exportInstance(payload string) error {
 	if err != nil {
 		log.Fatalf("Can't parse the URL %s %s", config.URL, err)
 	}
-	api := aspace.New(config.URL, config.Username, config.Password)
+	api := aspace.New(config.URL, config.AuthToken, config.Username, config.Password)
 	api.AuthToken = config.AuthToken
 
 	if api.AuthToken == "" {
@@ -224,7 +227,7 @@ func parseCmd(args []string) (*command, error) {
 }
 
 func runInstanceCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -238,7 +241,7 @@ func runInstanceCmd(cmd *command, config map[string]string) (string, error) {
 }
 
 func runRepoCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -327,7 +330,7 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 }
 
 func runAgentCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -411,7 +414,7 @@ func runAgentCmd(cmd *command, config map[string]string) (string, error) {
 }
 
 func runAccessionCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -508,7 +511,7 @@ func runAccessionCmd(cmd *command, config map[string]string) (string, error) {
 }
 
 func runSubjectCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -577,7 +580,7 @@ func runSubjectCmd(cmd *command, config map[string]string) (string, error) {
 }
 
 func runLocationCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -646,7 +649,7 @@ func runLocationCmd(cmd *command, config map[string]string) (string, error) {
 }
 
 func runVocabularyCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -716,7 +719,7 @@ func runVocabularyCmd(cmd *command, config map[string]string) (string, error) {
 }
 
 func runTermCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 	if err := api.Login(); err != nil {
 		return "", err
 	}

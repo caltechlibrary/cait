@@ -193,17 +193,19 @@ type ExternalID struct {
 
 // Extent represents an extends json model found in Accession records
 type Extent struct {
-	JSONModelType   string `json:"json_model_type,omitempty"`
-	LockVersion     int    `json:"lock_version"`
-	CreatedBy       string `json:"created_by,omitempty"`
-	CreateTime      string `json:"create_time,omitempty"`
-	SystemMTime     string `json:"system_mtime,omitempty"`
-	UserMTime       string `json:"user_mtime,omitempty"`
-	LastModifiedBy  string `json:"last_modified_by,omitempty"`
-	Number          string `json:"number,omitempty"`
-	PhysicalDetails string `json:"physical_details,omitempty"`
-	Portion         string `json:"portion,omitempty"`
-	ExtendType      string `json:"extent_type,omitempty"`
+	JSONModelType    string `json:"json_model_type,omitempty"`
+	LockVersion      int    `json:"lock_version"`
+	CreatedBy        string `json:"created_by,omitempty"`
+	CreateTime       string `json:"create_time,omitempty"`
+	SystemMTime      string `json:"system_mtime,omitempty"`
+	UserMTime        string `json:"user_mtime,omitempty"`
+	LastModifiedBy   string `json:"last_modified_by,omitempty"`
+	Number           string `json:"number,omitempty"`
+	PhysicalDetails  string `json:"physical_details,omitempty"`
+	Portion          string `json:"portion,omitempty"`
+	ExtendType       string `json:"extent_type,omitempty"`
+	ContainerSummary string `json:"container_summary,omitempty"`
+	Dimensions       string `json:"dimensions,omitempty"`
 }
 
 // UserDefined struct used in accession records for holding user defined data.
@@ -218,69 +220,150 @@ type UserDefined struct {
 	Boolean1       bool              `json:"boolean_1,omitempty"`
 	Boolean2       bool              `json:"boolean_2,omitempty"`
 	Boolean3       bool              `json:"boolean_3,omitempty"`
-	Boolean4       bool              `json:"boolean_4,omitempty"`
-	Boolean5       bool              `json:"boolean_5,omitempty"`
 	Text1          string            `json:"text_1,omitempty"`
 	Text2          string            `json:"test_2,omitempty"`
 	Text3          string            `json:"text_3,omitempty"`
 	Text4          string            `json:"text_4,omitempty"`
 	Text5          string            `json:"text_5,omitempty"`
+	Integer1       string            `json:"integer_1,omitempty"`
+	Integer2       string            `json:"integer_2,omitempty"`
+	Integer3       string            `json:"integer_3,omitempty"`
+	String1        string            `json:"string_1,omitempty"`
+	String2        string            `json:"string_2,omitempty"`
+	String3        string            `json:"string_3,omitempty"`
+	String4        string            `json:"string_4,omitempty"`
+	Enum1          string            `json:"enum_1,omitempty"`
+	Enum2          string            `json:"enum_1,omitempty"`
+	Enum3          string            `json:"enum_1,omitempty"`
+	Enum4          string            `json:"enum_1,omitempty"`
+	Repository     map[string]string `json:"repository,omitempty"`
+}
+
+// ExternalDocument a pointer to external documents
+type ExternalDocument struct {
+	Title          string            `json:"title,omitempty"`
+	Location       string            `json:"location,omitempty"`
+	Publish        bool              `json:"publish,omitempty"`
+	Integer        int               `json:"integer,omitempty"`
+	JSONModelType  string            `json:"json_model_type,omitempty"`
+	LockVersion    int               `json:"lock_version"`
+	CreatedBy      string            `json:"created_by,omitempty,omitempty"`
+	CreateTime     string            `json:"create_time,omitempty,omitempty"`
+	SystemMTime    string            `json:"system_mtime,omitempty,omitempty"`
+	UserMTime      string            `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy string            `json:"last_modified_by,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 }
 
 // RightsStatement records an Accession Rights' statement in a data structure
 type RightsStatement struct {
-	JSONModelType     string                   `json:"json_model_type,omitempty"`
-	LockVersion       int                      `json:"lock_version"`
-	Active            bool                     `json:"active,omitemtpy"`
-	CreatedBy         string                   `json:"created_by,omitempty,omitempty"`
-	CreateTime        string                   `json:"create_time,omitempty,omitempty"`
-	SystemMTime       string                   `json:"system_mtime,omitempty,omitempty"`
-	UserMTime         string                   `json:"user_mtime,omitempty,omitempty"`
-	LastModifiedBy    string                   `json:"last_modified_by,omitempty"`
-	ExternalDocuments []map[string]interface{} `json:"external_documents,omitempty"`
-	Identifier        string                   `json:"identifier,omitempty"`
-	Restrictions      string                   `json:"restrictions,omitempty"`
-	RightsType        string                   `json:"rights_type,omitempty"`
+	JSONModelType     string              `json:"json_model_type,omitempty"`
+	LockVersion       int                 `json:"lock_version"`
+	Active            bool                `json:"active,omitemtpy"`
+	CreatedBy         string              `json:"created_by,omitempty,omitempty"`
+	CreateTime        string              `json:"create_time,omitempty,omitempty"`
+	SystemMTime       string              `json:"system_mtime,omitempty,omitempty"`
+	UserMTime         string              `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy    string              `json:"last_modified_by,omitempty"`
+	ExternalDocuments []*ExternalDocument `json:"external_documents,omitempty"`
+	Identifier        string              `json:"identifier,omitempty"`
+	Restrictions      string              `json:"restrictions,omitempty"`
+	RightsType        string              `json:"rights_type,omitempty"`
+}
+
+// Deaccession records for Accession
+type Deaccession struct {
+	JSONModelType  string            `json:"json_model_type,omitempty"`
+	LockVersion    int               `json:"lock_version"`
+	Active         bool              `json:"active,omitemtpy"`
+	CreatedBy      string            `json:"created_by,omitempty,omitempty"`
+	CreateTime     string            `json:"create_time,omitempty,omitempty"`
+	SystemMTime    string            `json:"system_mtime,omitempty,omitempty"`
+	UserMTime      string            `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy string            `json:"last_modified_by,omitempty"`
+	Repository     map[string]string `json:"repository,omitempty"`
+	Scope          string            `json:"scope,omitempty"`
+	Description    string            `json:"description,omitempty"`
+	Reason         string            `json:"reason,omitempty"`
+	Disposition    string            `json:"disposition,omitempty"`
+	Notification   bool              `json:"notification,omitempty"`
+	Date           string            `json:"date,omitempty"`
+	Extents        []*Extent         `json:"extends,omitempty"`
+}
+
+// CollectionManagement records
+type CollectionManagement struct {
+	uri                            string            `json:"uri,omitempty"`
+	ExternalIDs                    []*ExternalID     `json:"external_ids,omitempty"`
+	ProcessingHoursPerFootEstimate string            `json:"processing_hours_per_foot_estimate,omitempty"`
+	ProcessingTotalExtent          string            `json:"processing_total_extent,omitempty"`
+	ProcessingTotalExtentType      string            `json:"processing_total_extent_type,omitempty"`
+	ProcessingHoursTotal           string            `json:"processing_hours_total,omitempty"`
+	ProcessingPlan                 string            `json:"processing_plan,omitempty"`
+	ProcessingPriority             string            `json:"processing_priority,omitempty"`
+	ProcessingFundingSource        string            `json:"processing_funding_source,omitempty"`
+	Processors                     string            `json:"processors,omitempty"`
+	RightsDetermined               bool              `json:"rights_determined,omitempty"`
+	JSONModelType                  string            `json:"json_model_type,omitempty"`
+	LockVersion                    int               `json:"lock_version"`
+	CreatedBy                      string            `json:"created_by,omitempty,omitempty"`
+	CreateTime                     string            `json:"create_time,omitempty,omitempty"`
+	SystemMTime                    string            `json:"system_mtime,omitempty,omitempty"`
+	UserMTime                      string            `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy                 string            `json:"last_modified_by,omitempty"`
+	Repository                     map[string]string `json:"repository,omitempty"`
 }
 
 // Accession represents an accession record in ArchivesSpace from the client point of view
 type Accession struct {
-	JSONModelType       string                   `json:"json_model_type,omitempty"`
-	LockVersion         int                      `json:"lock_version"`
-	ID                  int                      `json:"id,omitempty"`
-	Suppressed          bool                     `json:"suppressed,omitempty"`
-	Title               string                   `json:"title,omitempty"`
-	DisplayString       string                   `json:"display_string,omitempty"`
-	Publish             bool                     `json:"publish,omitempty"`
-	ContentDescription  string                   `json:"content_description,omitempty"`
-	Provenance          string                   `json:"provenance,omitempty"`
-	AccessionDate       string                   `json:"accession_date,omitempty"`
-	RestrictionsApply   bool                     `json:"restrictions_apply,omitempty"`
-	UseRestrictions     bool                     `json:"use_restrictions,omitempty"`
-	CreatedBy           string                   `json:"created_by,omitempty,omitempty"`
-	CreateTime          string                   `json:"create_time,omitempty,omitempty"`
-	SystemMTime         string                   `json:"system_mtime,omitempty,omitempty"`
-	UserMTime           string                   `json:"user_mtime,omitempty,omitempty"`
-	LastModifiedBy      string                   `json:"last_modified_by,omitempty"`
-	ID0                 string                   `json:"id_0,omitempty"`
-	ID1                 string                   `json:"id_1,omitempty"`
-	ExternalIDs         []*ExternalID            `json:"external_ids,omitempty"`
-	RelelatedAccessions []map[string]interface{} `json:"related_accessions,omitempty"`
-	Classifications     []map[string]interface{} `json:"classifications,omitempty"`
-	Subjects            []map[string]interface{} `json:"subjects,omitempty"`
-	LinkedEvents        []map[string]interface{} `json:"linked_events,omitempty"`
-	Extents             []*Extent                `json:"extents,omitempty"`
-	Dates               []*Date                  `json:"dates,omitempty"`
-	ExternalDocuments   []map[string]interface{} `json:"external_documents,omitempty"`
-	RightsStatements    []RightsStatement        `json:"rights_statements,omitempty"`
-	Deaccessions        []map[string]interface{} `json:"deaccessions,omitempty"`
-	RelelatedResources  []map[string]interface{} `json:"related_resources,omitempty"`
-	LinkedAgents        []*Agent                 `json:"linked_agents,omitempty"`
-	Instances           []map[string]interface{} `json:"instances,omitempty"`
-	URI                 string                   `json:"uri,omitempty"`
-	Repository          map[string]string        `json:"repository,omitempty"`
-	UserDefined         map[string]interface{}   `json:"user_defined,omitempty"`
+	JSONModelType          string                   `json:"json_model_type,omitempty"`
+	LockVersion            int                      `json:"lock_version"`
+	CreatedBy              string                   `json:"created_by,omitempty,omitempty"`
+	CreateTime             string                   `json:"create_time,omitempty,omitempty"`
+	SystemMTime            string                   `json:"system_mtime,omitempty,omitempty"`
+	UserMTime              string                   `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy         string                   `json:"last_modified_by,omitempty"`
+	ID                     int                      `json:"id,omitempty"`
+	Suppressed             bool                     `json:"suppressed"`
+	Title                  string                   `json:"title,omitempty"`
+	DisplayString          string                   `json:"display_string,omitempty"`
+	Publish                bool                     `json:"publish,omitempty"`
+	ContentDescription     string                   `json:"content_description,omitempty"`
+	ConditionDescription   string                   `json:"condition_description,omitempty"`
+	Disposition            string                   `json:"disposition,omitempty"`
+	Inventory              string                   `json:"inventory,omitempty"`
+	Provenance             string                   `json:"provenance,omitempty"`
+	AccessionDate          string                   `json:"accession_date,omitempty"`
+	RestrictionsApply      bool                     `json:"restrictions_apply,omitempty"`
+	UseRestrictions        bool                     `json:"use_restrictions,omitempty"`
+	UseRestrictionsNote    string                   `json:"use_restrictions_note,omitempty"`
+	ID0                    string                   `json:"id_0,omitempty"`
+	ID1                    string                   `json:"id_1,omitempty"`
+	ID2                    string                   `json:"id_2,omitempty"`
+	ID3                    string                   `json:"id_3,omitempty"`
+	ExternalIDs            []*ExternalID            `json:"external_ids,omitempty"`
+	RelelatedAccessions    []map[string]interface{} `json:"related_accessions,omitempty"`
+	Classifications        []map[string]interface{} `json:"classifications,omitempty"`
+	Subjects               []map[string]interface{} `json:"subjects,omitempty"`
+	LinkedEvents           []map[string]interface{} `json:"linked_events,omitempty"`
+	Extents                []*Extent                `json:"extents,omitempty"`
+	Dates                  []*Date                  `json:"dates,omitempty"`
+	ExternalDocuments      []*ExternalDocument      `json:"external_documents,omitempty"`
+	RightsStatements       []*RightsStatement       `json:"rights_statements,omitempty"`
+	RelelatedResources     []map[string]interface{} `json:"related_resources,omitempty"`
+	LinkedAgents           []*Agent                 `json:"linked_agents,omitempty"`
+	Instances              []map[string]interface{} `json:"instances,omitempty"`
+	URI                    string                   `json:"uri,omitempty"`
+	Repository             map[string]string        `json:"repository,omitempty"`
+	UserDefined            map[string]interface{}   `json:"user_defined,omitempty"`
+	Deaccessions           []*Deaccession           `json:"deaccession,omitempty"`
+	CollectionManagement   *CollectionManagement    `json:"collection_management,omitempty"`
+	AcquisitionType        string                   `json:"acquision_type,omitempty"`
+	ResourceType           string                   `json:"resource_type,omitempty"`
+	RetentionRule          string                   `json:"retention_rule,omitempty"`
+	GeneralNote            string                   `json:"general_note,omitempty"`
+	AccessRestrictions     bool                     `json:"access_restrictions,omitempty"`
+	AccessRestrictionsNote string                   `json:"access_restrictions_note,omitempty"`
 }
 
 // Vocabulary defines a structure used in both Term and Subject
@@ -363,24 +446,26 @@ type Location struct {
 	Title                string        `json:"title,omitempty"`
 }
 
-func checkEnv(apiURL, username, password string) bool {
+func checkEnv(apiURL, apiToken, username, password string) bool {
 	if strings.TrimSpace(apiURL) == "" {
 		return false
 	}
-	if strings.TrimSpace(username) == "" {
-		return false
-	}
-	if strings.TrimSpace(password) == "" {
-		return false
+	if strings.TrimSpace(apiToken) == "" {
+		if strings.TrimSpace(username) == "" {
+			return false
+		}
+		if strings.TrimSpace(password) == "" {
+			return false
+		}
 	}
 	return true
 }
 
 // New creates a new ArchivesSpaceAPI object for use with most of the functions
 // in the gas package.
-func New(apiURL, username, password string) *ArchivesSpaceAPI {
+func New(apiURL, apiToken, username, password string) *ArchivesSpaceAPI {
 	aspace := new(ArchivesSpaceAPI)
-	if checkEnv(apiURL, username, password) == false {
+	if checkEnv(apiURL, apiToken, username, password) == false {
 		log.Fatal("Cannot create a new ArchivesSpace API connection")
 	}
 
@@ -391,7 +476,7 @@ func New(apiURL, username, password string) *ArchivesSpaceAPI {
 	aspace.URL = u
 	aspace.Username = username
 	aspace.Password = password
-	aspace.AuthToken = ""
+	aspace.AuthToken = apiToken
 	return aspace
 }
 
@@ -409,6 +494,11 @@ func (aspace *ArchivesSpaceAPI) Login() error {
 	// See https://golang.org/pkg/net/url/#pkg-examples for example building a URL from parts.
 	// Command line example: curl -F "password=admin" "http://localhost:8089/users/admin/login"
 	var data map[string]interface{}
+
+	// If we already have a token set then logout and get a new one
+	if aspace.IsAuth() == true {
+		aspace.Logout()
+	}
 
 	u := aspace.URL
 	u.Path = fmt.Sprintf("/users/%s/login", aspace.Username)
@@ -438,6 +528,10 @@ func (aspace *ArchivesSpaceAPI) Login() error {
 
 // Logout clear the authentication token for the session with the API
 func (aspace *ArchivesSpaceAPI) Logout() error {
+	// Save the token and invalidate the one in our aspace struct.
+	token := aspace.AuthToken
+	aspace.AuthToken = ""
+	// Using the copied token try to logout from the service.
 	u := aspace.URL
 	u.Path = `/logout`
 	client := &http.Client{}
@@ -446,7 +540,7 @@ func (aspace *ArchivesSpaceAPI) Logout() error {
 		return err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("X-ArchivesSpace-Session", aspace.AuthToken)
+	req.Header.Add("X-ArchivesSpace-Session", token)
 	_, err = client.Do(req)
 	if err != nil {
 		return err
@@ -964,6 +1058,11 @@ func (aspace *ArchivesSpaceAPI) ListLocations() ([]int, error) {
 func stringify(o interface{}) string {
 	src, _ := json.Marshal(o)
 	return string(src)
+}
+
+// String convert NoteText struct as a JSON formatted string
+func (aspace *NoteText) String() string {
+	return stringify(aspace)
 }
 
 // String convert an ArchicesSpaceAPI struct as a JSON formatted string
