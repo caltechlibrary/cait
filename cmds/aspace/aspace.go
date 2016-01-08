@@ -807,9 +807,9 @@ func runSearchCmd(cmd *command, config map[string]string) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
-	opt := new(map[string]interface{})
+	opt := map[string]string{}
 	if cmd.Payload != "" {
-		err := json.Unmarshal([]byte(cmd.Payload), &opt)
+		err := json.Unmarshal([]byte(cmd.Payload), opt)
 		if err != nil {
 			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
 		}

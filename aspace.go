@@ -1050,11 +1050,11 @@ func (aspace *ArchivesSpaceAPI) ListLocations() ([]int, error) {
 }
 
 // Search return a list of search results from an ArchivesSpace instance
-func (aspace *ArchivesSpaceAPI) Search(opt *map[string]interface{}) ([]int, error) {
+func (aspace *ArchivesSpaceAPI) Search(opt map[string]string) ([]int, error) {
 	u := aspace.URL
 	u.Path = fmt.Sprintf(`/search`)
 	q := u.Query()
-	for k, v := range *opt {
+	for k, v := range opt {
 		q.Set(k, fmt.Sprintf("%s", v))
 	}
 	if q.Get("page") == "" {
