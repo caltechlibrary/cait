@@ -293,7 +293,7 @@ type Deaccession struct {
 
 // CollectionManagement records
 type CollectionManagement struct {
-	uri                            string            `json:"uri,omitempty"`
+	URI                            string            `json:"uri,omitempty"`
 	ExternalIDs                    []*ExternalID     `json:"external_ids,omitempty"`
 	ProcessingHoursPerFootEstimate string            `json:"processing_hours_per_foot_estimate,omitempty"`
 	ProcessingTotalExtent          string            `json:"processing_total_extent,omitempty"`
@@ -1045,6 +1045,21 @@ func (aspace *ArchivesSpaceAPI) ListLocations() ([]int, error) {
 	u.Path = fmt.Sprintf(`/locations`)
 	q := u.Query()
 	q.Set("all_ids", "true")
+	u.RawQuery = q.Encode()
+	return aspace.ListAPI(u.String())
+}
+
+// Search return a list of search results from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) Search(opt *map[string]interface{}) ([]int, error) {
+	u := aspace.URL
+	u.Path = fmt.Sprintf(`/search`)
+	q := u.Query()
+	for k, v := range *opt {
+		q.Set(k, fmt.Sprintf("%s", v))
+	}
+	if q.Get("page") == "" {
+		q.Set("page", "1")
+	}
 	u.RawQuery = q.Encode()
 	return aspace.ListAPI(u.String())
 }

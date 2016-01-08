@@ -41,6 +41,7 @@ var (
 		"vocabulary",
 		"term",
 		"location",
+		"search",
 	}
 	actions = []string{
 		"create",
@@ -801,6 +802,33 @@ func runTermCmd(cmd *command, config map[string]string) (string, error) {
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
+func runSearchCmd(cmd *command, config map[string]string) (string, error) {
+	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+	if err := api.Login(); err != nil {
+		return "", err
+	}
+	opt := new(map[string]interface{})
+	if cmd.Payload != "" {
+		err := json.Unmarshal([]byte(cmd.Payload), &opt)
+		if err != nil {
+			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
+		}
+	}
+	switch cmd.Action {
+	case "list":
+		results, err := api.Search(opt)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": "%s"}`, err)
+		}
+		src, err := json.Marshal(results)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": "Cannot find %s %s"}`, cmd.Payload, err)
+		}
+		return string(src), nil
+	}
+	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
+}
+
 func runCmd(cmd *command, config map[string]string) (string, error) {
 	switch cmd.Subject {
 	case "instance":
@@ -819,6 +847,8 @@ func runCmd(cmd *command, config map[string]string) (string, error) {
 		return runVocabularyCmd(cmd, config)
 	case "term":
 		return runTermCmd(cmd, config)
+	case "search":
+		return runSearchCmd(cmd, config)
 	}
 	return "", fmt.Errorf("%s %s not implemented", cmd.Subject, cmd.Action)
 }

@@ -16,7 +16,7 @@ import (
 // Get the environment variables needed for testing.
 var (
 	aspaceURL      = os.Getenv("ASPACE_API_URL")
-	aspaceToken = os.Getenv("ASPACE_API_TOKEN")
+	aspaceToken    = os.Getenv("ASPACE_API_TOKEN")
 	aspaceUsername = os.Getenv("ASPACE_USERNAME")
 	aspacePassword = os.Getenv("ASPACE_PASSWORD")
 )
@@ -406,8 +406,7 @@ func TestAccession(t *testing.T) {
 	}
 }
 
-/*
-func TestSubjects(t *testing.T) {
+func TestVocabularies(t *testing.T) {
 	// Get the environment variables needed for testing.
 	isSetup := checkConfig(t)
 	if isSetup == false {
@@ -415,27 +414,23 @@ func TestSubjects(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceToken, aspaceUsername, aspacePassword)
 	err := aspace.Login()
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	term := new(Term)
-	term.Term = "Hello World"
-	term.TermType = "topical"
-	term.Vocabulary = "/vocabularies/1"
-	subject := new(Subject)
-	subject.Source = "local"
-	subject.Terms = append(subject.Terms, term)
-	subject.Vocabulary = "/vocabularies/1"
-	response, err := aspace.CreateSubject(subject)
+
+	voc := new(Vocabulary)
+	voc.Name = "test from Go"
+	voc.RefID = "testFromGo"
+
+	response, err := aspace.CreateVocabulary(voc)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
 	fmt.Printf("DEBUG aspace.CreateSubject() --> %s\n", response)
 }
-*/
 
 //FIXME: Needs tests for Subject, Term, Vocalary, User, Search
