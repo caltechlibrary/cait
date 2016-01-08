@@ -455,7 +455,8 @@ func checkEnv(apiURL, apiToken, username, password string) bool {
 			return false
 		}
 		if strings.TrimSpace(password) == "" {
-			return false
+			log.Println("WARNING: using an empty string for password")
+			//return false
 		}
 	}
 	return true
