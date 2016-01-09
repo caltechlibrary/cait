@@ -1049,8 +1049,8 @@ func (aspace *ArchivesSpaceAPI) ListLocations() ([]int, error) {
 	return aspace.ListAPI(u.String())
 }
 
-// Search return a list of search results from an ArchivesSpace instance
-func (aspace *ArchivesSpaceAPI) Search(opt map[string]string) ([]int, error) {
+// Search return a JSON content from search results from an ArchivesSpace instance
+func (aspace *ArchivesSpaceAPI) Search(opt map[string]string) ([]byte, error) {
 	u := aspace.URL
 	u.Path = fmt.Sprintf(`/search`)
 	q := u.Query()
@@ -1061,11 +1061,11 @@ func (aspace *ArchivesSpaceAPI) Search(opt map[string]string) ([]int, error) {
 		q.Set("page", "1")
 	}
 	u.RawQuery = q.Encode()
-	return aspace.ListAPI(u.String())
+	return aspace.API("GET", u.String(), nil)
 }
 
 //FIXME: need Create, Get, Update, Delete, List functions for DigitalObject, Instances, Extents, Resource, Group, Users
-//FIXME: Need Get/query methods for /terms, /search/*
+//FIXME: Need Get/query methods for /terms
 
 //
 // String functions for aspace public structures
