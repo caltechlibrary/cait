@@ -168,12 +168,10 @@ func importInstance(payload string) error {
 
 func exportInstance(payload string) error {
 	config := new(instanceConfig)
-	fmt.Printf("DEBUG config %s\n", config)
 	err := json.Unmarshal([]byte(payload), &config)
 	if err != nil {
 		log.Fatalf("%s -> %s", err, payload)
 	}
-	fmt.Printf("DEBUG config %s\n", config)
 	_, err = url.Parse(config.URL)
 	if err != nil {
 		log.Fatalf("Can't parse the URL %s %s", config.URL, err)
@@ -335,7 +333,7 @@ func runAgentCmd(cmd *command, config map[string]string) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
-	//FIXME: figure out how I want to pass in agent type
+	//Agent Type Payload as JSON encoded objects
 	agent := new(aspace.Agent)
 	err := json.Unmarshal([]byte(cmd.Payload), &agent)
 	if err != nil {
@@ -419,7 +417,7 @@ func runAccessionCmd(cmd *command, config map[string]string) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
-	//FIXME: figure out how I want to pass in repo id for the accession
+	// Repo ID is passed as a JSON object
 	accession := new(aspace.Accession)
 	err := json.Unmarshal([]byte(cmd.Payload), &accession)
 	if err != nil {
@@ -481,7 +479,6 @@ func runAccessionCmd(cmd *command, config map[string]string) (string, error) {
 		}
 		accession, err = api.GetAccession(repoID, accessionID)
 		if err != nil {
-			fmt.Printf("DEBUG api.GetAccession(%d, %d) --> %s\n", repoID, accessionID, accession)
 			return "", fmt.Errorf(`{"error": "%s"}`, err)
 		}
 		src, err := json.Marshal(accession)
@@ -807,24 +804,20 @@ func runSearchCmd(cmd *command, config map[string]string) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
-	opt := map[string]string{}
+	var opt *map[string]string
 	if cmd.Payload != "" {
-		err := json.Unmarshal([]byte(cmd.Payload), opt)
+		err := json.Unmarshal([]byte(cmd.Payload), &opt)
 		if err != nil {
 			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
 		}
 	}
 	switch cmd.Action {
 	case "list":
-		results, err := api.Search(opt)
+		results, err := api.Search(*opt)
 		if err != nil {
 			return "", fmt.Errorf(`{"error": "%s"}`, err)
 		}
-		src, err := json.Marshal(results)
-		if err != nil {
-			return "", fmt.Errorf(`{"error": "Cannot find %s %s"}`, cmd.Payload, err)
-		}
-		return string(src), nil
+		return string(results), nil
 	}
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
