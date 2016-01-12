@@ -627,18 +627,54 @@ func (aspace *ArchivesSpaceAPI) ListLocations() ([]int, error) {
 }
 
 // Search return a JSON content from search results from an ArchivesSpace instance
-func (aspace *ArchivesSpaceAPI) Search(opt map[string]string) ([]byte, error) {
+func (aspace *ArchivesSpaceAPI) Search(opt *SearchQuery) ([]byte, error) {
 	u := aspace.URL
-	u.Path = fmt.Sprintf(`/search`)
-	q := u.Query()
-	for k, v := range opt {
-		q.Set(k, fmt.Sprintf("%s", v))
+	if opt.URI != "" {
+		u.Path = opt.URI
+	} else {
+		u.Path = "/search"
 	}
-	if q.Get("page") == "" {
+	q := u.Query()
+	//FIXME: Need to walk the struct provided by opt..
+	if opt.Q != "" {
+		q.Set("q", opt.Q)
+	}
+	if opt.Page > 0 {
+		q.Set("page", fmt.Sprintf("%d", opt.Page))
+	} else {
 		q.Set("page", "1")
 	}
+	if opt.PageSize > 0 {
+		q.Set("page_size", fmt.Sprintf("%d", opt.PageSize))
+	}
+	/*
+		if opt.Type != "" {
+			q.Set("type", opt.Type)
+		}
+		if opt.Sort != "" {
+			q.Set("sort", opt.Sort)
+		}
+		//FIXME: Need to understand how to express facits in a URL
+		if len(opt.Facets) > 0 {
+
+		}
+		for k, v := range opt.FilterTerm {
+			q.Set(k, v)
+		}
+		if len(opt.Exclude) > 0{
+			q.Set("exclude", IntListToString(opt.Exclude, ","))
+		}
+		//Skipping RootRecord and RESTHelpers
+		if len(opt.IDSet) > 0 {
+			q.Set("id_set", IntListToString(opt.IDSet, ","))
+		}
+		if opt.AllIDs == true {
+			q.Set("all_ids", "true")
+		}
+	*/
 	u.RawQuery = q.Encode()
-	return aspace.API("GET", u.String(), nil)
+	searchResults := new(SearchResults)
+	return aspace.API("GET", u.String(), &searchResults)
 }
 
 //FIXME: need Create, Get, Update, Delete, List functions for DigitalObject, Instances, Extents, Resource, Group, Users

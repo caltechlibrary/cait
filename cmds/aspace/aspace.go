@@ -214,10 +214,15 @@ func parseCmd(args []string) (*command, error) {
 	}
 	cmd.Subject = args[0]
 
+	if cmd.Subject == "search" {
+		cmd.Action = ""
+		cmd.Payload = strings.Join(args[1:], " ")
+		return cmd, nil
+	}
+
 	if containsElement(actions, args[1]) == false {
 		return nil, fmt.Errorf("%s is not an action (e.g. %s)", args[1], strings.Join(actions, ", "))
 	}
-
 	cmd.Action = args[1]
 	if len(args) > 2 {
 		cmd.Payload = strings.Join(args[2:], " ")
@@ -804,22 +809,22 @@ func runSearchCmd(cmd *command, config map[string]string) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
-	var opt *map[string]string
+	var (
+		opt *aspace.SearchQuery
+		err error
+		results []byte
+	)
 	if cmd.Payload != "" {
 		err := json.Unmarshal([]byte(cmd.Payload), &opt)
 		if err != nil {
 			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
 		}
 	}
-	switch cmd.Action {
-	case "list":
-		results, err := api.Search(*opt)
-		if err != nil {
-			return "", fmt.Errorf(`{"error": "%s"}`, err)
-		}
-		return string(results), nil
+	results, err = api.Search(opt)
+	if err != nil {
+		return "", fmt.Errorf(`{"error": "%s"}`, err)
 	}
-	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
+	return string(results), nil
 }
 
 func runCmd(cmd *command, config map[string]string) (string, error) {
