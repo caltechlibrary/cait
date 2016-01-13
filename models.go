@@ -446,18 +446,19 @@ type Location struct {
 
 // SearchQuery represents the query options supported by search
 type SearchQuery struct {
-	JSONModelType string `json:"json_model_type,omitempty"`
-	URI           string `json:"uri,omitempty"`
-	Q             string `json:"q,omitempty"`
-	Page          int    `json:"page,omitempty"`
-	PageSize      int    `json:"page_size,omitempty"`
+	JSONModelType string            `json:"json_model_type,omitempty"`
+	URI           string            `json:"uri,omitempty"`
+	Q             string            `json:"q,omitempty"`
+	Page          int               `json:"page,omitempty"`
+	PageSize      int               `json:"page_size,omitempty"`
+	FilterTerm    map[string]string `json:"filter_term,omitempty"`
+	Type          string            `json:"type,omitempty"`
 
 	//FIXME: some of these I don't understand what their data structure actually are, RSD 2016-01-11
 	//RepoID        int    `json:"repo_id,omitempty"`
 	//Type          string `json:"type,omitempty"` //NOTE: empty string means search all record types
 	//Sort          string `json:"sort,omitempty"`
 	//Facet         SearchFacets      `json:"facet,omitemtpy"`
-	//FilterTerm   map[string]string `json:"filter_term,omitempty"`
 	//SimpleFilter string `json:"simple_filter,omitempty"`
 	//Exclude      []int  `json:"exclude,omitempty"`
 	//RESTHelpers  bool   `json:"RESTHelpers,omitempty"`
@@ -483,7 +484,7 @@ type SearchResults struct {
 
 // SearchResult represents individual reult from the dataset returned by a search request
 type SearchResult struct {
-	ID               int   `json:"id,omitempty"`
+	ID               int      `json:"id,omitempty"`
 	Title            string   `json:"title,omitempty"`
 	Types            []string `json:"types,omitempty"`
 	JSON             string   `json:"json,omitempty"`
@@ -500,7 +501,7 @@ type SearchResult struct {
 	LastModifiedBy   string   `json:"last_modified_by,omitempty"`
 	Source           string   `json:"source,omitempty"`
 	Rules            string   `json:"rules,omitempty"`
-	linkedAgentRoles []string `json:"linked_agent_roles,omitempty"`
+	LinkedAgentRoles []string `json:"linked_agent_roles,omitempty"`
 	URI              string   `json:"uri,omitempty"`
 	JSONModelType    string   `json:"json_model_type,omitempty"`
 }
@@ -593,11 +594,11 @@ func (searchresult *SearchResult) String() string {
 	return stringify(searchresult)
 }
 
-// String from an array of instances
+// IntListToString String from an array of instances
 func IntListToString(intList []int, sep string) string {
 	stringList := make([]string, len(intList))
 	for i := range intList {
-		s := fmt.Sprintf("%s", intList[i])
+		s := fmt.Sprintf("%d", intList[i])
 		stringList[i] = s
 	}
 	return strings.Join(stringList, sep)

@@ -43,18 +43,22 @@ func checkConfig(t *testing.T) bool {
 }
 
 func TestSetup(t *testing.T) {
+	log.Printf("Checking configuration before starting tests.\n")
 	// Get the environment variables needed for testing.
 	isSetup := checkConfig(t)
 	if isSetup == false {
-		log.Fatalf("Environment variables needed to run tests not configured")
+		log.Println("Environment variables needed to run tests not configured")
+		t.FailNow()
 	}
 	// Make sure we're not talking to a named system (should be localhost)
 	u, err := url.Parse(aspaceURL)
 	if err != nil {
-		log.Fatalf("aspaceURL value doesn't make sense %s %s", aspaceURL, err)
+		log.Printf("aspaceURL value doesn't make sense %s %s", aspaceURL, err)
+		t.FailNow()
 	}
 	if strings.Contains(u.Host, "localhost:") == false {
-		log.Fatalf("Tests expect to run on http://localhost:8089 not %s", aspaceURL)
+		log.Printf("Tests expect to run on http://localhost:8089 not %s", aspaceURL)
+		t.FailNow()
 	}
 	log.Printf("Test setup completed\n")
 }
