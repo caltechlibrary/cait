@@ -105,3 +105,14 @@ Accessions are accessed in the context of a specific repository only.
 ```
     curl -H "X-ArchivesSpace-Session: $TOKEN" http://localhost:8089/repositories/3/accessions?all_ids=true
 ```
+
+# Misc Notes
+
++ [Bleve](https://github.com/blevesearch/bleve) - Golang search library, Lucene-lite like
+    + [Goin](https://bitbucket.org/zaphar/goin) - A Full Text search for your local file system (nice examples, implementation)
+    + [Hugoidx](https://github.com/blevesearch/hugoidx) - An example search implementation for Hugo static site generation
+    + [Example Applications](http://www.blevesearch.com/docs/Example-Applications/)
+
+
+
+
