@@ -62,18 +62,14 @@ func init() {
 	flag.BoolVar(&help, "h", false, usage)
 	flag.BoolVar(&help, "help", false, usage)
 	aspaceDataSet = os.Getenv("ASPACE_DATASET")
-	aspaceSitePrefix = os.Getenv("ASPACE_SITE_PREFIX")
 	aspaceBleveIndex = os.Getenv("ASPACE_BLEVE_INDEX")
 	aspaceBleveMapping = os.Getenv("ASPACE_BLEVE_MAPPING")
 
 	if aspaceDataSet == "" {
-		aspaceDataSet = "./data-import"
-	}
-	if aspaceSitePrefix == "" {
-		aspaceSitePrefix = "http://localhost:8001"
+		aspaceDataSet = "./data"
 	}
 	if aspaceBleveIndex == "" {
-		aspaceBleveIndex = "aspace.bleve"
+		aspaceBleveIndex = "index.bleve"
 	}
 }
 
@@ -88,7 +84,7 @@ func indexAgents(index bleve.Index, dirname string) error {
 	batchSize := 100
 	startTime := time.Now()
 	batchNo := 0
-	batchI := 1
+	batchI := 0
 	batch := index.NewBatch()
 	for i, fp := range files {
 		fname := path.Join(dirname, fp.Name())
@@ -110,12 +106,13 @@ func indexAgents(index bleve.Index, dirname string) error {
 			if err != nil {
 				return fmt.Errorf("Error processing batch %d, %s", batchNo, err)
 			}
-			batchNo++
-			batchI = 1
 			indexDuration := time.Since(startTime)
 			indexDurationSeconds := float64(indexDuration) / float64(time.Second)
 			timePerDoc := float64(indexDuration) / float64(i)
 			log.Printf("Indexed %d documents, in %.2fs (average %.2fms/doc)", i, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
+			batchNo++
+			batchI = 0
+			batch.Reset()
 		}
 	}
 
@@ -125,6 +122,7 @@ func indexAgents(index bleve.Index, dirname string) error {
 		if err != nil {
 			return fmt.Errorf("Error processing batch %d, %s", batchNo, err)
 		}
+		batch.Reset()
 	}
 	indexDuration := time.Since(startTime)
 	indexDurationSeconds := float64(indexDuration) / float64(time.Second)
@@ -145,7 +143,7 @@ func indexAccessions(index bleve.Index, dirname string) error {
 	batchSize := 100
 	startTime := time.Now()
 	batchNo := 0
-	batchI := 1
+	batchI := 0
 	batch := index.NewBatch()
 	for i, fp := range files {
 		fname := path.Join(dirname, fp.Name())
@@ -167,12 +165,13 @@ func indexAccessions(index bleve.Index, dirname string) error {
 			if err != nil {
 				return fmt.Errorf("Error processing batch %d, %s", batchNo, err)
 			}
-			batchNo++
-			batchI = 1
 			indexDuration := time.Since(startTime)
 			indexDurationSeconds := float64(indexDuration) / float64(time.Second)
 			timePerDoc := float64(indexDuration) / float64(i)
 			log.Printf("Indexed %d documents, in %.2fs (average %.2fms/doc)", i, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
+			batchNo++
+			batchI = 0
+			batch.Reset()
 		}
 	}
 
@@ -182,6 +181,7 @@ func indexAccessions(index bleve.Index, dirname string) error {
 		if err != nil {
 			return fmt.Errorf("Error processing batch %d, %s", batchNo, err)
 		}
+		batch.Reset()
 	}
 	indexDuration := time.Since(startTime)
 	indexDurationSeconds := float64(indexDuration) / float64(time.Second)
@@ -207,6 +207,9 @@ func main() {
 	if _, err = os.Stat(aspaceBleveIndex); os.IsNotExist(err) {
 		log.Printf("Creating Bleve index at %s\n", aspaceBleveIndex)
 		mapping := bleve.NewIndexMapping()
+		mapping.DefaultAnalyzer = "en"
+		dm := bleve.NewDocumentMapping()
+		mapping.AddDocumentMapping("application/json", dm)
 		index, err = bleve.New(aspaceBleveIndex, mapping)
 		if err != nil {
 			log.Fatalf("Can't create new bleve index %s, %s", aspaceBleveIndex, err)
@@ -232,6 +235,7 @@ func main() {
 		}
 		dirCount++
 	}
+
 	dataSet := path.Join(aspaceDataSet, "repositories", "2", "accessions")
 	log.Printf("Indexing %s\n", dataSet)
 	err = indexAccessions(index, dataSet)

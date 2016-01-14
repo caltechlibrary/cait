@@ -16,6 +16,7 @@ import (
 	"strings"
 
 	"../../../aspace"
+	"github.com/blevesearch/bleve"
 )
 
 type command struct {
@@ -805,14 +806,9 @@ func runTermCmd(cmd *command, config map[string]string) (string, error) {
 }
 
 func runSearchCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
-	if err := api.Login(); err != nil {
-		return "", err
-	}
 	var (
 		opt *aspace.SearchQuery
 		err error
-		results []byte
 	)
 	if cmd.Payload != "" {
 		err := json.Unmarshal([]byte(cmd.Payload), &opt)
@@ -820,11 +816,39 @@ func runSearchCmd(cmd *command, config map[string]string) (string, error) {
 			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
 		}
 	}
-	results, err = api.Search(opt)
-	if err != nil {
-		return "", fmt.Errorf(`{"error": "%s"}`, err)
+	bleveIndex := os.Getenv("ASPACE_BLEVE_INDEX")
+	if bleveIndex == "" {
+		fmt.Println("DEBUG using ArchivesSpace's REST API for search")
+		// Fall back to the ArchivesSpace search API
+		api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+		if err := api.Login(); err != nil {
+			return "", err
+		}
+		results, err := api.Search(opt)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": "%s"}`, err)
+		}
+		return string(results), nil
 	}
-	return string(results), nil
+
+	fmt.Printf("DEBUG using Bleve for search, terms [%s]\n", opt.Q)
+	fmt.Printf("DEBUG opening Bleve index [%s]\n", bleveIndex)
+	// search for some text
+	index, err := bleve.Open(bleveIndex)
+	if err != nil {
+		return "", fmt.Errorf("Can't open index %s, %s", bleveIndex, err)
+	}
+	fmt.Println("DEBUG generating the query")
+    query := bleve.NewMatchQuery(opt.Q)
+	fmt.Println("DEBUG making the search request")
+    search := bleve.NewSearchRequest(query)
+	fmt.Println("DEBUG executing the search")
+    results, err := index.Search(search)
+    if err != nil {
+		return "", fmt.Errorf("Search error, terms [%s], %s", opt.Q, err)
+    }
+	fmt.Println("DEBUG returning results.")
+    return fmt.Sprintf("%s", results), nil
 }
 
 func runCmd(cmd *command, config map[string]string) (string, error) {
