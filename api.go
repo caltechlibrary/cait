@@ -544,21 +544,25 @@ func (api *ArchivesSpaceAPI) CreateTerm(vocabularyID int, term *Term) (*Response
 // GetTerm retrieves a term record from an ArchivesSpace instance
 func (api *ArchivesSpaceAPI) GetTerm(vocabularyID, termID int) (*Term, error) {
 	u := *api.URL
-	u.Path = fmt.Sprintf("/vocabularies/%d/terms/%d", vocabularyID, termID)
+	u.Path = fmt.Sprintf("/vocabularies/%d/terms", vocabularyID)
 
 	// content should look something like
 	// {"lock_version":121,"title":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T23:16:19Z","user_mtime":"2015-10-19T22:45:07Z","source":"local","jsonmodel_type":"term","external_ids":[],"publish":true,"terms":[{"lock_version":0,"term":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T22:45:07Z","user_mtime":"2015-10-19T22:45:07Z","term_type":"function","jsonmodel_type":"term","uri":"/terms/1","term":"/terms/1"}],"external_documents":[],"uri":"/terms/1","is_linked_to_published_record":true,"term":"/terms/1"}
-	term := new(Term)
-	err := api.GetAPI(u.String(), term)
+	terms, err := api.ListTerms(vocabularyID)
 	if err != nil {
 		return nil, err
 	}
-	p := strings.Split(term.URI, "/")
-	term.ID, err = strconv.Atoi(p[len(p)-1])
-	if err != nil {
-		return term, fmt.Errorf("Accession ID parse error %d %s", term.ID, err)
+	for _, term := range terms {
+		p := strings.Split(term.URI, "/")
+		term.ID, err = strconv.Atoi(p[len(p)-1])
+		if err != nil {
+			return term, fmt.Errorf("id parse error /vocabulary/%d/terms for %s, %s", vocabularyID, term.URI, err)
+		}
+		if term.ID == termID {
+			return term, nil
+		}
 	}
-	return term, nil
+	return nil, nil
 }
 
 // UpdateTerm updates an existing term record in an ArchivesSpace instance
@@ -575,14 +579,58 @@ func (api *ArchivesSpaceAPI) DeleteTerm(term *Term) (*ResponseMsg, error) {
 	return api.DeleteAPI(u.String(), term)
 }
 
-// ListTerms return a list of Term IDs from an ArchivesSpace instance
-func (api *ArchivesSpaceAPI) ListTerms(vocabularyID int) ([]int, error) {
+// ListTermIDs return a list of Term IDs from an ArchivesSpace instance
+func (api *ArchivesSpaceAPI) ListTermIDs(vocabularyID int) ([]int, error) {
 	u := api.URL
 	u.Path = fmt.Sprintf(`/vocabularies/%d/terms`, vocabularyID)
 	q := u.Query()
 	q.Set("all_ids", "true")
 	u.RawQuery = q.Encode()
-	return api.ListAPI(u.String())
+	data, err := api.API("GET", u.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("Can't get Terms for vocabulary %d, %s", vocabularyID, err)
+	}
+	// Now Unpack list of terms into a []Term
+	var terms []*Term
+	err = json.Unmarshal(data, &terms)
+	if err != nil {
+		return nil, fmt.Errorf("Can't decode terms for vocabularly %d, %s", vocabularyID, err)
+	}
+	var ids []int
+	for _, term := range terms {
+		//FIXME: Get the Term id and set terms[i].ID to that value.
+		p := strings.Split(term.URI, "/")
+		id, err := strconv.Atoi(p[len(p)-1])
+		if err == nil {
+			ids = append(ids, id)
+		}
+	}
+	return ids, nil
+}
+
+// ListTerms return a list of Term IDs from an ArchivesSpace instance
+func (api *ArchivesSpaceAPI) ListTerms(vocabularyID int) ([]*Term, error) {
+	u := api.URL
+	u.Path = fmt.Sprintf(`/vocabularies/%d/terms`, vocabularyID)
+	q := u.Query()
+	q.Set("all_ids", "true")
+	u.RawQuery = q.Encode()
+	data, err := api.API("GET", u.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("Can't get Terms for vocabulary %d, %s", vocabularyID, err)
+	}
+	// Now Unpack list of terms into a []Term
+	var terms []*Term
+	err = json.Unmarshal(data, &terms)
+	if err != nil {
+		return nil, fmt.Errorf("Can't decode terms for vocabularly %d, %s", vocabularyID, err)
+	}
+	for _, term := range terms {
+		//FIXME: Get the Term id and set terms[i].ID to that value.
+		p := strings.Split(term.URI, "/")
+		term.ID, err = strconv.Atoi(p[len(p)-1])
+	}
+	return terms, nil
 }
 
 // CreateLocation creates a new Location in ArchivesSpace instance

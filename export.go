@@ -151,20 +151,16 @@ func (api *ArchivesSpaceAPI) ExportTerms() error {
 		return fmt.Errorf("Can't list vocabulary ids, %s", err)
 	}
 	for _, vocID := range vocIDs {
-		ids, err := api.ListTerms(vocID)
+		terms, err := api.ListTerms(vocID)
 		if err != nil {
 			return fmt.Errorf("Can't list term ids for vocabularies/%d, %s", vocID, err)
 		}
-		for _, id := range ids {
-			data, err := api.GetTerm(vocID, id)
-			if err != nil {
-				return fmt.Errorf("Can't get vocabularies/%d/terms/%d, %s", vocID, id, err)
-			}
+		for _, term := range terms {
 			dir := path.Join(api.DataSet, "vocabularies", fmt.Sprintf("%d", vocID), "terms")
-			fname := fmt.Sprintf("%d.json", id)
-			err = WriteJSON(&data, dir, fname)
+			fname := fmt.Sprintf("%d.json", term.ID)
+			err = WriteJSON(&term, dir, fname)
 			if err != nil {
-				return fmt.Errorf("Can't write vocabularies/%d/terms/%d.json, %s", vocID, id, err)
+				return fmt.Errorf("Can't write vocabularies/%d/terms/%d.json, %s", vocID, term.ID, err)
 			}
 		}
 	}

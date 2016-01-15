@@ -386,18 +386,18 @@ type Vocabulary struct {
 
 // Term is used in defining a Subject
 type Term struct {
-	JSONModelType  string      `json:"json_model_type,omitempty"`
-	LockVersion    int         `json:"lock_version"`
-	ID             int         `json:"id,omitempty"`
-	CreatedBy      string      `json:"created_by,omitempty,omitempty"`
-	CreateTime     string      `json:"create_time,omitempty,omitempty"`
-	SystemMTime    string      `json:"system_mtime,omitempty,omitempty"`
-	UserMTime      string      `json:"user_mtime,omitempty,omitempty"`
-	LastModifiedBy string      `json:"last_modified_by,omitempty"`
-	Term           string      `json:"term,omitempty"`
-	TermType       string      `json:"term_type,omitempty"`
-	URI            string      `json:"uri,omitempty"`
-	Vocabulary     *Vocabulary `json:"vocabulary,omitempty"`
+	JSONModelType  string `json:"json_model_type,omitempty"`
+	LockVersion    int    `json:"lock_version"`
+	ID             int    `json:"id,omitempty"`
+	CreatedBy      string `json:"created_by,omitempty,omitempty"`
+	CreateTime     string `json:"create_time,omitempty,omitempty"`
+	SystemMTime    string `json:"system_mtime,omitempty,omitempty"`
+	UserMTime      string `json:"user_mtime,omitempty,omitempty"`
+	LastModifiedBy string `json:"last_modified_by,omitempty"`
+	Term           string `json:"term,omitempty"`
+	TermType       string `json:"term_type,omitempty"`
+	URI            string `json:"uri,omitempty"`
+	Vocabulary     string `json:"vocabulary,omitempty"`
 }
 
 // Subject represents a subject that can be associated with an accession in a repository

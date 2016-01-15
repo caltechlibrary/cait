@@ -146,19 +146,46 @@ func containsElement(src []string, elem string) bool {
 func exportInstance(api *aspace.ArchivesSpaceAPI) error {
 	var err error
 
+	log.Println("Starting Export")
 	log.Println("Logging into ", api.URL)
 	err = api.Login()
 	if err != nil {
 		return fmt.Errorf("%s, error %s", api.URL, err)
 	}
-	log.Printf("export TOKEN=%s\n", api.AuthToken)
+	//log.Printf("export TOKEN=%s\n", api.AuthToken)
 
+	log.Println("Exporting repositories")
 	err = api.ExportRepositories()
 	if err != nil {
 		return fmt.Errorf("Can't export repositories, %s", err)
 	}
 
+	log.Printf("Exporting subjects\n")
+	err = api.ExportSubjects()
+	if err != nil {
+		return fmt.Errorf("Can't export subjects, %s", err)
+	}
+
+	log.Printf("Exporting vocabularies\n")
+	err = api.ExportVocabularies()
+	if err != nil {
+		return fmt.Errorf("Can't export vocabularies, %s", err)
+	}
+
+	log.Printf("Exporting terms")
+	err = api.ExportTerms()
+	if err != nil {
+		return fmt.Errorf("Can't export terms, %s", err)
+	}
+
+	log.Printf("Exporting locations")
+	err = api.ExportLocations()
+	if err != nil {
+		return fmt.Errorf("Can't export locations, %s", err)
+	}
+
 	for _, agentType := range []string{"people", "corporate_entities", "families", "software"} {
+		log.Printf("Exporting agents/%s\n", agentType)
 		err = api.ExportAgents(agentType)
 		if err != nil {
 			return fmt.Errorf("Can't export agents, %s", err)
@@ -170,31 +197,13 @@ func exportInstance(api *aspace.ArchivesSpaceAPI) error {
 		return fmt.Errorf("Can't get a list of repository ids, %s", err)
 	}
 	for _, id := range ids {
+		log.Printf("Exporting repositories/%d/accessions\n", id)
 		err = api.ExportAccessions(id)
 		if err != nil {
 			return fmt.Errorf("Can't export repositories/%d/accessions, %s", id, err)
 		}
 	}
-
-	err = api.ExportSubjects()
-	if err != nil {
-		return fmt.Errorf("Can't export subjects, %s", err)
-	}
-
-	err = api.ExportVocabularies()
-	if err != nil {
-		return fmt.Errorf("Can't export vocabularies, %s", err)
-	}
-
-	err = api.ExportTerms()
-	if err != nil {
-		return fmt.Errorf("Can't export terms, %s", err)
-	}
-
-	err = api.ExportLocations()
-	if err != nil {
-		return fmt.Errorf("Can't export locations, %s", err)
-	}
+	log.Printf("Export complete")
 
 	//FIXME: Add other types as we start to use them
 	//FIXME: E.g. DigitalObject, Instances, Extents, Resource, Group, Users
@@ -779,7 +788,7 @@ func runTermCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 		//FIXME: calculate the vocabulary ID
 		if term.ID == 0 {
 			var ids []int
-			ids, err := api.ListTerms(vocabularyID)
+			ids, err := api.ListTermIDs(vocabularyID)
 			if err != nil {
 				return "", fmt.Errorf(`{"error": "%s"}`, err)
 			}
