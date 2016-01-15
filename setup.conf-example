@@ -1,0 +1,23 @@
+#
+# this is an example setup configuration for running the API tests.
+#
+
+#
+# Local Development setup
+#
+export ASPACE_API_URL=http://localhost:8089
+export ASPACE_USERNAME=admin
+export ASPACE_PASSWORD=admin
+export ASPACE_DATASETS=data
+export ASPACE_HTDOCS=html
+export ASPACE_TEMPLATES=templates
+export ASPACE_BLEVE_INDEX=index.bleve
+
+#
+# Create the necessary directory structure
+#
+mkdir -p $ASPACE_DATASET
+mkdir -p $ASPACE_HTDOCS
+mkdir -p $ASPACE_TEMPLATES
+
+

@@ -24,10 +24,14 @@ import (
 // ArchivesSpaceAPI is a struct holding the essentials for communicating
 // with the ArchicesSpace REST API
 type ArchivesSpaceAPI struct {
-	URL       *url.URL `json:"api_url"`
-	Username  string   `json:"username,omitempty"`
-	Password  string   `json:"password,omitempty"`
-	AuthToken string   `json:"token,omitempty"`
+	URL        *url.URL `json:"api_url"`
+	AuthToken  string   `json:"token,omitempty"`
+	Username   string   `json:"username,omitempty"`
+	Password   string   `json:"password,omitempty"`
+	DataSet    string   `json:"aspace_dataset,omitempty"`
+	Htdocs     string   `json:"htdocs,omitempty"`
+	Templates  string   `json:"templates,omitempty"`
+	BleveIndex string   `json:"bleve_index,omitempty"`
 }
 
 // ResponseMsg is a structure to hold the JSON portion of a response from the ArchivesSpaceAPI

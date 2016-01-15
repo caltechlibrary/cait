@@ -10,8 +10,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/url"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -52,6 +52,17 @@ var (
 		"export",
 		"import",
 	}
+)
+
+// These are the global environment variables defaults used by various combinations of subjects and actions
+var (
+	aspaceAPIURL     = `http://localhost:8089`
+	aspaceUsername   = ``
+	aspacePassword   = ``
+	aspaceDataSet    = `data`
+	aspaceHtdocs     = `htdocs`
+	aspaceTemplates  = `templates`
+	aspaceBleveIndex = `index.bleve`
 )
 
 func usage(msg string, exitCode int) {
@@ -123,23 +134,6 @@ func usage(msg string, exitCode int) {
 	os.Exit(exitCode)
 }
 
-func configureApp() (map[string]string, error) {
-	envKeys := []string{
-		"ASPACE_API_URL",
-		"ASPACE_API_TOKEN",
-		"ASPACE_USERNAME",
-		"ASPACE_PASSWORD",
-	}
-	conf := make(map[string]string)
-	for _, ky := range envKeys {
-		conf[ky] = os.Getenv(ky)
-		if ky != "ASPACE_API_TOKEN" && conf[ky] == "" {
-			return nil, fmt.Errorf("%s is undefined in the enviroment (e.g. try export %s=SOME_VALUE_FOR_%s)", ky, ky, ky)
-		}
-	}
-	return conf, nil
-}
-
 func containsElement(src []string, elem string) bool {
 	for _, item := range src {
 		if strings.Compare(item, elem) == 0 {
@@ -149,58 +143,66 @@ func containsElement(src []string, elem string) bool {
 	return false
 }
 
-type instanceConfig struct {
-	URL        string `json:"aspace_url,omitempty"`
-	Username   string `json:"username,omitempty"`
-	Password   string `json:"password,omitempty"`
-	AuthToken  string `json:"auth_token,omitempty"`
-	ExportPath string `json:"export_path,omitempty"`
-	ImportPath string `json:"import_path,omitempty"`
-}
+func exportInstance(api *aspace.ArchivesSpaceAPI) error {
+	var err error
 
-func (i *instanceConfig) String() string {
-	src, _ := json.Marshal(i)
-	return string(src)
-}
-
-func importInstance(payload string) error {
-	return fmt.Errorf(`importInstance("%s") not implemented`, payload)
-}
-
-func exportInstance(payload string) error {
-	config := new(instanceConfig)
-	err := json.Unmarshal([]byte(payload), &config)
+	log.Println("Logging into ", api.URL)
+	err = api.Login()
 	if err != nil {
-		log.Fatalf("%s -> %s", err, payload)
+		return fmt.Errorf("%s, error %s", api.URL, err)
 	}
-	_, err = url.Parse(config.URL)
-	if err != nil {
-		log.Fatalf("Can't parse the URL %s %s", config.URL, err)
-	}
-	api := aspace.New(config.URL, config.AuthToken, config.Username, config.Password)
-	api.AuthToken = config.AuthToken
+	log.Printf("export TOKEN=%s\n", api.AuthToken)
 
-	if api.AuthToken == "" {
-		log.Println("Logging into ", api.URL)
-		err = api.Login()
+	err = api.ExportRepositories()
+	if err != nil {
+		return fmt.Errorf("Can't export repositories, %s", err)
+	}
+
+	for _, agentType := range []string{"people", "corporate_entities", "families", "software"} {
+		err = api.ExportAgents(agentType)
 		if err != nil {
-			log.Fatalf("%s, error %s", api.URL, err)
+			return fmt.Errorf("Can't export agents, %s", err)
 		}
-		log.Printf("export TOKEN=%s\n", api.AuthToken)
-	} else {
-		log.Printf("Using AuthToken %s", api.AuthToken)
 	}
 
-	//FIXME: fetch repostories and save the JSON blobs to config.ExportPath + "/repositories/"
-	//FIXME: fetch agents/people and save the JSON blobs to config.ExportPath + "/agents/people/"
-	//FIXME: fetch agents/corporate_entities and save the JSON blobs to config.ExportPath + "/agents/corporate_entities/"
-	//FIXME: fetch agents/families and save the JSON blobs to config.ExportPath + "/agents/families/"
-	//FIXME: fetch agents/software and save the JSON blobs to config.ExportPath + "/agents/software/"
-	//FIXME: fetch repositories/*/accessions and save the JSON blobs to config.ExportPath + "/repositories/*/accessions/"
-	//FIXME: Fetch subjects, locations, vocabularies and terms
-	//FIXME: Add other types as we start to use them
+	ids, err := api.ListRepositoryIDs()
+	if err != nil {
+		return fmt.Errorf("Can't get a list of repository ids, %s", err)
+	}
+	for _, id := range ids {
+		err = api.ExportAccessions(id)
+		if err != nil {
+			return fmt.Errorf("Can't export repositories/%d/accessions, %s", id, err)
+		}
+	}
 
-	return fmt.Errorf(`exportInstance("%s") not implemented fully %s`, config, api)
+	err = api.ExportSubjects()
+	if err != nil {
+		return fmt.Errorf("Can't export subjects, %s", err)
+	}
+
+	err = api.ExportVocabularies()
+	if err != nil {
+		return fmt.Errorf("Can't export vocabularies, %s", err)
+	}
+
+	err = api.ExportTerms()
+	if err != nil {
+		return fmt.Errorf("Can't export terms, %s", err)
+	}
+
+	err = api.ExportLocations()
+	if err != nil {
+		return fmt.Errorf("Can't export locations, %s", err)
+	}
+
+	//FIXME: Add other types as we start to use them
+	//FIXME: E.g. DigitalObject, Instances, Extents, Resource, Group, Users
+	return nil
+}
+
+func importInstance(api *aspace.ArchivesSpaceAPI) error {
+	return fmt.Errorf(`importInstance("%s") not implemented`, api)
 }
 
 func parseCmd(args []string) (*command, error) {
@@ -231,22 +233,20 @@ func parseCmd(args []string) (*command, error) {
 	return cmd, nil
 }
 
-func runInstanceCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+func runInstanceCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
 	switch cmd.Action {
 	case "export":
-		return "", exportInstance(cmd.Payload)
+		return "", exportInstance(api)
 	case "import":
-		return "", importInstance(cmd.Payload)
+		return "", importInstance(api)
 	}
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runRepoCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+func runRepoCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -327,15 +327,36 @@ func runRepoCmd(cmd *command, config map[string]string) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "export":
-		return "", exportInstance(cmd.Payload)
+		repo := new(aspace.Repository)
+		err := json.Unmarshal([]byte(cmd.Payload), &repo)
+		if err != nil {
+			return "", err
+		}
+		err = api.ExportRepository(
+			repo.ID,
+			path.Join(api.DataSet, "repositories"),
+			fmt.Sprintf("%d.json", repo.ID),
+		)
+		if err != nil {
+			return "", err
+		}
+		return `{"status": "ok"}`, nil
 	case "import":
-		return "", importInstance(cmd.Payload)
+		repo := new(aspace.Repository)
+		err := json.Unmarshal([]byte(cmd.Payload), &repo)
+		if err != nil {
+			return "", err
+		}
+		err = api.ImportRepository(path.Join(api.DataSet, "repositories", fmt.Sprintf("%d.json", repo.ID)))
+		if err != nil {
+			return "", err
+		}
+		return `{"status": "ok"}`, nil
 	}
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runAgentCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+func runAgentCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -418,8 +439,7 @@ func runAgentCmd(cmd *command, config map[string]string) (string, error) {
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runAccessionCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+func runAccessionCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -514,8 +534,7 @@ func runAccessionCmd(cmd *command, config map[string]string) (string, error) {
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runSubjectCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+func runSubjectCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -583,8 +602,7 @@ func runSubjectCmd(cmd *command, config map[string]string) (string, error) {
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runLocationCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+func runLocationCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -652,8 +670,7 @@ func runLocationCmd(cmd *command, config map[string]string) (string, error) {
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runVocabularyCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+func runVocabularyCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -722,8 +739,7 @@ func runVocabularyCmd(cmd *command, config map[string]string) (string, error) {
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runTermCmd(cmd *command, config map[string]string) (string, error) {
-	api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
+func runTermCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -805,7 +821,7 @@ func runTermCmd(cmd *command, config map[string]string) (string, error) {
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runSearchCmd(cmd *command, config map[string]string) (string, error) {
+func runSearchCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	var (
 		opt *aspace.SearchQuery
 		err error
@@ -819,7 +835,6 @@ func runSearchCmd(cmd *command, config map[string]string) (string, error) {
 	bleveIndex := os.Getenv("ASPACE_BLEVE_INDEX")
 	if bleveIndex == "" {
 		// Fall back to the ArchivesSpace search API
-		api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 		if err := api.Login(); err != nil {
 			return "", err
 		}
@@ -836,39 +851,39 @@ func runSearchCmd(cmd *command, config map[string]string) (string, error) {
 		return "", fmt.Errorf("Can't open index %s, %s", bleveIndex, err)
 	}
 	defer index.Close()
-    query := bleve.NewMatchQuery(opt.Q)
+	query := bleve.NewMatchQuery(opt.Q)
 	if opt.PageSize == 0 {
 		opt.PageSize = 10
 	}
 	request := bleve.NewSearchRequestOptions(query, opt.PageSize, opt.Page, opt.Explain)
 
-    results, err := index.Search(request)
-    if err != nil {
+	results, err := index.Search(request)
+	if err != nil {
 		return "", fmt.Errorf("Search error, terms [%s], %s", opt.Q, err)
-    }
-    return fmt.Sprintf("%s", results), nil
+	}
+	return fmt.Sprintf("%s", results), nil
 }
 
-func runCmd(cmd *command, config map[string]string) (string, error) {
+func runCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	switch cmd.Subject {
 	case "instance":
-		return runInstanceCmd(cmd, config)
+		return runInstanceCmd(api, cmd)
 	case "repository":
-		return runRepoCmd(cmd, config)
+		return runRepoCmd(api, cmd)
 	case "agent":
-		return runAgentCmd(cmd, config)
+		return runAgentCmd(api, cmd)
 	case "accession":
-		return runAccessionCmd(cmd, config)
+		return runAccessionCmd(api, cmd)
 	case "subject":
-		return runSubjectCmd(cmd, config)
+		return runSubjectCmd(api, cmd)
 	case "location":
-		return runLocationCmd(cmd, config)
+		return runLocationCmd(api, cmd)
 	case "vocabulary":
-		return runVocabularyCmd(cmd, config)
+		return runVocabularyCmd(api, cmd)
 	case "term":
-		return runTermCmd(cmd, config)
+		return runTermCmd(api, cmd)
 	case "search":
-		return runSearchCmd(cmd, config)
+		return runSearchCmd(api, cmd)
 	}
 	return "", fmt.Errorf("%s %s not implemented", cmd.Subject, cmd.Action)
 }
@@ -881,13 +896,21 @@ func (c *command) String() string {
 	return string(src)
 }
 
-func init() {
+func main() {
 	flag.BoolVar(help, "h", false, "Display the help page")
 	flag.StringVar(payload, "i", "", "Use this filepath for the payload")
 	flag.BoolVar(version, "v", false, "Display version info")
-}
 
-func main() {
+	aspaceAPIURL = aspace.MergeEnv("ASPACE_API_URL", aspaceAPIURL)
+	aspaceUsername = aspace.MergeEnv("ASPACE_USERNAME", aspaceUsername)
+	aspacePassword = aspace.MergeEnv("ASPACE_PASSWORD", aspacePassword)
+	aspaceDataSet = aspace.MergeEnv("ASPACE_DATASET", aspaceDataSet)
+	aspaceHtdocs = aspace.MergeEnv("ASPACE_HTDOCS", aspaceHtdocs)
+	aspaceTemplates = aspace.MergeEnv("ASPACE_TEMPLATES", aspaceTemplates)
+	aspaceBleveIndex = aspace.MergeEnv("ASPACE_BLEVE_INDEX", aspaceBleveIndex)
+
+	api := aspace.New(aspaceAPIURL, aspaceUsername, aspacePassword)
+
 	flag.Parse()
 	if *help == true {
 		usage("", 0)
@@ -902,10 +925,7 @@ func main() {
 	if len(args) < 2 {
 		usage("aspace is a command line tool for interacting with an ArchivesSpace installation.", 1)
 	}
-	config, err := configureApp()
-	if err != nil {
-		usage(fmt.Sprintf("%s", err), 1)
-	}
+
 	cmd, err := parseCmd(args)
 	if err != nil {
 		usage(fmt.Sprintf("%s", err), 1)
@@ -934,7 +954,7 @@ func main() {
 	if cmd.Subject == "agent" && len(args) > 2 {
 		cmd.Options = []string{args[2]}
 	}
-	src, err := runCmd(cmd, config)
+	src, err := runCmd(api, cmd)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
