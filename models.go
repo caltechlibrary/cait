@@ -451,6 +451,7 @@ type SearchQuery struct {
 	Q             string            `json:"q,omitempty"`
 	Page          int               `json:"page,omitempty"`
 	PageSize      int               `json:"page_size,omitempty"`
+	Explain       bool              `json:"explain,omitempty"`
 	FilterTerm    map[string]string `json:"filter_term,omitempty"`
 	Type          string            `json:"type,omitempty"`
 

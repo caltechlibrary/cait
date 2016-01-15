@@ -818,7 +818,6 @@ func runSearchCmd(cmd *command, config map[string]string) (string, error) {
 	}
 	bleveIndex := os.Getenv("ASPACE_BLEVE_INDEX")
 	if bleveIndex == "" {
-		fmt.Println("DEBUG using ArchivesSpace's REST API for search")
 		// Fall back to the ArchivesSpace search API
 		api := aspace.New(config["ASPACE_API_URL"], config["ASPACE_API_TOKEN"], config["ASPACE_USERNAME"], config["ASPACE_PASSWORD"])
 		if err := api.Login(); err != nil {
@@ -831,23 +830,22 @@ func runSearchCmd(cmd *command, config map[string]string) (string, error) {
 		return string(results), nil
 	}
 
-	fmt.Printf("DEBUG using Bleve for search, terms [%s]\n", opt.Q)
-	fmt.Printf("DEBUG opening Bleve index [%s]\n", bleveIndex)
 	// search for some text
 	index, err := bleve.Open(bleveIndex)
 	if err != nil {
 		return "", fmt.Errorf("Can't open index %s, %s", bleveIndex, err)
 	}
-	fmt.Println("DEBUG generating the query")
+	defer index.Close()
     query := bleve.NewMatchQuery(opt.Q)
-	fmt.Println("DEBUG making the search request")
-    search := bleve.NewSearchRequest(query)
-	fmt.Println("DEBUG executing the search")
-    results, err := index.Search(search)
+	if opt.PageSize == 0 {
+		opt.PageSize = 10
+	}
+	request := bleve.NewSearchRequestOptions(query, opt.PageSize, opt.Page, opt.Explain)
+
+    results, err := index.Search(request)
     if err != nil {
 		return "", fmt.Errorf("Search error, terms [%s], %s", opt.Q, err)
     }
-	fmt.Println("DEBUG returning results.")
     return fmt.Sprintf("%s", results), nil
 }
 

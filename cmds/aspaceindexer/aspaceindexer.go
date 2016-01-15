@@ -42,17 +42,14 @@ const usage = `
  CONFIGURATION
 
  aspaceindexer relies on the following environment variables for
- configuration:
+ configuration when overriding the defaults:
 
-    ASPACE_DATASET
+    ASPACE_DATASET	(default: data)
                     This should be the path to the directory tree containings
-                    the JSON files to be index. E.g. data-export
+                    the JSON files to be index. E.g. data-export vs. the default
+					data.
 
-    ASPACE_SITE_PREFIX
-                    This is the website URL for the public face query
-                    service.
-
-    ASPACE_BLEVE_INDEX
+    ASPACE_BLEVE_INDEX	(default: index.bleve)
                     This is the directory that will contain all the Bleve
                     indexes.
 
@@ -63,7 +60,6 @@ func init() {
 	flag.BoolVar(&help, "help", false, usage)
 	aspaceDataSet = os.Getenv("ASPACE_DATASET")
 	aspaceBleveIndex = os.Getenv("ASPACE_BLEVE_INDEX")
-	aspaceBleveMapping = os.Getenv("ASPACE_BLEVE_MAPPING")
 
 	if aspaceDataSet == "" {
 		aspaceDataSet = "./data"
@@ -72,6 +68,7 @@ func init() {
 		aspaceBleveIndex = "index.bleve"
 	}
 }
+
 
 func indexAgents(index bleve.Index, dirname string) error {
 	files, err := ioutil.ReadDir(dirname)
@@ -152,6 +149,7 @@ func indexAccessions(index bleve.Index, dirname string) error {
 		if err != nil {
 			return fmt.Errorf("Can't read %s, %s", fname, err)
 		}
+
 		//FIXME: This is the only change in the process, just the structure we're rendering...
 		var data *aspace.Accession
 		err = json.Unmarshal(src, &data)
@@ -203,13 +201,10 @@ func main() {
 		os.Exit(0)
 	}
 
-	//FIXME: Need to add -h, --help flag support
 	if _, err = os.Stat(aspaceBleveIndex); os.IsNotExist(err) {
 		log.Printf("Creating Bleve index at %s\n", aspaceBleveIndex)
 		mapping := bleve.NewIndexMapping()
 		mapping.DefaultAnalyzer = "en"
-		dm := bleve.NewDocumentMapping()
-		mapping.AddDocumentMapping("application/json", dm)
 		index, err = bleve.New(aspaceBleveIndex, mapping)
 		if err != nil {
 			log.Fatalf("Can't create new bleve index %s, %s", aspaceBleveIndex, err)
@@ -221,11 +216,21 @@ func main() {
 			log.Fatalf("Can't open bleve index %s, %s", aspaceBleveIndex, err)
 		}
 	}
+	defer index.Close()
 
 	// Walk our data import tree and index things
 	log.Printf("Start indexing of %s in %s\n", aspaceDataSet, aspaceBleveIndex)
 	wholeProcessStartTime := time.Now()
 	dirCount := 0
+
+	dataSet := path.Join(aspaceDataSet, "repositories", "2", "accessions")
+	log.Printf("Indexing %s\n", dataSet)
+	err = indexAccessions(index, dataSet)
+	if err != nil {
+		log.Fatalf("Can't properly index %s, %s\n", dataSet, err)
+	}
+	dirCount++
+
 	for _, folder := range []string{"corporate_entities", "families", "people", "software"} {
 		dataSet := path.Join(aspaceDataSet, "agents", folder)
 		log.Printf("Indexing %s\n", dataSet)
@@ -236,13 +241,6 @@ func main() {
 		dirCount++
 	}
 
-	dataSet := path.Join(aspaceDataSet, "repositories", "2", "accessions")
-	log.Printf("Indexing %s\n", dataSet)
-	err = indexAccessions(index, dataSet)
-	if err != nil {
-		log.Fatalf("Can't properly index %s, %s\n", dataSet, err)
-	}
-	dirCount++
 
 	indexDuration := time.Since(wholeProcessStartTime)
 	indexDurationSeconds := float64(indexDuration) / float64(time.Second)
