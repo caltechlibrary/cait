@@ -16,7 +16,7 @@ export ASPACE_BLEVE_INDEX=index.bleve
 #
 # Create the necessary directory structure
 #
-mkdir -p $ASPACE_DATASET
+mkdir -p $ASPACE_DATASETS
 mkdir -p $ASPACE_HTDOCS
 mkdir -p $ASPACE_TEMPLATES
 
