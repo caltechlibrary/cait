@@ -69,7 +69,6 @@ func init() {
 	}
 }
 
-
 func indexAgents(index bleve.Index, dirname string) error {
 	files, err := ioutil.ReadDir(dirname)
 	if err != nil {
@@ -207,13 +206,13 @@ func main() {
 		mapping.DefaultAnalyzer = "en"
 		index, err = bleve.New(aspaceBleveIndex, mapping)
 		if err != nil {
-			log.Fatalf("Can't create new bleve index %s, %s", aspaceBleveIndex, err)
+			log.Printf("Can't create new bleve index %s, %s", aspaceBleveIndex, err)
 		}
 	} else {
 		log.Printf("Opening Bleve index at %s\n", aspaceBleveIndex)
 		index, err = bleve.Open(aspaceBleveIndex)
 		if err != nil {
-			log.Fatalf("Can't open bleve index %s, %s", aspaceBleveIndex, err)
+			log.Printf("Can't open bleve index %s, %s", aspaceBleveIndex, err)
 		}
 	}
 	defer index.Close()
@@ -227,20 +226,19 @@ func main() {
 	log.Printf("Indexing %s\n", dataSet)
 	err = indexAccessions(index, dataSet)
 	if err != nil {
-		log.Fatalf("Can't properly index %s, %s\n", dataSet, err)
+		log.Printf("Can't properly index %s, %s\n", dataSet, err)
 	}
 	dirCount++
 
-	for _, folder := range []string{"corporate_entities", "families", "people", "software"} {
+	for _, folder := range []string{"corporate_entities", "people", "families", "software"} {
 		dataSet := path.Join(aspaceDataSet, "agents", folder)
 		log.Printf("Indexing %s\n", dataSet)
 		err := indexAgents(index, dataSet)
 		if err != nil {
-			log.Fatalf("Can't properly index %s, %s\n", dataSet, err)
+			log.Printf("Can't properly index %s, %s\n", dataSet, err)
 		}
 		dirCount++
 	}
-
 
 	indexDuration := time.Since(wholeProcessStartTime)
 	indexDurationSeconds := float64(indexDuration) / float64(time.Second)
