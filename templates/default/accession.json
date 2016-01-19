@@ -1,0 +1,5 @@
+{
+    "title": "{{ .Title }}",
+    "uri": "{{ .URI }}",
+    "content_description": "{{ .ContentDescription }}"
+}

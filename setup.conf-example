@@ -9,8 +9,8 @@ export ASPACE_API_URL=http://localhost:8089
 export ASPACE_USERNAME=admin
 export ASPACE_PASSWORD=admin
 export ASPACE_DATASETS=data
-export ASPACE_HTDOCS=html
-export ASPACE_TEMPLATES=templates
+export ASPACE_HTDOCS=htdocs
+export ASPACE_TEMPLATES=templates/default
 export ASPACE_BLEVE_INDEX=index.bleve
 
 #

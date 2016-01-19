@@ -38,3 +38,5 @@ bin/*
 *.zip
 *.tar.gz
 *.tgz
+htdocs/*
+html/*
