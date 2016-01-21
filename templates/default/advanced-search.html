@@ -10,12 +10,12 @@
             <input type="hidden" name="page" value="{{ .Page }}">
             <input type="hidden" name="page_size" value="{{ .PageSize }}">
             <p>Find catalog entries that have...</p>
-            <div><label>all of these words</label> <input type="text" name="q_all_terms"></div>
-            <div><label>this exact wording or phrase</label> <input type="text" name="q_exact_phrase"> </div>
-            <div><label>one or more of these words</label> <input type="text" name="q_some_terms"> </div>
+            <div><label>all of these words</label> <input type="text" name="q_required"></div>
+            <div><label>this exact wording or phrase</label> <input type="text" name="q_phrase"> </div>
+            <div><label>one or more of these words</label> <input type="text" name="q"> </div>
 
             <p>But don't show entries that have...</p>
-            <div><label>any of these unwanted words</label> <input type="text" name="q_exclude_terms"> </div>
+            <div><label>any of these unwanted words</label> <input type="text" name="q_exclude"> </div>
  
             <div>
                 <input type="submit" name="submit" value="Go">

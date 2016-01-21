@@ -13,15 +13,13 @@ import (
 	"../../../aspace"
 
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"os"
+	"net/url"
 	"strconv"
 	"strings"
 	"text/template"
-	"url"
 
 	"github.com/blevesearch/bleve"
 )
@@ -72,45 +70,25 @@ func usage() {
 
 // SearchForm holds the expected values for both Basic and Advanced search
 type SearchForm struct {
-	SearchField         string `json:"search_field,omitempty"`
-	Query               string `json:"query,omitempty"`
-	Institution         string `json:"institution,omitempty"`
-	RequiredTerms       string `json:"required_terms,omitempty"`
-	QuotedText          string `json:"quoted_text,omitempty"`
-	FullTextSearchTerms string `json:"full_text_search_terms,omitempty"`
-	ExcludedTerms       string `json:"excluded_terms,omitempty"`
-	EntryType           string `json:"entry_type,omitempty"`
-	PhotoID             string `json:"photo_id,omitempty"`
-	CatSeries           string `json:"cat_series,omitempty"`
-	ResultsFile         string `json:"results_file,omitempty"`
-	RecsPerPage         int    `json:"recsPerPage,omitempty"`
-	FirstRecToShow      int    `json:"firstRecToShow,omitempty"`
-}
-
-// Record is an individual Search result record
-type Record struct {
-	URI           string   `json:"id"`
-	Title         string   `json:"title"`
-	PrimaryType   string   `json:"primary_type"`
-	Types         []string `json:"types"`
-	Suppressed    bool     `json:"suppressed"`
-	Published     bool     `json:"publish"`
-	Repository    string   `json:"repository,omitempty"`
-	Subjects      []string `json:"subjects"`
-	Agents        []string `json:"agents"`
-	Creators      []string `json:"creators"`
-	Extents       []string `json:"extent_type_enum_s,omitempty"`
-	TermTypes     []string `json:"term_type_enum_s,omitempty"`
-	Identifier    string   `json:"identifier"`
-	Portions      []string `json:"portion_enum_s,omitempty"`
-	AccessionDate string   `json:"accession_date,omitempty"`
-	ExternalID    string   `josn:"external_id,omitempty"`
-	FourPartID    string   `json:"fout_part_id,omitempty"`
+	Method   string `json:"method"`
+	Action   string `json:"action"`
+	AllIDs   bool   `json:"all_ids,omitempty"`
+	PageSize int    `json:"page_size,omitempty"`
+	Page     int    `json:"page,omitempty"`
+	// Simple Search
+	Query string `json:"q,omitempty"`
+	// Advanced Search
+	QueryRequired string `json:"q_required,omitempty"`
+	QueryPhrase   string `json:"q_phrase,omitempty"`
+	QueryExcluded string `json:"q_exclude,omitempty"`
+	// Subjects can be a comma delimited list of subjects (e.g. Manuscript Collection, Image Archive)
+	Subjects string `json:"q_subjects,omitempty"`
 }
 
 // Records are the return structure with all search results and metadata to navigate them
 type Records struct {
-	Prefix      string
+	Prefix string
+	// SearchTerms resolves string to a search expression (Strange Attraction+subjects:Manuscript Collection-chemestry)
 	SearchTerms string
 	FirstPage   int `json:"first_page,omitempty"`
 	LastPage    int `json:"last_page,omitempty"`
@@ -122,7 +100,7 @@ type Records struct {
 	//Facets map[string]map[string]interface{} `json:"facets,omitempty"`
 	//{"facet_queries":{},"facet_fields":{},"facet_dates":{},"facet_ranges":{}
 
-	Records []*Record `json:"results,omitemty"`
+	Records []*aspace.NormalizedView `json:"results,omitemty"`
 }
 
 func mapToSearchQuery(m map[string]string) (*aspace.SearchQuery, error) {
@@ -270,7 +248,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func publicSearchHandler(w http.ResponseWriter, r *http.Request) {
+func searchHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Request: %s Path: %s RemoteAddr: %s UserAgent: %s\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
 	// If GET with Query String or POST pass to results handler
 	// else display Basic Search Form
@@ -289,7 +267,6 @@ func publicSearchHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	w.Write([]byte(basicPage))
 }
-
 
 func init() {
 	var err error
@@ -336,8 +313,8 @@ func main() {
 	defer index.Close()
 
 	// Wake up our search webserver
-	http.HandleFunc("/search/advanced/", publicSearchHandler)
-	http.HandleFunc("/search/basic/", publicSearchHandler)
+	http.HandleFunc("/search/advanced/", searchHandler)
+	http.HandleFunc("/search/basic/", searchHandler)
 
 	log.Printf("Listening on %s\n", serviceURL.String())
 	err := http.ListenAndServe(fmt.Sprintf("%s:%s", serviceURL.Host, serviceURL.Port), nil)
