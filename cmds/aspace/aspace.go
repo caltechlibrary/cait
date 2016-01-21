@@ -56,54 +56,36 @@ var (
 
 // These are the global environment variables defaults used by various combinations of subjects and actions
 var (
-	aspaceAPIURL     = `http://localhost:8089`
-	aspaceUsername   = ``
-	aspacePassword   = ``
-	aspaceDataSet    = `data`
-	aspaceHtdocs     = `htdocs`
-	aspaceTemplates  = `templates`
-	aspaceBleveIndex = `index.bleve`
-)
+	description = `
+  USAGE: aspace SUBJECT ACTION [OPTIONS|PAYLOAD]
 
-func usage(msg string, exitCode int) {
-	appName := "aspace" //path.Base(os.Args[0])
-	fmt.Fprintf(os.Stderr, `
-  USAGE: %s SUBJECT ACTION [OPTIONS|PAYLOAD]
-
-  %s is a command line utility for interacting with an ArchivesSpace
+  aspace is a command line utility for interacting with an ArchivesSpace
   instance.  The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
 
-  SUBJECT can be %s.
+    SUBJECT can be %s.
 
-  ACTION can be %s.
+    ACTION can be %s.
 
-  PAYLOAD is a JSON expression appropriate to SUBJECT and ACTION.
+    PAYLOAD is a JSON expression appropriate to SUBJECT and ACTION.
 
-  OPTIONS addition flags based parameters appropriate apply to the SUBJECT, ACTION or PAYLOAD
+ OPTIONS addition flags based parameters appropriate apply to the SUBJECT, ACTION or PAYLOAD
 
-`,
-		appName,
-		appName,
-		strings.Join(subjects, ", "),
-		strings.Join(actions, ", "))
+`
+	configuration = `
+ CONFIGURATION
 
-	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Fprintf(os.Stderr, "\t-%s\t%s\n", f.Name, f.Usage)
-	})
-
-	fmt.Fprintf(os.Stderr, `
-  %s also relies on the shell environment for information about connecting
+  aspace also relies on the shell environment for information about connecting
   to the ArchivesSpace instance. The following shell variables are used
 
-	ASPACE_API_URL           (e.g. http://localhost:8089)
-	ASPACE_API_TOKEN         (e.g. long token string of letters and numbers)
+    ASPACE_API_URL           (e.g. http://localhost:8089)
+    ASPACE_API_TOKEN         (e.g. long token string of letters and numbers)
 
   If ASPACE_API_TOKEN is not set then ASPACE_USERNAME and ASPACE_PASSWORD
   are used if available.
 
   EXAMPLES:
 
-  	%s repository create '{"repo_code":"MyTest","name":"My Test Repository"}'
+  	aspace repository create '{"repo_code":"MyTest","name":"My Test Repository"}'
 
   The subject is "repository", the action is "create", the target is "MyTest"
   and the options are "My Test Repository".
@@ -113,25 +95,31 @@ func usage(msg string, exitCode int) {
 
   You can check to see what repositories exists with
 
-    %s repository list
+    aspace repository list
 
   Or for a specific repository by ID with
 
-    %s repository list '{"id": 2}'
+    aspace repository list '{"id": 2}'
 
   Other SUBJECTS and ACTIONS work in a similar fashion.
 
-`,
-		appName,
-		appName,
-		appName,
-		appName)
+`
+	aspaceAPIURL     = `http://localhost:8089`
+	aspaceUsername   = ``
+	aspacePassword   = ``
+	aspaceDataSet    = `data`
+	aspaceHtdocs     = `htdocs`
+	aspaceTemplates  = `templates`
+	aspaceBleveIndex = `index.bleve`
+)
 
-	if msg != "" {
-		fmt.Fprintf(os.Stderr, "\n%s\n\n", msg)
-	}
-
-	os.Exit(exitCode)
+func usage() {
+	fmt.Println(description,
+		strings.Join(subjects, ", "),
+		strings.Join(actions, ", "))
+	flag.PrintDefaults()
+	fmt.Println(configuration)
+	os.Exit(0)
 }
 
 func containsElement(src []string, elem string) bool {
@@ -922,7 +910,7 @@ func main() {
 
 	flag.Parse()
 	if *help == true {
-		usage("", 0)
+		usage()
 	}
 
 	if *version == true {
@@ -932,30 +920,30 @@ func main() {
 
 	args := os.Args[1:]
 	if len(args) < 2 {
-		usage("aspace is a command line tool for interacting with an ArchivesSpace installation.", 1)
+		log.Fatalf("Missing commands options. For more info try: aspace -h")
 	}
 
 	cmd, err := parseCmd(args)
 	if err != nil {
-		usage(fmt.Sprintf("%s", err), 1)
+		log.Fatalf("%s\n", err)
 	}
 	os.Args = args[1:]
 
 	flag.Parse()
 
 	if *help == true {
-		usage("", 0)
+		usage()
 	}
 
 	if *version == true {
-		fmt.Printf("Version: %s\n", aspace.Version)
+		log.Printf("Version: %s\n", aspace.Version)
 		os.Exit(0)
 	}
 
 	if *payload != "" {
 		src, err := ioutil.ReadFile(*payload)
 		if err != nil {
-			usage(fmt.Sprintf("Cannot read %s", *payload), 1)
+			log.Fatalf("Cannot read %s", *payload)
 		}
 		cmd.Payload = string(src)
 	}

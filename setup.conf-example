@@ -11,6 +11,7 @@ export ASPACE_PASSWORD=admin
 export ASPACE_DATASETS=data
 export ASPACE_HTDOCS=htdocs
 export ASPACE_TEMPLATES=templates/default
+export ASPACE_SEARCH_URL=http://localhost:8501
 export ASPACE_BLEVE_INDEX=index.bleve
 
 #

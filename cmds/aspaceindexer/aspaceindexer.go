@@ -11,7 +11,8 @@ import (
 	"log"
 	"os"
 	"path"
-	"time"
+	"path/filepath"
+	"strings"
 
 	"github.com/blevesearch/bleve"
 
@@ -19,14 +20,7 @@ import (
 )
 
 var (
-	help               bool
-	aspaceDataSet      string
-	aspaceSitePrefix   string
-	aspaceBleveIndex   string
-	aspaceBleveMapping string
-)
-
-const usage = `
+	description = `
  USAGE: aspaceindexer [-h|--help]
 
  SYNOPSIS
@@ -37,211 +31,116 @@ const usage = `
  Configuration is done through environmental variables.
 
  OPTIONS
-    -h, --help  Display this help page
+`
+
+	configuration = `
 
  CONFIGURATION
 
  aspaceindexer relies on the following environment variables for
  configuration when overriding the defaults:
 
-    ASPACE_DATASET	(default: data)
-                    This should be the path to the directory tree containings
-                    the JSON files to be index. E.g. data-export vs. the default
-					data.
+    ASPACE_HTDOCS       This should be the path to the directory tree
+                        containings the content (e.g. JSON files) to be index.
+                        This is generally populated with the aspacepage command.
+						Defaults to ./htdocs.
 
-    ASPACE_BLEVE_INDEX	(default: index.bleve)
-                    This is the directory that will contain all the Bleve
-                    indexes.
+    ASPACE_BLEVE_INDEX	This is the directory that will contain all the Bleve
+                        indexes. Defaults to ./index.bleve
 
 `
+	help      bool
+	htdocsDir string
+	indexName string
+	dirCount  int
+	fileCount int
+	index     bleve.Index
+)
+
+func usage() {
+	fmt.Println(description)
+	flag.PrintDefaults()
+	fmt.Println(configuration)
+	os.Exit(0)
+}
 
 func init() {
-	flag.BoolVar(&help, "h", false, usage)
-	flag.BoolVar(&help, "help", false, usage)
-	aspaceDataSet = os.Getenv("ASPACE_DATASET")
-	aspaceBleveIndex = os.Getenv("ASPACE_BLEVE_INDEX")
-
-	if aspaceDataSet == "" {
-		aspaceDataSet = "./data"
-	}
-	if aspaceBleveIndex == "" {
-		aspaceBleveIndex = "index.bleve"
-	}
+	htdocsDir = "htdocs"
+	indexName = "index.bleve"
+	htdocsDir = os.Getenv("ASPACE_HTDOCS")
+	indexName = os.Getenv("ASPACE_BLEVE_INDEX")
+	flag.StringVar(&htdocsDir, "htdocs", "htdocs", "The document root for the website")
+	flag.StringVar(&indexName, "index", "index.bleve", "The name of the Bleve index")
+	flag.BoolVar(&help, "h", false, "this help message")
+	flag.BoolVar(&help, "help", false, "this help message")
 }
 
-func indexAgents(index bleve.Index, dirname string) error {
-	files, err := ioutil.ReadDir(dirname)
+func getIndex(indexName string) (bleve.Index, error) {
+	if _, err := os.Stat(indexName); os.IsNotExist(err) {
+		log.Printf("Creating Bleve index at %s\n", indexName)
+		mapping := bleve.NewIndexMapping()
+		mapping.DefaultAnalyzer = "en"
+		index, err := bleve.New(indexName, mapping)
+		if err != nil {
+			return nil, fmt.Errorf("Can't create new bleve index %s, %s", indexName, err)
+		}
+		return index, nil
+	}
+	log.Printf("Opening Bleve index at %s\n", indexName)
+	index, err := bleve.Open(indexName)
 	if err != nil {
-		return fmt.Errorf("%s", err)
+		return nil, fmt.Errorf("Can't create new bleve index %s, %s", indexName, err)
 	}
-	fileCount := len(files)
+	return index, nil
+}
 
-	/*Batch ingest implementation */
-	batchSize := 100
-	startTime := time.Now()
-	batchNo := 0
-	batchI := 0
-	batch := index.NewBatch()
-	for i, fp := range files {
-		fname := path.Join(dirname, fp.Name())
-		//log.Printf("%d/%d: batching %s\n", i, fileCount, fname)
-		src, err := ioutil.ReadFile(fname)
+func walkHtdocs(p string, f os.FileInfo, err error) error {
+	if strings.Contains(p, "/accessions/") == true && strings.HasSuffix(p, ".json") == true {
+		src, err := ioutil.ReadFile(p)
 		if err != nil {
-			return fmt.Errorf("Can't read %s, %s", fname, err)
+			log.Printf("Can't read %s, %s", p, err)
+			return nil
 		}
-		//FIXME: This is the only change in the process, just the structure we're rendering...
-		var data *aspace.Agent
-		err = json.Unmarshal(src, &data)
+		view := new(aspace.NormalizedAccessionView)
+		err = json.Unmarshal(src, &view)
 		if err != nil {
-			return fmt.Errorf("Can't parse %s, %s", fname, err)
+			log.Printf("Can't parse %s, %s", p, err)
+			return nil
 		}
-		batch.Index(data.URI, data)
-		batchI++
-		if batchI >= batchSize {
-			err = index.Batch(batch)
-			if err != nil {
-				return fmt.Errorf("Error processing batch %d, %s", batchNo, err)
-			}
-			indexDuration := time.Since(startTime)
-			indexDurationSeconds := float64(indexDuration) / float64(time.Second)
-			timePerDoc := float64(indexDuration) / float64(i)
-			log.Printf("Indexed %d documents, in %.2fs (average %.2fms/doc)", i, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
-			batchNo++
-			batchI = 0
-			batch.Reset()
+		// Trim the htdocsDir and trailing .json extension
+		i := len(htdocsDir)
+		j := len(p)
+		err = index.Index(p[i:j-5], view)
+		if err != nil {
+			log.Printf("Indexing error %s, %s", p, err)
+			return nil
 		}
+		log.Printf("Indexed %s", p)
 	}
-
-	// Run any remaining batch
-	if batchI < fileCount {
-		err = index.Batch(batch)
-		if err != nil {
-			return fmt.Errorf("Error processing batch %d, %s", batchNo, err)
-		}
-		batch.Reset()
-	}
-	indexDuration := time.Since(startTime)
-	indexDurationSeconds := float64(indexDuration) / float64(time.Second)
-	timePerDoc := float64(indexDuration) / float64(fileCount)
-	log.Printf("Indexed %d documents, in %.2fs (average %.2fms/doc)", fileCount, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
-
 	return nil
 }
 
-func indexAccessions(index bleve.Index, dirname string) error {
-	files, err := ioutil.ReadDir(dirname)
-	if err != nil {
-		return fmt.Errorf("%s", err)
-	}
-	fileCount := len(files)
-
-	/*Batch ingest implementation */
-	batchSize := 100
-	startTime := time.Now()
-	batchNo := 0
-	batchI := 0
-	batch := index.NewBatch()
-	for i, fp := range files {
-		fname := path.Join(dirname, fp.Name())
-		//log.Printf("%d/%d: batching %s\n", i, fileCount, fname)
-		src, err := ioutil.ReadFile(fname)
-		if err != nil {
-			return fmt.Errorf("Can't read %s, %s", fname, err)
-		}
-
-		//FIXME: This is the only change in the process, just the structure we're rendering...
-		var data *aspace.Accession
-		err = json.Unmarshal(src, &data)
-		if err != nil {
-			return fmt.Errorf("Can't parse %s, %s", fname, err)
-		}
-		batch.Index(data.URI, data)
-		batchI++
-		if i > 0 && batchI >= batchSize {
-			err = index.Batch(batch)
-			if err != nil {
-				return fmt.Errorf("Error processing batch %d, %s", batchNo, err)
-			}
-			indexDuration := time.Since(startTime)
-			indexDurationSeconds := float64(indexDuration) / float64(time.Second)
-			timePerDoc := float64(indexDuration) / float64(i)
-			log.Printf("Indexed %d documents, in %.2fs (average %.2fms/doc)", i, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
-			batchNo++
-			batchI = 0
-			batch.Reset()
-		}
-	}
-
-	// Run any remaining batch
-	if batchI < fileCount {
-		err = index.Batch(batch)
-		if err != nil {
-			return fmt.Errorf("Error processing batch %d, %s", batchNo, err)
-		}
-		batch.Reset()
-	}
-	indexDuration := time.Since(startTime)
-	indexDurationSeconds := float64(indexDuration) / float64(time.Second)
-	timePerDoc := float64(indexDuration) / float64(fileCount)
-	log.Printf("Indexed %d documents, in %.2fs (average %.2fms/doc)", fileCount, indexDurationSeconds, timePerDoc/float64(time.Millisecond))
-
-	return nil
+func indexSite() error {
+	//FIXME: Need to switch this for indexing on batch.
+	return filepath.Walk(path.Join(htdocsDir, "repositories"), walkHtdocs)
 }
 
 func main() {
-	var (
-		index bleve.Index
-		err   error
-	)
+	var err error
 
 	flag.Parse()
 	if help == true {
-		fmt.Println(usage)
-		os.Exit(0)
+		usage()
 	}
 
-	if _, err = os.Stat(aspaceBleveIndex); os.IsNotExist(err) {
-		log.Printf("Creating Bleve index at %s\n", aspaceBleveIndex)
-		mapping := bleve.NewIndexMapping()
-		mapping.DefaultAnalyzer = "en"
-		index, err = bleve.New(aspaceBleveIndex, mapping)
-		if err != nil {
-			log.Printf("Can't create new bleve index %s, %s", aspaceBleveIndex, err)
-		}
-	} else {
-		log.Printf("Opening Bleve index at %s\n", aspaceBleveIndex)
-		index, err = bleve.Open(aspaceBleveIndex)
-		if err != nil {
-			log.Printf("Can't open bleve index %s, %s", aspaceBleveIndex, err)
-		}
+	index, err = getIndex(indexName)
+	if err != nil {
+		log.Fatalf("%s", err)
 	}
 	defer index.Close()
 
 	// Walk our data import tree and index things
-	log.Printf("Start indexing of %s in %s\n", aspaceDataSet, aspaceBleveIndex)
-	wholeProcessStartTime := time.Now()
-	dirCount := 0
-
-	dataSet := path.Join(aspaceDataSet, "repositories", "2", "accessions")
-	log.Printf("Indexing %s\n", dataSet)
-	err = indexAccessions(index, dataSet)
-	if err != nil {
-		log.Printf("Can't properly index %s, %s\n", dataSet, err)
-	}
-	dirCount++
-
-	for _, folder := range []string{"corporate_entities", "people", "families", "software"} {
-		dataSet := path.Join(aspaceDataSet, "agents", folder)
-		log.Printf("Indexing %s\n", dataSet)
-		err := indexAgents(index, dataSet)
-		if err != nil {
-			log.Printf("Can't properly index %s, %s\n", dataSet, err)
-		}
-		dirCount++
-	}
-
-	indexDuration := time.Since(wholeProcessStartTime)
-	indexDurationSeconds := float64(indexDuration) / float64(time.Second)
-	log.Printf("Finished, Indexed %d directories, in %.2fs for %s in %s\n",
-		dirCount, indexDurationSeconds, aspaceDataSet, aspaceBleveIndex)
+	log.Printf("Start indexing of %s in %s\n", htdocsDir, indexName)
+	indexSite()
+	log.Printf("Finsihed")
 }
