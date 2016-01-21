@@ -1,8 +1,6 @@
     <section>
         <h1>Search - Advanced</h1>
         <form method="post" action="{{ .URI }}">
-            <input type="hidden" name="page" value="{{ .Page }}">
-            <input type="hidden" name="page_size" value="{{ .PageSize }}">
             <p>Find catalog entries that have...</p>
             <div><label>all of these words</label> <input type="text" name="q_required"></div>
             <div><label>this exact wording or phrase</label> <input type="text" name="q_phrase"> </div>
