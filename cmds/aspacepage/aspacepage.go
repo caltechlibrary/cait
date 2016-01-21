@@ -145,6 +145,10 @@ func walkRepositories(p string, f os.FileInfo, err error) error {
 			// Process JSON file (an abridged version of the JSON output in data)
 			fname = path.Join(htdocsDir, fmt.Sprintf("%s.json", accession.URI))
 			src, err := json.Marshal(view)
+			if err != nil {
+				return fmt.Errorf("Could not JSON encode %s, %s", fname, err)
+			}
+			log.Printf("Writing %s", fname)
 			err = ioutil.WriteFile(fname, src, 0664)
 			if err != nil {
 				log.Fatalf("could not write JSON view %s, %s", fname, err)
