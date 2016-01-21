@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Results - {{ .Q }}</title>
+    <style>
+    .search-result {
+        height: auto;
+        width: 100%;
+        border-bottom: medium solid black;
+    }
+    </style>
+</head>
+<body>
+    <header><h1>Search Results for {{ .Q }}</h1></header>
+    <section>
+    {{range .Results}}
+        <div class="search-result">
+            <h2>{{ .Title }}</h2>
+            <div>URI: {{ .URI }} </div>
+        </div>
+    {{end}}
+    </section>
+    <footer>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,9 @@
+    <section>
+        <h1>Search Results for {{ .Q }}</h1>
+    {{range .Results}}
+        <div class="search-result">
+            <h2>{{ .Title }}</h2>
+            <div>URI: {{ .URI }} </div>
+        </div>
+    {{end}}
+    </section>

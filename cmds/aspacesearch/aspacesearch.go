@@ -10,7 +10,20 @@ import (
 	"fmt"
 	"os"
 
-	//"../../../aspace"
+	"../../../aspace"
+
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
+	"strconv"
+	"strings"
+	"text/template"
+	"url"
+
+	"github.com/blevesearch/bleve"
 )
 
 var (
@@ -42,7 +55,12 @@ var (
 	indexName    string
 	htdocsDir    string
 	templatesDir string
-	serviceURL   string
+	serviceURL   *url.URL
+
+	advancedPage []byte
+	basicPage    []byte
+
+	index *bleve.Index
 )
 
 func usage() {
@@ -52,17 +70,256 @@ func usage() {
 	os.Exit(0)
 }
 
+// SearchForm holds the expected values for both Basic and Advanced search
+type SearchForm struct {
+	SearchField         string `json:"search_field,omitempty"`
+	Query               string `json:"query,omitempty"`
+	Institution         string `json:"institution,omitempty"`
+	RequiredTerms       string `json:"required_terms,omitempty"`
+	QuotedText          string `json:"quoted_text,omitempty"`
+	FullTextSearchTerms string `json:"full_text_search_terms,omitempty"`
+	ExcludedTerms       string `json:"excluded_terms,omitempty"`
+	EntryType           string `json:"entry_type,omitempty"`
+	PhotoID             string `json:"photo_id,omitempty"`
+	CatSeries           string `json:"cat_series,omitempty"`
+	ResultsFile         string `json:"results_file,omitempty"`
+	RecsPerPage         int    `json:"recsPerPage,omitempty"`
+	FirstRecToShow      int    `json:"firstRecToShow,omitempty"`
+}
+
+// Record is an individual Search result record
+type Record struct {
+	URI           string   `json:"id"`
+	Title         string   `json:"title"`
+	PrimaryType   string   `json:"primary_type"`
+	Types         []string `json:"types"`
+	Suppressed    bool     `json:"suppressed"`
+	Published     bool     `json:"publish"`
+	Repository    string   `json:"repository,omitempty"`
+	Subjects      []string `json:"subjects"`
+	Agents        []string `json:"agents"`
+	Creators      []string `json:"creators"`
+	Extents       []string `json:"extent_type_enum_s,omitempty"`
+	TermTypes     []string `json:"term_type_enum_s,omitempty"`
+	Identifier    string   `json:"identifier"`
+	Portions      []string `json:"portion_enum_s,omitempty"`
+	AccessionDate string   `json:"accession_date,omitempty"`
+	ExternalID    string   `josn:"external_id,omitempty"`
+	FourPartID    string   `json:"fout_part_id,omitempty"`
+}
+
+// Records are the return structure with all search results and metadata to navigate them
+type Records struct {
+	Prefix      string
+	SearchTerms string
+	FirstPage   int `json:"first_page,omitempty"`
+	LastPage    int `json:"last_page,omitempty"`
+	ThisPage    int `json:"this_page,omitempty"`
+	OffsetFirst int `json:"offset_first,omitempty"`
+	OffsetLast  int `json:"offset_last"`
+	TotalHits   int `json:"total_hits,omitempty"`
+
+	//Facets map[string]map[string]interface{} `json:"facets,omitempty"`
+	//{"facet_queries":{},"facet_fields":{},"facet_dates":{},"facet_ranges":{}
+
+	Records []*Record `json:"results,omitemty"`
+}
+
+func mapToSearchQuery(m map[string]string) (*aspace.SearchQuery, error) {
+	var err error
+	fmt.Printf("DEBUG starting mapToSearchQuery: %v\n", m)
+	q := new(aspace.SearchQuery)
+	if _, ok := m["uri"]; ok == true {
+		q.URI = m["uri"]
+		fmt.Printf("DEBUG q.URI: %s\n", q.URI)
+	}
+	if _, ok := m["q"]; ok == true {
+		q.Q = m["q"]
+	}
+	if _, ok := m["page"]; ok == true {
+		fmt.Printf("DEBUG converting page: %s\n", m["page"])
+		q.Page, err = strconv.Atoi(m["page"])
+		if err != nil {
+			return nil, fmt.Errorf("%s", err)
+		}
+	}
+	if _, ok := m["page_size"]; ok == true {
+		fmt.Printf("DEBUG converting page_size: %s\n", m["page_size"])
+		q.PageSize, err = strconv.Atoi(m["page_size"])
+		if err != nil {
+			return nil, fmt.Errorf("%s", err)
+		}
+	}
+
+	/*
+		if _, ok := m["repo_id"]; ok == true {
+			q.RepoID, err = strconv.Atoi(m["repo_id"])
+			if err != nil {
+				return nil, fmt.Errorf("%s", err)
+			}
+		}
+		if _, ok := m["type"]; ok == true {
+			q.Type = m["type"]
+		}
+		if _, ok := m["sort"]; ok == true {
+			q.Sort = m["sort"]
+		}
+		if _, ok := m["id_set"]; ok == true {
+			q.IDSet, err = strconv.Atoi(m["id_set"])
+			if err != nil {
+				return nil, fmt.Errorf("%s", err)
+			}
+		}
+		if _, ok := m["all_ids"]; ok == true {
+			q.AllIDs, err = strconv.ParseBool(m["all_ids"])
+			if err != nil {
+				return nil, fmt.Errorf("%s", err)
+			}
+		}
+	*/
+
+	//FIXME: Facets, FilterTerm, SimpleFilter, Exclude... not sure how to form the key/value pairs for GET and POST
+	fmt.Printf("DEBUG resolved query submission: %s\n", q)
+	return q, nil
+}
+
+func resultsHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	err := r.ParseForm()
+	if err != nil {
+		w.Header().Set("Content-Type", "text/plain")
+		w.Write([]byte(fmt.Sprintf("error in POST: %s", err)))
+		return
+	}
+
+	fmt.Printf("DEBUG r.Form: %v\n", r.Form)
+	// Query ArchivesSpace's Solr API or ArchivesSpace's own API
+	// Output Results in results template for list or single record as appropriate
+	err = api.Login()
+	if err != nil {
+		log.Printf("API access error %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("%s", err)))
+		return
+	}
+	submission := make(map[string]string)
+
+	// Basic Search results
+	if r.Method == "GET" {
+		for k, v := range query {
+			fmt.Printf("DEBUG k %s v type: %T -> %v\n", k, v, v)
+			submission[k] = strings.Join(v, "")
+		}
+	}
+
+	// Advanced Search results
+	if r.Method == "POST" {
+		for k, v := range r.Form {
+			fmt.Printf("DEBUG k %s v type: %T -> %v\n", k, v, v)
+			submission[k] = strings.Join(v, "")
+		}
+	}
+
+	if _, ok := submission["page"]; ok != true {
+		submission["page"] = "1"
+	}
+
+	fmt.Printf("DEBUG r.Method: %s\n", r.Method)
+	fmt.Printf("DEBUG r.URL.Path: %s\n", r.URL.Path)
+	fmt.Printf("DEBUG submission: %v\n", submission)
+
+	//w.Header().Set("Content-Type", "text/html")
+	//w.Write([]byte(resultsPage))
+	opt, err := mapToSearchQuery(submission)
+	if err != nil {
+		log.Printf("API access error %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("%s", err)))
+		return
+	}
+	fmt.Printf("DEBUG opt now: %v\n", opt)
+	content, err := index.Search(opt)
+
+	//FIXME: Need to process the results to fit our result templates
+
+	if err != nil {
+		log.Printf("API results error %s, %s", api.URL, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("%s", err)))
+		return
+	}
+
+	var data *Records
+	if err := json.Unmarshal(content, &data); err != nil {
+		log.Printf("API error unpacking results %s, %s", content, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("%s", err)))
+		return
+	}
+	// FIXME: Need to make sure the opt.Q is URL decoded...
+	data.SearchTerms = opt.Q
+	data.Prefix = "http://localhost:8081"
+
+	w.Header().Set("Content-Type", "text/html")
+	tmpl := template.New("results.html")
+	tmpl.ParseFiles("templates/results.html")
+
+	err = tmpl.Execute(w, data)
+	if err != nil {
+		log.Printf("Can't render template/results.html, %s", err)
+	}
+}
+
+func publicSearchHandler(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Request: %s Path: %s RemoteAddr: %s UserAgent: %s\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
+	// If GET with Query String or POST pass to results handler
+	// else display Basic Search Form
+	query := r.URL.Query()
+	if r.Method == "POST" || len(query) > 0 {
+		resultsHandler(w, r)
+		return
+	}
+
+	if r.URL.Path == "/search/advanced/" {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(advancedPage))
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/html")
+	w.Write([]byte(basicPage))
+}
+
+
 func init() {
-	serviceURL = os.Getenv("ASPACE_SEARCH_URL")
+	var err error
+
+	uri := os.Getenv("ASPACE_SEARCH_URL")
 	indexName = os.Getenv("ASPACE_BLEVE_INDEX")
 	htdocsDir = os.Getenv("ASPACE_HTDOCS")
 	templatesDir = os.Getenv("ASPACE_TEMPLATES")
-	flag.StringVar(&serviceURL, "search", "http://localhost:8501", "The URL to listen on for search requests")
+	flag.StringVar(&url, "search", "http://localhost:8501", "The URL to listen on for search requests")
 	flag.StringVar(&indexName, "index", "index.bleve", "specify the Bleve index to use")
 	flag.StringVar(&htdocsDir, "htdocs", "htdocs", "specify where to write the HTML files to")
 	flag.StringVar(&templatesDir, "templates", "templates/default", "The directory path for templates")
 	flag.BoolVar(&help, "h", false, "display this help message")
 	flag.BoolVar(&help, "help", false, "display this help message")
+
+	advancedPage, err = ioutil.ReadFile(path.Join(templatesDir, "advanced.html"))
+	if err != nil {
+		log.Fatalf("Can't read templates/advanced.html, %s", err)
+	}
+	basicPage, err = ioutil.ReadFile(path.Join(templatesDir, "templates/basic.html"))
+	if err != nil {
+		log.Fatalf("Can't read templates/basic.html, %s", err)
+	}
+
+	if uri != "" {
+		serviceURL, err = url.Parse(uri)
+		if err != nil {
+			log.Fatalf("Aspace Search URL not valid, %s, %s", uri, err)
+		}
+	}
 }
 
 func main() {
@@ -71,5 +328,20 @@ func main() {
 		usage()
 	}
 
-	fmt.Printf("aspacesearch not implemented yet: %s, %s, %s, %s", serviceURL, indexName, htdocsDir, templatesDir)
+	// Wake up our search engine
+	index, err := bleve.Open(indexName)
+	if err != nil {
+		log.Fatalf("Can't open Bleve index %s, %s", indexName, err)
+	}
+	defer index.Close()
+
+	// Wake up our search webserver
+	http.HandleFunc("/search/advanced/", publicSearchHandler)
+	http.HandleFunc("/search/basic/", publicSearchHandler)
+
+	log.Printf("Listening on %s\n", serviceURL.String())
+	err := http.ListenAndServe(fmt.Sprintf("%s:%s", serviceURL.Host, serviceURL.Port), nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 }
