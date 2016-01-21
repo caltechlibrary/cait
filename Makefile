@@ -1,7 +1,7 @@
 #
 # Simple Makefile for conviently testing, building and deploying experiment.
 #
-build: aspace.go models.go
+build: aspace.go models.go views.go import.go export.go
 	go build
 	go build -o bin/aspace cmds/aspace/aspace.go
 	go build -o bin/aspacepage cmds/aspacepage/aspacepage.go

@@ -8,7 +8,7 @@ import (
 )
 
 //
-// Useful view driven data structures
+// Useful view driven data structures and functions
 //
 
 // NormalizedAccessionView returns a structure suitable for templating public web content.

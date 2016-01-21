@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Search Results - {{ .Q }}</title>
+    <title>Search Results</title>
     <style>
     .search-result {
         height: auto;
@@ -11,14 +11,19 @@
     </style>
 </head>
 <body>
-    <header><h1>Search Results for {{ .Q }}</h1></header>
+    <header><h1>Search Results</h1></header>
+    <nav>
+        {{ .Request.From }}/{{ .Request.Size }} of {{ .Total }}
+    </nav>
     <section>
-    {{range .Results}}
+    {{ range .Hits }}
         <div class="search-result">
-            <h2>{{ .Title }}</h2>
-            <div>URI: {{ .URI }} </div>
+            {{ $href := (printf "%s.html" .ID)  }}
+            {{ range .Fragments.title }}<h2><a href="{{ $href }}">{{ . }}</a></h2>{{ end }}
+            {{ range .Fragments.subjects }}<h3><a href="{{ $href }}">{{ . }}</a></h3>{{ end }}
+            {{ range .Fragments.content_description }}<p>{{ . }}</p>{{ end }}
         </div>
-    {{end}}
+    {{ end }}
     </section>
     <footer>
     </footer>
