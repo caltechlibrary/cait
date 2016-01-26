@@ -21,7 +21,7 @@
  *    subjects array object
  *    linked_events array object
  *    extents array JSONModel(:extent) object
- *    datesarray JSONModel(:date) object
+ *    dates array JSONModel(:date) object
  *    external_documents array JSONModel(:external_document) object
  *    rights_statements array JSONModel(:rights_statement) object
  *    linked_agents array object
@@ -47,16 +47,17 @@
  * ```
  */
 var apiToken = "",
-    apiURI = "";
+    apiURI = "",
+    apiUsername = "admin";
 
 // Log into the ArchivesSpace API and save the token for re-use.
 function login() {
-    var username = Getenv("ASPACE_USERNAME"),
-        password = Getenv("ASPACE_PASSWORD"),
-        data = "",
-        uri = "";
+    var password = Getenv("ASPACE_PASSWORD"),
+        data = {},
+        src = "";
+    apiUsername = Getenv("ASPACE_USERNAME"),
     apiURI = Getenv("ASPACE_API_URL"),
-    src = HttpPost(apiURI + '/users/' + username + '/login', 'multipart/form-data', encodeURI('password='+password));
+    src = HttpPost(apiURI + '/users/' + apiUsername + '/login', 'multipart/form-data', encodeURI('password='+password));
     data = JSON.parse(src);
     apiToken = data.session;
 }
@@ -67,6 +68,7 @@ login();
 //console.log('\t curl -H "X-ArchivesSpace-Session: ' + apiToken + '" ' + apiURI);
 
 function callback(row) {
+    //FIXME: need the current date/time in various formats...
     //FIXME: look up accession that is related
     //FIXME: Need to figure out exactly how the row object maps to ArchivesSpace's
     // concept of a Digital Object.
@@ -76,14 +78,33 @@ function callback(row) {
         uri: "/repositories/2/digital_object",
         title: row["Title"],
         publish: true,
-        subject: [],
+        subjects: [],
         extents: [],
-        dates: [],
+        dates: [
+            {
+                date_type: "single",
+                label: "migration",
+                certainty: "",
+                expression: "2016 January 26",
+                begin: "2016-01-26",
+                era: "",
+                lock_version: 0,
+                jsonmodel_type: "date",
+                created_by: apiUsername,
+                last_modified_by: apiUsername,
+                user_mtime: "2016-01-26T00:00:00Z",
+                system_mtime: "2016-01-26T00:00:00Z",
+                create_time: "2016-01-26T00:00:00Z"
+            }
+        ],
+        created_by: apiUsername,
+        last_modified_by: apiUsername,
         external_documents: [],
         rights_statements: [],
         linked_agents: [],
         suppressed: false,
-        restrictions: false
+        restrictions: false,
+        jsonmodel_type: "digital_object"
     };
     //console.log("DEBUG obj: " + JSON.stringify(obj));
     return {path: "", source: obj, error: ""};
