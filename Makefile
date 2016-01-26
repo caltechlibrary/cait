@@ -8,6 +8,7 @@ build: aspace.go models.go views.go import.go export.go
 	go build -o bin/aspaceindexer cmds/aspaceindexer/aspaceindexer.go
 	go build -o bin/aspacesearch cmds/aspacesearch/aspacesearch.go
 	go build -o bin/aspacedashboard cmds/aspacedashboard/aspacedashboard.go
+	go build -o bin/xlsximporter cmds/xlsximporter/xlsximporter.go
 
 test:
 	go test
@@ -18,11 +19,13 @@ clean:
 	if [ -f bin/aspaceindexer ]; then rm bin/aspaceindexer; fi
 	if [ -f bin/aspacesearch ]; then rm bin/aspacesearch; fi
 	if [ -f bin/aspacedashboard ]; then rm bin/aspacedashboard; fi
+	if [ -f bin/xlsximporter ]; then rm bin/xlsximporter; fi
 
 install:
-	if [ ! -d $GOBIN ] && [ "$GOBIN" != "" ]; then mkdir -p $GOBIN; fi
+	if [ ! -d "$GOBIN" ] && [ "$GOBIN" != "" ]; then mkdir -p "$GOBIN"; fi
 	go install cmds/aspace/aspace.go
 	go install cmds/aspacepage/aspacepage.go
 	go install cmds/aspaceindexer/aspaceindexer.go
 	go install cmds/aspacesearch/aspacesearch.go
 	go install cmds/aspacedashboard/aspacedashboard.go
+	go install cmds/xlsximporter/xlsximporter.go
