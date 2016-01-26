@@ -68,6 +68,9 @@ login();
 
 function callback(row) {
     //FIXME: look up accession that is related
+    //FIXME: Need to figure out exactly how the row object maps to ArchivesSpace's
+    // concept of a Digital Object.
+
     //console.log("DEBUG row: " + JSON.stringify(row));
     var obj = {
         uri: "/repositories/2/digital_object",
