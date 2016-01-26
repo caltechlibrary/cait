@@ -181,7 +181,7 @@ func (api *ArchivesSpaceAPI) GetAPI(url string, obj interface{}) error {
 	}
 	err = json.Unmarshal(content, obj)
 	if err != nil {
-		return err
+		return fmt.Errorf("unmarshal error %s, %s\n", content, err)
 	}
 	return nil
 }
@@ -250,7 +250,7 @@ func (api *ArchivesSpaceAPI) GetRepository(id int) (*Repository, error) {
 	if err != nil {
 		return nil, err
 	}
-	repo.ID = id
+	repo.ID = URIToID(repo.URI)
 	return repo, nil
 }
 
@@ -311,9 +311,7 @@ func (api *ArchivesSpaceAPI) ListRepositories() ([]Repository, error) {
 	}
 	// Now I need to populate the repos[?].ID fields
 	for i := range repos {
-		if id, err := strconv.Atoi(strings.TrimPrefix(repos[i].URI, "/repositories/")); err == nil {
-			repos[i].ID = id
-		}
+		repos[i].ID = URIToID(repos[i].URI)
 	}
 	return repos, nil
 }
@@ -335,14 +333,7 @@ func (api *ArchivesSpaceAPI) GetAgent(agentType string, agentID int) (*Agent, er
 	if err != nil {
 		return nil, err
 	}
-
-	// Make sure the ID comes from agent.URI
-	p := strings.Split(agent.URI, "/")
-	id, err := strconv.Atoi(p[len(p)-1])
-	if err != nil {
-		return agent, err
-	}
-	agent.ID = id
+	agent.ID = URIToID(agent.URI)
 	return agent, nil
 }
 
@@ -553,11 +544,7 @@ func (api *ArchivesSpaceAPI) GetTerm(vocabularyID, termID int) (*Term, error) {
 		return nil, err
 	}
 	for _, term := range terms {
-		p := strings.Split(term.URI, "/")
-		term.ID, err = strconv.Atoi(p[len(p)-1])
-		if err != nil {
-			return term, fmt.Errorf("id parse error /vocabulary/%d/terms for %s, %s", vocabularyID, term.URI, err)
-		}
+		term.ID = URIToID(term.URI)
 		if term.ID == termID {
 			return term, nil
 		}
@@ -684,6 +671,52 @@ func (api *ArchivesSpaceAPI) ListLocations() ([]int, error) {
 	return api.ListAPI(u.String())
 }
 
+// CreateDigitalObject - return a new digital object
+func (api *ArchivesSpaceAPI) CreateDigitalObject(repoID int, obj *DigitalObject) (*ResponseMsg, error) {
+	u := *api.URL
+	u.Path = fmt.Sprintf("/repositories/%d/digital_object", repoID)
+	return api.CreateAPI(u.String(), obj)
+}
+
+// GetDigitalObject - return a given digital object
+func (api *ArchivesSpaceAPI) GetDigitalObject(repoID, objID int) (*DigitalObject, error) {
+	u := *api.URL
+	u.Path = fmt.Sprintf("/repositories/%d/digital_objects/%d", repoID, objID)
+
+	obj := new(DigitalObject)
+	err := api.GetAPI(u.String(), obj)
+	if err != nil {
+		return nil, fmt.Errorf("GetDigitalObject() %s, error, %s", u.String(), err)
+	}
+	obj.ID = URIToID(obj.URI)
+	return obj, nil
+}
+
+// UpdateDigitalObject - returns an updated digital
+func (api *ArchivesSpaceAPI) UpdateDigitalObject(obj *DigitalObject) (*ResponseMsg, error) {
+	u := api.URL
+	u.Path = obj.URI
+	return api.UpdateAPI(u.String(), obj)
+}
+
+// DeleteDigitalObject - return the results of deleting a digital object
+func (api *ArchivesSpaceAPI) DeleteDigitalObject(obj *DigitalObject) (*ResponseMsg, error) {
+	u := api.URL
+	u.Path = obj.URI
+	return api.DeleteAPI(u.String(), obj)
+}
+
+// ListDigitalObjects - return a list of digital object ids
+func (api *ArchivesSpaceAPI) ListDigitalObjects(repoID int) ([]int, error) {
+	u := api.URL
+	u.Path = fmt.Sprintf(`/repositories/%d/digital_objects`, repoID)
+	q := u.Query()
+	q.Set("all_ids", "true")
+	u.RawQuery = q.Encode()
+	return api.ListAPI(u.String())
+}
+
+
 // Search return a JSON content from search results from an ArchivesSpace instance
 func (api *ArchivesSpaceAPI) Search(opt *SearchQuery) ([]byte, error) {
 	u := api.URL
@@ -735,4 +768,5 @@ func (api *ArchivesSpaceAPI) Search(opt *SearchQuery) ([]byte, error) {
 	return api.API("GET", u.String(), &searchResults)
 }
 
-//FIXME: need Create, Get, Update, Delete, List functions for DigitalObject, Instances, Extents, Resource, Group, Users
+
+//FIXME: need Create, Get, Update, Delete, List functions for Resources, Extents, Instances, Group, Users

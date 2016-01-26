@@ -71,7 +71,7 @@ func TestArchiveSpaceAPI(t *testing.T) {
 		t.SkipNow()
 	}
 
-	aspace := New(aspaceURL, aspaceToken, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
 	if aspace.URL == nil {
 		t.Errorf("%s\t%s", aspace.URL.String(), aspaceURL)
 	}
@@ -105,7 +105,7 @@ func TestRepository(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceURL, aspaceToken, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
 	tm := time.Now()
 	repoCode := fmt.Sprintf("%d", tm.Unix())
 
@@ -204,7 +204,7 @@ func TestAgent(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceURL, aspaceToken, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
 	err := aspace.Login()
 	if err != nil {
 		t.Error(err)
@@ -310,7 +310,7 @@ func TestAccession(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceURL, aspaceToken, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
 	err := aspace.Login()
 	if err != nil {
 		t.Error(err)
@@ -418,7 +418,7 @@ func TestVocabularies(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceURL, aspaceToken, aspaceUsername, aspacePassword)
+	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
 	err := aspace.Login()
 	if err != nil {
 		t.Error(err)

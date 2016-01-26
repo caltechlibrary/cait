@@ -21,11 +21,11 @@ import (
 func WriteJSON(data interface{}, dir string, fname string) error {
 	err := os.MkdirAll(dir, 0770)
 	if err != nil {
-		return err
+		return fmt.Errorf("WriteJSON() mkdir %s/%s, %s", dir, fname, err)
 	}
 	src, err := json.Marshal(data)
 	if err != nil {
-		return err
+		return fmt.Errorf("WriteJSON() JSON encode %s/%s, %s", dir, fname, err)
 	}
 	return ioutil.WriteFile(path.Join(dir, fname), src, 0664)
 }
@@ -183,6 +183,27 @@ func (api *ArchivesSpaceAPI) ExportLocations() error {
 		err = WriteJSON(&data, dir, fname)
 		if err != nil {
 			return fmt.Errorf("Can't write locations/%d.json, %s", id, err)
+		}
+	}
+	return nil
+}
+
+// ExportDigitalObjects export all digital objects by id to JSON files.
+func (api *ArchivesSpaceAPI) ExportDigitalObjects(repoID int) error {
+	ids, err := api.ListDigitalObjects(repoID)
+	if err != nil {
+		return fmt.Errorf("Can't list digital_object ids, %s", err)
+	}
+	for _, id := range ids {
+		data, err := api.GetDigitalObject(repoID, id)
+		if err != nil {
+			return fmt.Errorf("Can't get /repositories/%d/digial_object/%d, %s", repoID, id, err)
+		}
+		dir := path.Join(api.DataSet, "repositories", fmt.Sprintf("%d", repoID), "digital_objects")
+		fname := fmt.Sprintf("%d.json", id)
+		err = WriteJSON(&data, dir, fname)
+		if err != nil {
+			return fmt.Errorf("Can't write %d/%d.json, %s", dir, id, err)
 		}
 	}
 	return nil
