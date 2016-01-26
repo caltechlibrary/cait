@@ -935,7 +935,7 @@ type DigitalObject struct {
 	FileVersions         []*FileVersion           `json:"file_versions,omitemtpy"`
 	Restrictions         bool                     `json:"restrictions,omitmepty"`
 	Tree                 map[string]interface{}   `json:"tree,omitmepty"`
-	Notes                []*NoteText              `json:"notes,omitmepty"`
+	Notes                []map[string]interface{} `json:"notes,omitmepty"`
 	CollectionManagement *CollectionManagement    `json:"collection_management,omitempty"`
 	UserDefined          []map[string]interface{} `json:"user_defined,omitmepty"`
 	LinkedInstances      []map[string]interface{} `json:"linked_instances,omitemtpy"`
