@@ -41,7 +41,7 @@ var (
 		"vocabulary",
 		"term",
 		"location",
-		"digitalobject",
+		"digital_object",
 		"search",
 	}
 	actions = []string{
@@ -931,7 +931,7 @@ func runCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 		return runTermCmd(api, cmd)
 	case "search":
 		return runSearchCmd(api, cmd)
-	case "digitalobject":
+	case "digital_object":
 		return runDigitalObjectCmd(api, cmd)
 	}
 	return "", fmt.Errorf("%s %s not implemented", cmd.Subject, cmd.Action)
