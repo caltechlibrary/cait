@@ -1,11 +1,24 @@
-"Read Online" link goes in File Versions
-Series -> Subject/function
-Keywords -> Subject/topical
+"Read Online" link pulls from in File Versions file_uri
+
+Series maps to subject/function
+
+Keywords maps to subject/topical
 
 
-Subject determines rule to mapping "Name _and Subject" to either creator, subject or both.
+Subject determines rule to mapping "Name \_and Subject" to either creator, subject or both.
 
 E.g. Oral History Interviews
+
+Rules:
+
++ Oral History -> Subject and Creator
++ Film & Video -> Subject
++ Institute Publications -> Creator
++ Manuscript Collection -> Creator
++ Waston Lecture -> Creator
++ Alumni Day -> Creator
+
+
 
 Resolver URL as identifier
 
