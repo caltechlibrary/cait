@@ -34,12 +34,13 @@ var (
 	inputFilename *string
 	jsFilename    *string
 	jsCallback    *string
+	sheetNo int
 )
 
 type jsResponse struct {
-	Path   string `json:"path"`
-	Source map[string]interface{} `json:"source"`
-	Error  string `json:"error"`
+	Path   string `json:"path,omitempty"`
+	Object map[string]interface{} `json:"object,omitempty"`
+	Error  string `json:"error,omitempty"`
 }
 
 func usage() {
@@ -57,13 +58,13 @@ func usage() {
 
  The callback function in JavaScript should return an object that looks like
 
-     {"path": ..., "source": ..., "error": ...}
+     {"path": ..., "object": ..., "error": ...}
 
  The "path" property should contain the desired filename to use for storing
  the JSON blob. If it is empty the output will only be displayed to standard out.
 
- The "source" property should be the final version of the object you want to
- turn into a JSON blob.
+ The "object" property should be the final version of the object. It is what
+ will be transformed into a JSON blob.
 
  The "error" property is a string and if the string is not empty it will be
  used as an error message and cause the processing to stop.
@@ -83,7 +84,7 @@ func usage() {
         }
         return {
             "path": "data/" + i + ".json",
-            "source": row,
+            "object": row,
             "error": ""
         }
     }
@@ -119,10 +120,86 @@ func usage() {
 	os.Exit(0)
 }
 
+func processSheet(sheet *xlsx.Sheet, asArray, jsMap bool, vm *otto.Otto) {
+	columnNames := []string{}
+	if asArray == true {
+		fmt.Println("[")
+	}
+	for rowNo, row := range sheet.Rows {
+		if asArray == true && rowNo > 1 {
+			fmt.Printf(", ")
+		}
+		jsonBlob := make(map[string]string)
+		for colNo, cell := range row.Cells {
+			if rowNo == 0 {
+				columnNames = append(columnNames, cell.String())
+			} else {
+				// Build a map and render it out
+				if colNo >= len(columnNames) {
+					k := fmt.Sprintf("column_%d", colNo+1)
+					columnNames = append(columnNames, k)
+				}
+				s := cell.String()
+				jsonBlob[columnNames[colNo]] = s
+			}
+		}
+		if rowNo > 0 {
+			src, err := json.Marshal(jsonBlob)
+			if err != nil {
+				log.Fatalf("Can't render JSON blob, %s", err)
+			}
+			if jsMap == true {
+				// We need to eval the callback from inside a closure to be safer
+				js := fmt.Sprintf("(function(){ return %s(%s);}())", *jsCallback, src)
+				jsValue, err := vm.Eval(js)
+				if err != nil {
+					log.Fatalf("row: %d, Can't run %s, %s", rowNo, *jsFilename, err)
+				}
+				rawData, err := jsValue.Export()
+				if err != nil {
+					log.Fatalf("row: %d, Can't convert JavaScript value %s(%s), %s", rowNo, *jsCallback, src, err)
+				}
+				src, err = json.Marshal(rawData)
+				if err != nil {
+					log.Fatalf("row: %d, src: %s\njs returned %v\nerror: %s", rowNo, js, jsValue, err)
+				}
+				response := new(jsResponse)
+				err = json.Unmarshal(src, &response)
+				if err != nil {
+					log.Fatalf("row: %d, do not understand response %s, %s", rowNo, src, err)
+				}
+				if response.Error != "" {
+					log.Fatalf("row: %d, %s", rowNo, response.Error)
+				}
+				if len(response.Object) > 0 {
+					// Now re-package response.Object into a JSON blob
+					src, err = json.Marshal(response.Object)
+					if err != nil {
+						log.Fatalf("row: %d, %s", rowNo, err)
+					}
+					if response.Path != "" && len(src) != 0 {
+						d := path.Dir(response.Path)
+						if d != "." {
+							os.MkdirAll(d, 0775)
+						}
+						ioutil.WriteFile(response.Path, src, 0664)
+					}
+				}
+			}
+			fmt.Printf("%s\n", src)
+		}
+	}
+	if asArray == true {
+		fmt.Println("]")
+	}
+}
+
 func init() {
+	sheetNo = -2
 	flag.BoolVar(&help, "h", false, "display this help message")
 	flag.BoolVar(&help, "help", false, "display this help message")
 	flag.BoolVar(&asArray, "as-array", false, "Write the JSON blobs output as an array")
+	flag.IntVar(&sheetNo, "sheet", -2, "only process a specific sheet number, index starts at 1")
 	inputFilename = flag.String("i", "", "Read the Excel file from this name")
 	jsFilename = flag.String("js", "", "The name of the JavaScript file containing callback function")
 	jsCallback = flag.String("callback", "callback", "The name of the JavaScript function to use as a callback")
@@ -131,8 +208,8 @@ func init() {
 func main() {
 	var (
 		xlFile   *xlsx.File
-		vm       *otto.Otto
 		jsSource []byte
+		vm       *otto.Otto
 	)
 	flag.Parse()
 
@@ -214,16 +291,13 @@ func main() {
 			return result
 		})
 		vm.Set("HttpPost", func(call otto.FunctionCall) otto.Value {
-			//FIXME: Need to optional argument of an array of headers,
-			// [{"Content-Type":"application/json"},{"X-ArchivesSpaceSession":"..."}]
-			var headers []map[string]string{
-				map[string]string{""}
-			}
+			var headers []map[string]string
 
 			uri := call.Argument(0).String()
 			mimeType := call.Argument(1).String()
 			payload := call.Argument(2).String()
 			buf := strings.NewReader(payload)
+			// Process any additional headers past to HttpPost()
 			if len(call.ArgumentList) > 2 {
 				rawObjs, err := call.Argument(3).Export()
 				if err != nil {
@@ -237,7 +311,7 @@ func main() {
 			}
 
 			client := &http.Client{}
-			req, err := http.NewRequest("POST", uri, payload)
+			req, err := http.NewRequest("POST", uri, buf)
 			if err != nil {
 				log.Fatalf("Can't create a GET request for %s, %s", uri, err)
 			}
@@ -270,77 +344,12 @@ func main() {
 		}
 	}
 
-	for _, sheet := range xlFile.Sheets {
-		columnNames := []string{}
-		if asArray == true {
-			fmt.Println("[")
-		}
-		for rowNo, row := range sheet.Rows {
-			if asArray == true && rowNo > 1 {
-				fmt.Printf(", ")
-			}
-			jsonBlob := map[string]string{}
-			for colNo, cell := range row.Cells {
-				if rowNo == 0 {
-					columnNames = append(columnNames, cell.String())
-				} else {
-					// Build a map and render it out
-					if colNo < len(columnNames) {
-						jsonBlob[columnNames[colNo]] = cell.String()
-					} else {
-						k := fmt.Sprintf("column_%d", colNo+1)
-						columnNames = append(columnNames, k)
-						jsonBlob[k] = cell.String()
-					}
-				}
-			}
-			if rowNo > 0 {
-				src, err := json.Marshal(jsonBlob)
-				if err != nil {
-					log.Fatalf("Can't render JSON blob, %s", err)
-				}
-				if jsMap == true {
-					// We're eval the callback from inside a closure to be safer
-					js := fmt.Sprintf("(function(){ return %s(%s);}())", *jsCallback, src)
-					jsValue, err := vm.Eval(js)
-					if err != nil {
-						log.Fatalf("row: %d, Can't run %s, %s", rowNo, *jsFilename, err)
-					}
-					val, err := jsValue.Export()
-					if err != nil {
-						log.Fatalf("row: %d, Can't convert JavaScript value %s(%s), %s", rowNo, *jsCallback, src, err)
-					}
-					src, err = json.Marshal(val)
-					if err != nil {
-						log.Fatalf("row: %d, src: %s\njs returned %v\nerror: %s", rowNo, js, jsValue, err)
-					}
-					response := new(jsResponse)
-					err = json.Unmarshal(src, &response)
-					if err != nil {
-						log.Fatalf("row: %d, do not understand response %s, %s", rowNo, src, err)
-					}
-					if response.Error != "" {
-						log.Fatalf("row: %d, %s", rowNo, response.Error)
-					}
-					// Now re-package response.Source into a JSON blob
-					src, err = json.Marshal(response.Source)
-					if err != nil {
-						log.Fatalf("row: %d, %s", rowNo, err)
-					}
-					if response.Path != "" {
-						d := path.Dir(response.Path)
-						if d != "." {
-							os.MkdirAll(d, 0775)
-						}
-						ioutil.WriteFile(response.Path, src, 0664)
-					}
-				}
-				fmt.Printf("%s\n", src)
-			}
-		}
-		if asArray == true {
-			fmt.Println("]")
-		}
 
+	// We need to adjust i by 1 since Humans tend to count from 1 rather than zero
+	sheetNo = sheetNo - 1
+	for i, sheet := range xlFile.Sheets {
+		if sheetNo < 0 || sheetNo == i {
+			processSheet(sheet, asArray, jsMap, vm)
+		}
 	}
 }

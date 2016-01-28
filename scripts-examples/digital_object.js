@@ -157,7 +157,6 @@ function subjectToURI(label, subjects) {
 
 login();
 Subjects = getSubjects();
-console.log("DEBUG Subjects: " + JSON.stringify(Subjects));
 
 //
 // Main processing and callback
@@ -169,6 +168,11 @@ function callback(row) {
         keys = Object.keys(row),
         obj = {};
 
+    // If we are missing a value for our digital object id, then we have an error
+    if (row[cA] === undefined) {
+        return {path: "", source: "", error: "Missing " + cA}
+    }
+
     // Normalize the row fields, trim the strings
     columnNames.forEach(function (ky) {
         if (row[ky] === undefined) {
@@ -177,9 +181,7 @@ function callback(row) {
             s = row[ky];
             row[ky] = s.trim();
         }
-        console.log("DEBUG normalize " + ky + " -> [" + row[ky] + "]");
     });
-    console.log("DEBUG Digital Object ID: [" + row[cA] + "]");
 
     obj = {
         uri: "/repositories/2/digital_objects/"+row[cA],
@@ -245,20 +247,15 @@ function callback(row) {
     };
 
     // Merge in our subjects
-    console.log("DEBUG looking up subject " + row[cC]);
     subject = subjectToURI(row[cC], Subjects)
     if (subject != "") {
-        console.log("DEBUG adding Subject from Series for " + obj.uri);
         obj.subjects.push({ref: subject});
     }
-    console.log("DEBUG looking up subject " + row[cD]);
     subject = subjectToURI(row[cD], Subjects)
     if (subject != "") {
-        console.log("DEBUG adding Subject from Keywords for " + obj.uri);
         obj.subjects.push({ref: subject});
     }
 
     //FIXME: Add support for "subject/creator" values on Digital Object
-    console.log("DEBUG subjects: ", JSON.stringify(obj.subjects));
     return {path: [dataDir, obj.uri, '.json'].join(""), source: obj, error: ""};
 }
