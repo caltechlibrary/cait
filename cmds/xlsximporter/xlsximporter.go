@@ -96,8 +96,12 @@ func usage() {
  GetEnv() takes one argument, a string, matching the environment variable
  you will to retreive. E.g. Getenv("ASPACE_API_URL")
 
- HttpGet() accepts a URL (including an parameters) returns the response body.
- E.g. HttpGet("http://localhost:8089/repositories?all_ids=true")
+ HttpGet() accepts a URL (including an parameters), optional headers and
+ returns the response body. E.g.
+
+	 // content is the text handed back unaltered from the API call
+     content = HttpGet("http://localhost:8089/repositories?all_ids=true",
+		 [{'X-ArchivesSpace-Session':apiToken}]);
 
 
  OPTIONS
@@ -167,8 +171,34 @@ func main() {
 			return result
 		})
 		vm.Set("HttpGet", func(call otto.FunctionCall) otto.Value {
+			//FIXME: Need to optional argument of an array of headers,
+			// [{"Content-Type":"application/json"},{"X-ArchivesSpaceSession":"..."}]
+			var headers []map[string]string
+
 			uri := call.Argument(0).String()
-			resp, err := http.Get(uri)
+			if len(call.ArgumentList) > 1 {
+				rawObjs, err := call.Argument(1).Export()
+				if err != nil {
+					log.Printf("Failed to process headers for %s, %s", uri, err)
+				}
+				src, _ := json.Marshal(rawObjs)
+				err = json.Unmarshal(src, &headers)
+				if err != nil {
+					log.Printf("Failed to translate header for %s, %s", uri, err)
+				}
+			}
+
+			client := &http.Client{}
+			req, err := http.NewRequest("GET", uri, nil)
+			if err != nil {
+				log.Fatalf("Can't create a GET request for %s, %s", uri, err)
+			}
+            for _, header := range headers {
+                    for k, v := range header {
+                            req.Header.Set(k, v)
+                    }
+            }
+            resp, err := client.Do(req)
 			if err != nil {
 				log.Fatalf("Can't connect to %s, %s", uri, err)
 			}
@@ -184,12 +214,40 @@ func main() {
 			return result
 		})
 		vm.Set("HttpPost", func(call otto.FunctionCall) otto.Value {
+			//FIXME: Need to optional argument of an array of headers,
+			// [{"Content-Type":"application/json"},{"X-ArchivesSpaceSession":"..."}]
+			var headers []map[string]string{
+				map[string]string{""}
+			}
+
 			uri := call.Argument(0).String()
 			mimeType := call.Argument(1).String()
 			payload := call.Argument(2).String()
 			buf := strings.NewReader(payload)
+			if len(call.ArgumentList) > 2 {
+				rawObjs, err := call.Argument(3).Export()
+				if err != nil {
+					log.Printf("Failed to process headers for %s, %s", uri, err)
+				}
+				src, _ := json.Marshal(rawObjs)
+				err = json.Unmarshal(src, &headers)
+				if err != nil {
+					log.Printf("Failed to translate header for %s, %s", uri, err)
+				}
+			}
 
-			resp, err := http.Post(uri, mimeType, buf)
+			client := &http.Client{}
+			req, err := http.NewRequest("POST", uri, payload)
+			if err != nil {
+				log.Fatalf("Can't create a GET request for %s, %s", uri, err)
+			}
+			req.Header.Set("Content-Type", mimeType)
+            for _, header := range headers {
+                    for k, v := range header {
+                            req.Header.Set(k, v)
+                    }
+            }
+            resp, err := client.Do(req)
 			if err != nil {
 				log.Fatalf("Can't connect to %s, %s", uri, err)
 			}

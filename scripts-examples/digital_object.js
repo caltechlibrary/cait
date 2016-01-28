@@ -31,32 +31,51 @@
  *
  * All Publish fields should be true
  */
-var apiToken = "",
-    apiURI = "",
-    apiUsername = "admin",
-    dataDir = Getenv("ASPACE_DATASETS");
+var // Spreadsheet description of columns c??
+    cA = "Digital Object ID",
+    cB = "Title",
+    cC = "Series",
+    cD = "Keywords",
+    cE = "Name _and Subject",
+    cF = "url_online oral history URL",
+    cG = "Oral History Text by Item ID::Text Description",
+    cH = "Oral History Text by Item ID::Search Text",
+    // Convence array to do normalization with
+    columnNames = [ cA, cB, cC, cD, cE, cF, cG, cH ],
+    // Auth and API vars
+    apiToken = "",
+    apiURI = Getenv("ASPACE_API_URL"),
+    apiUsername = Getenv("ASPACE_USERNAME"),
+    apiPassword = Getenv("ASPACE_PASSWORD")
+    // Local data locations
+    dataDir = Getenv("ASPACE_DATASETS"),
+    Subjects = {};
+
+//
+// Helper functions
+//
 
 // Take a Date and return it in iso8601 format per
-// https://www.w3.org/TR/NOTE-datetime, https://en.wikipedia.org/wiki/ISO_8601
+//  https://www.w3.org/TR/NOTE-datetime, https://en.wikipedia.org/wiki/ISO_8601
 function iso8601(d) {
     if (d == undefined) {
         d = new Date();
     }
-    // // YYYY-MM-DDThh:mm:ssZ (in UTC)
-    // return [d.getUTCYear(),
-    //     "-",
-    //     ("0" + (d.getUTCMonth() + 1)).slice(-2),
-    //     "-",
-    //     ("0" + (d.getUTCDate())).slice(-2),
-    //     "T",
-    //     ("0" + (d.getUTCHours())).slice(-2),
-    //     ":",
-    //     ("0" + (d.getUTCMinutes())).slice(-2),
-    //     ":",
-    //     ("0" + (d.getUTCSeconds())).slice(-2),
-    //     "Z"
-    // ].join("");
-    return d.toJSON();
+    // ArchivesSpace seems to interpret iso8601 as
+    // YYYY-MM-DDThh:mm:ssZ (in UTC)
+    return [d.getUTCFullYear(),
+        "-",
+        ("0" + (d.getUTCMonth() + 1)).slice(-2),
+        "-",
+        ("0" + (d.getUTCDate())).slice(-2),
+        "T",
+        ("0" + (d.getUTCHours())).slice(-2),
+        ":",
+        ("0" + (d.getUTCMinutes())).slice(-2),
+        ":",
+        ("0" + (d.getUTCSeconds())).slice(-2),
+        "Z"
+    ].join("");
 }
 
 // Take a Date and return it in YYYY-MM-DD format
@@ -64,11 +83,11 @@ function yyyymmdd(d) {
     if (d === undefined) {
         d = new Date();
     }
-    return [d.getYear(),
+    return [d.getUTCFullYear(),
         "-",
-        ("0" + (d.getMonth() + 1)).slice(-2),
+        ("0" + (d.getUTCMonth() + 1)).slice(-2),
         "-",
-        ("0" + (d.getDate())).slice(-2)
+        ("0" + (d.getUTCDate())).slice(-2)
     ].join("");
 }
 
@@ -91,62 +110,79 @@ function dateExpression(d) {
     if (d === undefined) {
         d = new Date();
     }
-    return [d.getFullYear(),
+    return [d.getUTCFullYear(),
         " ",
-        months[d.getMonth()],
-        "",
-        d.getDate()
+        months[d.getUTCMonth()],
+        " ",
+        d.getUTCDate()
     ].join("");
 }
 
+//
+// ArchivesSpace API methods
+//
+
 // Log into the ArchivesSpace API and save the token for re-use.
 function login() {
-    var password = Getenv("ASPACE_PASSWORD"),
-        data = {},
+    var data = {},
         src = "";
-    apiUsername = Getenv("ASPACE_USERNAME"),
-    apiURI = Getenv("ASPACE_API_URL"),
-    src = HttpPost(apiURI + '/users/' + apiUsername + '/login', 'multipart/form-data', encodeURI('password='+password));
+    src = HttpPost(apiURI + '/users/' + apiUsername + '/login', 'multipart/form-data', encodeURI('password='+apiPassword));
     data = JSON.parse(src);
     apiToken = data.session;
 }
 
-// Login to the API.
+function getSubjects() {
+    var subjects = {};
+    subjectIDs = (JSON.parse(HttpGet(apiURI + "/subjects?all_ids=true", [{"X-ArchivesSpace-Session": apiToken}])));
+    subjectIDs.forEach(function(id) {
+        subject = JSON.parse(HttpGet(apiURI + "/subjects/" + id, [{"X-ArchivesSpace-Session": apiToken}]));
+        if (subject.title !== undefined && subject.uri !== undefined) {
+            subjects[subject.title.toLowerCase()] = subject.uri;
+        }
+    });
+    return subjects;
+}
+
+function subjectToURI(label, subjects) {
+    s = label.toLowerCase().trim();
+    if (subjects[s] !== undefined) {
+        return subjects[s];
+    }
+    return "";
+}
+
+//
+// Initialization
+//
+
 login();
-//console.log('\texport ASPACE_API_TOKEN: ' + apiToken);
-//console.log('\t curl -H "X-ArchivesSpace-Session: ' + apiToken + '" ' + apiURI);
+Subjects = getSubjects();
+console.log("DEBUG Subjects: " + JSON.stringify(Subjects));
 
+//
+// Main processing and callback
+//
+
+// callback() is the primary mapping function
 function callback(row) {
-    //FIXME: need the current date/time in various formats...
-    //FIXME: look up accession that is related so I can populate linked_instances
-    //FIXME: Need to figure out exactly how the row object maps to ArchivesSpace's
-    // concept of a Digital Object.
- //
- // The Mapping follows these rules:
- // + "Digital Object ID" maps to id value in URI
- // + "Title" maps to title
- // + "Series" maps to subject of type function
- // + "Keywords" maps to subject of type topical
- // + "Name \_and Subject" map to creator or subject based on the content of "Series"
- //      + Oral History -> Creator (interviewer/interviewee), Subject (interviewee)
- //      + Film & Video -> Subject
- //      + Institute Publications -> Creator
- //      + Manuscript Collection -> Creator
- //      + Watson Lecture -> Creator
- //      + Alumni Day -> Creator
- //      + Commencement -> Creator
- //      + Institute Publications -> Creator
- //      + "" -> Creator
- // + "url_online oral history URL" maps to unique identifier for Digital Object, File Versions-> File URI (publish should be checked), Notes -> General Notes:Persistent ID
- // + "Oral History Text by Item ID::Search Text" maps to Notes -> General Notes:Content
- // + "Oral History Text by Item ID::Text Description" maps to Notes -> General Note:Label
- // All Publish fields should be true
- //
-
-    //console.log("DEBUG row: " + JSON.stringify(row));
     var timestamp = new Date(),
-        obj = {
-        uri: "/repositories/2/digital_object/"+row["Digital Object ID"],
+        keys = Object.keys(row),
+        obj = {};
+
+    // Normalize the row fields, trim the strings
+    columnNames.forEach(function (ky) {
+        if (row[ky] === undefined) {
+            row[ky] = "";
+        } else if (typeof(row[ky]) === "string") {
+            s = row[ky];
+            row[ky] = s.trim();
+        }
+        console.log("DEBUG normalize " + ky + " -> [" + row[ky] + "]");
+    });
+    console.log("DEBUG Digital Object ID: [" + row[cA] + "]");
+
+    obj = {
+        uri: "/repositories/2/digital_objects/"+row[cA],
         title: row["Title"],
         publish: true,
         subjects: [],
@@ -171,18 +207,18 @@ function callback(row) {
         notes: [
             {
                 content: [
-                    row["Oral History Text by Item ID::Search Text"]
+                    row[cH]
                 ],
                  jsonmodel_type: "note_digital_object",
-                 label: row["Oral History Text by Item ID::Text Description"],
-                 persistent_id: row["url_online oral history URL"],
+                 label: row[cG],
+                 persistent_id: row[cF],
                  publish: true,
                  "type": "note"
             }
         ],
         file_versions: [
             {
-                "file_uri": " http://resolver.caltech.edu/CaltechOH:OH_Clauser_F",
+                "file_uri": row[cF],
                 "publish": true,
                 "jsonmodel_type": "file_version",
                 "created_by": apiUsername,
@@ -207,5 +243,22 @@ function callback(row) {
         restrictions: false,
         jsonmodel_type: "digital_object"
     };
+
+    // Merge in our subjects
+    console.log("DEBUG looking up subject " + row[cC]);
+    subject = subjectToURI(row[cC], Subjects)
+    if (subject != "") {
+        console.log("DEBUG adding Subject from Series for " + obj.uri);
+        obj.subjects.push({ref: subject});
+    }
+    console.log("DEBUG looking up subject " + row[cD]);
+    subject = subjectToURI(row[cD], Subjects)
+    if (subject != "") {
+        console.log("DEBUG adding Subject from Keywords for " + obj.uri);
+        obj.subjects.push({ref: subject});
+    }
+
+    //FIXME: Add support for "subject/creator" values on Digital Object
+    console.log("DEBUG subjects: ", JSON.stringify(obj.subjects));
     return {path: [dataDir, obj.uri, '.json'].join(""), source: obj, error: ""};
 }
