@@ -216,7 +216,7 @@ type Accession struct {
 	AccessRestrictionsNote string                   `json:"access_restrictions_note,omitempty"`
 	UseRestrictions        bool                     `json:"use_restrictions,omitempty"`
 	UseRestrictionsNote    string                   `json:"use_restrictions_note,omitempty"`
-	LinkedAgents           []*Agent                 `json:"linked_agents"`
+	LinkedAgents           []map[string]interface{} `json:"linked_agents"`
 	Instances              []map[string]interface{} `json:"instances,omitempty"`
 
 	LockVersion    int               `json:"lock_version"`
@@ -2090,8 +2090,8 @@ type Subject struct {
 	Publish                   bool                     `json:"publish"`
 	Source                    string                   `json:"source,omitempty"`
 	ScopeNote                 string                   `json:"scope_note,omitempty"`
-	Terms                     []*Term                  `json:"terms,omitempty"` // uri_or_object
-	Vocabulary                []map[string]interface{} `json:"vocabularly,omitempty"`
+	Terms                     []map[string]interface{} `json:"terms,omitempty"` // uri_or_object
+	Vocabulary                string                   `json:"vocabulary,omitempty"`
 	AuthorityID               string                   `json:"authority_id,omitempty"`
 	ExternalDocuments         []map[string]interface{} `json:"external_documents"`
 
@@ -2237,11 +2237,11 @@ type UserDefined struct {
 
 // Vocabulary JSONModel(:vocabulary)
 type Vocabulary struct {
-	ID    int     `json:"id,omitempty"`
-	URI   string  `json:"uri,omitempty"`
-	RefID string  `json:"ref_id,omitempty"`
-	Name  string  `json:"name,omitempty"`
-	Terms []*Term `json:"terms,omitempty"`
+	ID    int                      `json:"id,omitempty"`
+	URI   string                   `json:"uri,omitempty"`
+	RefID string                   `json:"ref_id,omitempty"`
+	Name  string                   `json:"name,omitempty"`
+	Terms []map[string]interface{} `json:"terms,omitempty"`
 
 	LockVersion    int               `json:"lock_version"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`

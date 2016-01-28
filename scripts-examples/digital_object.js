@@ -49,7 +49,11 @@ var // Spreadsheet description of columns c??
     apiPassword = Getenv("ASPACE_PASSWORD")
     // Local data locations
     dataDir = Getenv("ASPACE_DATASETS"),
-    Subjects = {};
+    Subjects = {},
+    Titles = [],
+    // You could start with object IDs at 1, but this may need to be changed
+    // if you have other Digital Objects already ingested.
+    ObjectIDOffset = 200;
 
 //
 // Helper functions
@@ -132,19 +136,45 @@ function login() {
 }
 
 function getSubjects() {
-    var subjects = {};
+    var topical = {},
+        functional = {};
     subjectIDs = (JSON.parse(HttpGet(apiURI + "/subjects?all_ids=true", [{"X-ArchivesSpace-Session": apiToken}])));
     subjectIDs.forEach(function(id) {
         subject = JSON.parse(HttpGet(apiURI + "/subjects/" + id, [{"X-ArchivesSpace-Session": apiToken}]));
         if (subject.title !== undefined && subject.uri !== undefined) {
-            subjects[subject.title.toLowerCase()] = subject.uri;
+            subject.terms.forEach(function (term) {
+                if (term.term_type === "function") {
+                    console.log("DEBUG subject/function", subject.title, subject.uri);
+                    functional[subject.title] = subject.uri;
+                }
+                if (term.term_type === "topical") {
+                    console.log("DEBUG subject/topical", subject.title, subject.uri);
+                    topical[subject.title] = subject.uri;
+                }
+            });
+
         }
     });
-    return subjects;
+    return {Topical: topical, Functional: functional};
+}
+
+
+function getAccessionTitles() {
+    var titles = [],
+        titleIDs = [];
+    titleIDs = (JSON.parse(HttpGet(apiURI + "/repositories/2/accessions?all_ids=true", [{"X-ArchivesSpace-Session": apiToken}])));
+    titleIDs.forEach(function(id) {
+        accession = JSON.parse(HttpGet(apiURI + "/repositories/2/accessions/" + id, [{"X-ArchivesSpace-Session": apiToken}]));
+        if (accession.title !== undefined && accession.uri !== undefined) {
+            console.log("DEBUG accession", accession.title, accession.uri);
+            titles.push({title: accession.title, uri: accession.uri});
+        }
+    });
+    return titles;
 }
 
 function subjectToURI(label, subjects) {
-    s = label.toLowerCase().trim();
+    s = label;
     if (subjects[s] !== undefined) {
         return subjects[s];
     }
@@ -157,6 +187,7 @@ function subjectToURI(label, subjects) {
 
 login();
 Subjects = getSubjects();
+Titles = getAccessionTitles();
 
 //
 // Main processing and callback
@@ -169,8 +200,11 @@ function callback(row) {
         obj = {};
 
     // If we are missing a value for our digital object id, then we have an error
-    if (row[cA] === undefined) {
-        return {path: "", source: "", error: "Missing " + cA}
+    if (row[cA] === undefined || row[cB] === "") {
+        return {path: "", object: "", error: "Missing " + cA}
+    }
+    if (row[cB] === undefined || row[cB].trim() === "") {
+        return {path: "", object: "", error: "Missing " + cB}
     }
 
     // Normalize the row fields, trim the strings
@@ -183,20 +217,25 @@ function callback(row) {
         }
     });
 
+    // Our spreadsheet uses row number as ID, but we have some existing
+    // Digital Objects so we're going to offset our new object IDs
+    objectID = parseInt(row[cA], 10) + ObjectIDOffset;
     obj = {
-        uri: "/repositories/2/digital_objects/"+row[cA],
-        title: row["Title"],
+        digital_object_id: row[cF],
+        uri: "/repositories/2/digital_objects/" + objectID,
+        title: row[cB],
         publish: true,
         subjects: [],
         extents: [],
         dates: [
             {
                 date_type: "single",
-                label: "migration",
+                label: "other",
                 certainty: "",
                 expression: dateExpression(timestamp),
                 begin: yyyymmdd(timestamp),
                 era: "",
+                /*
                 lock_version: 0,
                 jsonmodel_type: "date",
                 created_by: apiUsername,
@@ -204,58 +243,70 @@ function callback(row) {
                 user_mtime: iso8601(timestamp),
                 system_mtime: iso8601(timestamp),
                 create_time: iso8601(timestamp),
+                */
             }
         ],
-        notes: [
-            {
-                content: [
-                    row[cH]
-                ],
-                 jsonmodel_type: "note_digital_object",
-                 label: row[cG],
-                 persistent_id: row[cF],
-                 publish: true,
-                 "type": "note"
-            }
-        ],
+        notes: [],
         file_versions: [
             {
                 "file_uri": row[cF],
                 "publish": true,
                 "jsonmodel_type": "file_version",
+                /*
                 "created_by": apiUsername,
                 "last_modified_by": apiUsername,
                 "user_mtime": iso8601(timestamp),
                 "system_mtime": iso8601(timestamp),
                 "create_time": iso8601(timestamp)
+                */
             }
         ],
+        /*
         created_by: apiUsername,
         last_modified_by: apiUsername,
         user_mtime: iso8601(timestamp),
         system_mtime: iso8601(timestamp),
         create_time: iso8601(timestamp),
+        */
         repository: {
             ref: '/repositories/2'
         },
         external_documents: [],
         rights_statements: [],
+        linked_instances: [],
         linked_agents: [],
         suppressed: false,
         restrictions: false,
         jsonmodel_type: "digital_object"
     };
+    // Merge notes
+    if (row[cH] !== "") {
+        obj.notes.push({
+            content: [
+                row[cH]
+            ],
+             jsonmodel_type: "note_digital_object",
+             label: row[cG],
+             persistent_id: row[cF],
+             publish: true,
+             "type": "note"
+        });
+    }
 
     // Merge in our subjects
-    subject = subjectToURI(row[cC], Subjects)
+    subject = subjectToURI(row[cC], Subjects.Functional)
     if (subject != "") {
         obj.subjects.push({ref: subject});
     }
-    subject = subjectToURI(row[cD], Subjects)
+    subject = subjectToURI(row[cD], Subjects.Topical)
     if (subject != "") {
         obj.subjects.push({ref: subject});
     }
-
-    //FIXME: Add support for "subject/creator" values on Digital Object
-    return {path: [dataDir, obj.uri, '.json'].join(""), source: obj, error: ""};
+    // NOTE: when these Digital Objects are imported they will need to be linked to their accessions
+    Titles.forEach(function (item) {
+        if (item.title === obj.title) {
+            obj.linked_instances.push({ref: item.uri});
+        }
+    });
+    return {path: [dataDir, obj.uri, '.json'].join(""), object: obj, error: ""};
 }

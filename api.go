@@ -162,12 +162,12 @@ func (api *ArchivesSpaceAPI) API(method string, url string, data interface{}) ([
 func (api *ArchivesSpaceAPI) CreateAPI(url string, obj interface{}) (*ResponseMsg, error) {
 	content, err := api.API("POST", url, obj)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Create API, %s, %s", content, err)
 	}
 	data := new(ResponseMsg)
 	err = json.Unmarshal(content, data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Create API, unmarshal response msg, %s", err)
 	}
 	return data, nil
 }
@@ -556,6 +556,7 @@ func (api *ArchivesSpaceAPI) GetTerm(vocabularyID, termID int) (*Term, error) {
 func (api *ArchivesSpaceAPI) UpdateTerm(term *Term) (*ResponseMsg, error) {
 	u := api.URL
 	u.Path = term.URI
+	fmt.Printf("DEBUG term.URI, %s\n", term.URI)
 	return api.UpdateAPI(u.String(), term)
 }
 
@@ -674,7 +675,7 @@ func (api *ArchivesSpaceAPI) ListLocations() ([]int, error) {
 // CreateDigitalObject - return a new digital object
 func (api *ArchivesSpaceAPI) CreateDigitalObject(repoID int, obj *DigitalObject) (*ResponseMsg, error) {
 	u := *api.URL
-	u.Path = fmt.Sprintf("/repositories/%d/digital_object", repoID)
+	u.Path = fmt.Sprintf("/repositories/%d/digital_objects", repoID)
 	return api.CreateAPI(u.String(), obj)
 }
 
@@ -715,7 +716,6 @@ func (api *ArchivesSpaceAPI) ListDigitalObjects(repoID int) ([]int, error) {
 	u.RawQuery = q.Encode()
 	return api.ListAPI(u.String())
 }
-
 
 // Search return a JSON content from search results from an ArchivesSpace instance
 func (api *ArchivesSpaceAPI) Search(opt *SearchQuery) ([]byte, error) {
@@ -767,6 +767,5 @@ func (api *ArchivesSpaceAPI) Search(opt *SearchQuery) ([]byte, error) {
 	searchResults := new(SearchResults)
 	return api.API("GET", u.String(), &searchResults)
 }
-
 
 //FIXME: need Create, Get, Update, Delete, List functions for Resources, Extents, Instances, Group, Users

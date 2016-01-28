@@ -19,9 +19,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path"
-	"net/http"
 	"strings"
 
 	"github.com/robertkrimen/otto"
@@ -34,13 +34,13 @@ var (
 	inputFilename *string
 	jsFilename    *string
 	jsCallback    *string
-	sheetNo int
+	sheetNo       int
 )
 
 type jsResponse struct {
-	Path   string `json:"path,omitempty"`
+	Path   string                 `json:"path,omitempty"`
 	Object map[string]interface{} `json:"object,omitempty"`
-	Error  string `json:"error,omitempty"`
+	Error  string                 `json:"error,omitempty"`
 }
 
 func usage() {
@@ -171,19 +171,20 @@ func processSheet(sheet *xlsx.Sheet, asArray, jsMap bool, vm *otto.Otto) {
 				if response.Error != "" {
 					log.Fatalf("row: %d, %s", rowNo, response.Error)
 				}
-				if len(response.Object) > 0 {
-					// Now re-package response.Object into a JSON blob
-					src, err = json.Marshal(response.Object)
-					if err != nil {
-						log.Fatalf("row: %d, %s", rowNo, err)
+				if response.Object == nil {
+					log.Fatalf("row: %d, response.object missing, %s", rowNo, src)
+				}
+				// Now re-package response.Object into a JSON blob
+				src, err := json.Marshal(response.Object)
+				if err != nil {
+					log.Fatalf("row: %d, %s", rowNo, err)
+				}
+				if response.Path != "" {
+					d := path.Dir(response.Path)
+					if d != "." {
+						os.MkdirAll(d, 0775)
 					}
-					if response.Path != "" && len(src) != 0 {
-						d := path.Dir(response.Path)
-						if d != "." {
-							os.MkdirAll(d, 0775)
-						}
-						ioutil.WriteFile(response.Path, src, 0664)
-					}
+					ioutil.WriteFile(response.Path, src, 0664)
 				}
 			}
 			fmt.Printf("%s\n", src)
@@ -195,11 +196,11 @@ func processSheet(sheet *xlsx.Sheet, asArray, jsMap bool, vm *otto.Otto) {
 }
 
 func init() {
-	sheetNo = -2
+	sheetNo = 0
 	flag.BoolVar(&help, "h", false, "display this help message")
 	flag.BoolVar(&help, "help", false, "display this help message")
 	flag.BoolVar(&asArray, "as-array", false, "Write the JSON blobs output as an array")
-	flag.IntVar(&sheetNo, "sheet", -2, "only process a specific sheet number, index starts at 1")
+	flag.IntVar(&sheetNo, "sheet", 0, "Process a specific sheet number, index starts at 1, zero means process all sheets")
 	inputFilename = flag.String("i", "", "Read the Excel file from this name")
 	jsFilename = flag.String("js", "", "The name of the JavaScript file containing callback function")
 	jsCallback = flag.String("callback", "callback", "The name of the JavaScript function to use as a callback")
@@ -270,12 +271,12 @@ func main() {
 			if err != nil {
 				log.Fatalf("Can't create a GET request for %s, %s", uri, err)
 			}
-            for _, header := range headers {
-                    for k, v := range header {
-                            req.Header.Set(k, v)
-                    }
-            }
-            resp, err := client.Do(req)
+			for _, header := range headers {
+				for k, v := range header {
+					req.Header.Set(k, v)
+				}
+			}
+			resp, err := client.Do(req)
 			if err != nil {
 				log.Fatalf("Can't connect to %s, %s", uri, err)
 			}
@@ -316,12 +317,12 @@ func main() {
 				log.Fatalf("Can't create a GET request for %s, %s", uri, err)
 			}
 			req.Header.Set("Content-Type", mimeType)
-            for _, header := range headers {
-                    for k, v := range header {
-                            req.Header.Set(k, v)
-                    }
-            }
-            resp, err := client.Do(req)
+			for _, header := range headers {
+				for k, v := range header {
+					req.Header.Set(k, v)
+				}
+			}
+			resp, err := client.Do(req)
 			if err != nil {
 				log.Fatalf("Can't connect to %s, %s", uri, err)
 			}
@@ -343,7 +344,6 @@ func main() {
 			log.Fatalf("Error %s, %s", *jsFilename, err)
 		}
 	}
-
 
 	// We need to adjust i by 1 since Humans tend to count from 1 rather than zero
 	sheetNo = sheetNo - 1

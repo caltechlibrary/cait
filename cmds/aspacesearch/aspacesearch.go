@@ -9,7 +9,6 @@ import (
 	//"encoding/json"
 	"flag"
 	"fmt"
-	"text/template"// Using text template because I am not HTML escaping results...
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -18,6 +17,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"text/template" // Using text template because I am not HTML escaping results...
 
 	"../../../aspace"
 	"github.com/blevesearch/bleve"
@@ -237,8 +237,8 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	//content, _ := json.Marshal(searchResults)
 	//log.Printf("DEBUG content: %s\n", content)
 	/*
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(content)
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(content)
 	*/
 	w.Header().Set("Content-Type", "text/html")
 	tmpl := template.New("results-search.html")
@@ -296,7 +296,7 @@ func logRequest(r *http.Request) {
 }
 
 func logger(next http.Handler) http.Handler {
-	return http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Println("DEBUG testing call to logger...")
 		logRequest(r)
 		next.ServeHTTP(w, r)

@@ -99,7 +99,7 @@ var (
 
   Or for a specific repository by ID with
 
-    aspace repository list '{"id": 2}'
+    aspace repository list '{"uri": "/repositories/2"}'
 
   Other SUBJECTS and ACTIONS work in a similar fashion.
 
@@ -185,15 +185,15 @@ func exportInstance(api *aspace.ArchivesSpaceAPI) error {
 		return fmt.Errorf("Can't get a list of repository ids, %s", err)
 	}
 	for _, id := range ids {
-		log.Printf("Exporting repositories/%d/digital_objects\n", id)
+		log.Printf("Exporting /repositories/%d/digital_objects\n", id)
 		err = api.ExportDigitalObjects(id)
 		if err != nil {
-			return fmt.Errorf("Can't export repositories/%d/digital_objects, %s", id, err)
+			return fmt.Errorf("Can't export /repositories/%d/digital_objects, %s", id, err)
 		}
 		log.Printf("Exporting repositories/%d/accessions\n", id)
 		err = api.ExportAccessions(id)
 		if err != nil {
-			return fmt.Errorf("Can't export repositories/%d/accessions, %s", id, err)
+			return fmt.Errorf("Can't export /repositories/%d/accessions, %s", id, err)
 		}
 	}
 	log.Printf("Export complete")
@@ -252,10 +252,17 @@ func runRepoCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
+	repoID := 0
+	repo := new(aspace.Repository)
+	if cmd.Payload != "" {
+		err := json.Unmarshal([]byte(cmd.Payload), repo)
+		if err != nil {
+			return "", fmt.Errorf("Problem unmashalling JSON repository request, %s", err)
+		}
+		repoID = aspace.URIToID(repo.URI)
+	}
 	switch cmd.Action {
 	case "create":
-		repo := new(aspace.Repository)
-		err := json.Unmarshal([]byte(cmd.Payload), repo)
 		response, err := api.CreateRepository(repo)
 		if err != nil {
 			return "", err
@@ -263,15 +270,13 @@ func runRepoCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 		if response.Status != "Created" {
 			return "", fmt.Errorf("%s", response)
 		}
-		// repo, err = api.GetRepository(response.ID)
-		// src, err := json.Marshal(repo)
 		src, err := json.Marshal(response)
 		if err != nil {
 			return "", err
 		}
 		return string(src), nil
 	case "list":
-		if cmd.Payload == "" {
+		if repoID == 0 {
 			repos, err := api.ListRepositories()
 			if err != nil {
 				return "", fmt.Errorf(`{"error": "%s"}`, err)
@@ -282,13 +287,7 @@ func runRepoCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 			}
 			return string(src), nil
 		}
-		repo := new(aspace.Repository)
-		err := json.Unmarshal([]byte(cmd.Payload), &repo)
-		if err != nil {
-			return "", err
-		}
-		repoID := aspace.URIToID(repo.URI)
-		repo, err = api.GetRepository(repoID)
+		repo, err := api.GetRepository(repoID)
 		if err != nil {
 			return "", fmt.Errorf(`{"error": "%s"}`, err)
 		}
@@ -298,11 +297,6 @@ func runRepoCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 		}
 		return string(src), nil
 	case "update":
-		repo := new(aspace.Repository)
-		err := json.Unmarshal([]byte(cmd.Payload), &repo)
-		if err != nil {
-			return "", err
-		}
 		responseMsg, err := api.UpdateRepository(repo)
 		if err != nil {
 			return "", err
@@ -310,12 +304,7 @@ func runRepoCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "delete":
-		repo := new(aspace.Repository)
-		err := json.Unmarshal([]byte(cmd.Payload), &repo)
-		if err != nil {
-			return "", err
-		}
-		repo, err = api.GetRepository(repo.ID)
+		repo, err := api.GetRepository(repoID)
 		if err != nil {
 			return "", err
 		}
@@ -326,27 +315,17 @@ func runRepoCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "export":
-		repo := new(aspace.Repository)
-		err := json.Unmarshal([]byte(cmd.Payload), &repo)
-		if err != nil {
-			return "", err
-		}
-		err = api.ExportRepository(
-			repo.ID,
+		err := api.ExportRepository(
+			repoID,
 			path.Join(api.DataSet, "repositories"),
-			fmt.Sprintf("%d.json", repo.ID),
+			fmt.Sprintf("%d.json", repoID),
 		)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("Exporting /repositories, %s", err)
 		}
 		return `{"status": "ok"}`, nil
 	case "import":
-		repo := new(aspace.Repository)
-		err := json.Unmarshal([]byte(cmd.Payload), &repo)
-		if err != nil {
-			return "", err
-		}
-		err = api.ImportRepository(path.Join(api.DataSet, "repositories", fmt.Sprintf("%d.json", repo.ID)))
+		err := api.ImportRepository(path.Join(api.DataSet, "repositories", fmt.Sprintf("%d.json", repoID)))
 		if err != nil {
 			return "", err
 		}
@@ -365,9 +344,10 @@ func runAgentCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
 	}
+	agentID := aspace.URIToID(agent.URI)
 	p := strings.Split(agent.URI, "/")
 	if len(p) < 3 {
-		return "", fmt.Errorf(`Agent commands require a uri in the JSON payload, %s`, cmd.Payload)
+		return "", fmt.Errorf(`Agent commands require a uri in the JSON payload, e.g. {"uri":"/agents/people"} or {"uri":/"agents/poeple/3"}, %s`, cmd.Payload)
 	} else if len(p) == 3 {
 		agent.URI = ""
 	}
@@ -381,18 +361,13 @@ func runAgentCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 		if response.Status != "Created" {
 			return "", fmt.Errorf("%s", response)
 		}
-		// agent, err = api.GetAgent(aType, response.ID)
-		// if err != nil {
-		// 	return "", err
-		// }
-		// src, err := json.Marshal(agent)
 		src, err := json.Marshal(response)
 		if err != nil {
 			return "", err
 		}
 		return string(src), nil
 	case "list":
-		if agent.ID == 0 {
+		if agentID == 0 {
 			agents, err := api.ListAgents(aType)
 			if err != nil {
 				return "", fmt.Errorf(`{"error": "%s"}`, err)
@@ -403,7 +378,6 @@ func runAgentCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 			}
 			return string(src), nil
 		}
-		agentID := aspace.URIToID(agent.URI)
 		agent, err = api.GetAgent(aType, agentID)
 		if err != nil {
 			return "", fmt.Errorf(`{"error": "%s"}`, err)
@@ -421,7 +395,7 @@ func runAgentCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "delete":
-		agent, err = api.GetAgent(aType, agent.ID)
+		agent, err = api.GetAgent(aType, agentID)
 		if err != nil {
 			return "", err
 		}
@@ -431,6 +405,12 @@ func runAgentCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 		}
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
+	case "export":
+		err := api.ExportAgents(aType)
+		if err != nil {
+			return "", fmt.Errorf("Exporting /agents/%s, %s", aType, err)
+		}
+		return `{"status": "ok"}`, nil
 	}
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
@@ -450,9 +430,6 @@ func runAccessionCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error)
 	if repoID == 0 {
 		return "", fmt.Errorf(`{"error":"Could not determine repository id from uri"}`)
 	}
-	if accessionID == 0 {
-		return "", fmt.Errorf(`{"error":"Could not determine accession id from uri"}`)
-	}
 	switch cmd.Action {
 	case "create":
 		response, err := api.CreateAccession(repoID, accession)
@@ -468,7 +445,7 @@ func runAccessionCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error)
 		}
 		return string(src), nil
 	case "list":
-		if accession.ID == 0 {
+		if accessionID == 0 {
 			accessions, err := api.ListAccessions(repoID)
 			if err != nil {
 				return "", fmt.Errorf(`{"uri": "/repositories/%d/accessions","error": "%s"}`, repoID, err)
@@ -496,7 +473,7 @@ func runAccessionCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error)
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "delete":
-		accession, err = api.GetAccession(repoID, accession.ID)
+		accession, err = api.GetAccession(repoID, accessionID)
 		if err != nil {
 			return "", err
 		}
@@ -506,6 +483,12 @@ func runAccessionCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error)
 		}
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
+	case "export":
+		err := api.ExportAccessions(repoID)
+		if err != nil {
+			return "", fmt.Errorf("Exporting /repositories/%d/accessions, %s", repoID, err)
+		}
+		return `{"status": "ok"}`, nil
 	}
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
@@ -575,6 +558,12 @@ func runSubjectCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 		}
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
+	case "export":
+		err := api.ExportSubjects()
+		if err != nil {
+			return "", fmt.Errorf("Exporting /subjects, %s", err)
+		}
+		return `{"status": "ok"}`, nil
 	}
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
@@ -644,6 +633,12 @@ func runLocationCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) 
 		}
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
+	case "export":
+		err := api.ExportLocations()
+		if err != nil {
+			return "", fmt.Errorf("Exporting /locations, %s", err)
+		}
+		return `{"status": "ok"}`, nil
 	}
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
@@ -714,6 +709,12 @@ func runVocabularyCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error
 		}
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
+	case "export":
+		err := api.ExportVocabularies()
+		if err != nil {
+			return "", fmt.Errorf("Exporting /vocabularies, %s", err)
+		}
+		return `{"status": "ok"}`, nil
 	}
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
@@ -732,7 +733,7 @@ func runTermCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	termID := aspace.URIToID(term.URI)
 	vocabularyID := aspace.URIToVocabularyID(term.URI)
 	if vocabularyID == 0 {
-		return "", fmt.Errorf("Can't determine vocabulary ID from uri, %s", cmd.Payload)
+		return "", fmt.Errorf(`Can't determine vocabulary ID from uri, e.g. {"uri":"/vocabularies/1/terms"} or {"uri":"/vocabularies/1/terms/2"}, %s`, cmd.Payload)
 	}
 	switch cmd.Action {
 	case "create":
@@ -790,6 +791,12 @@ func runTermCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 		}
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
+	case "export":
+		err := api.ExportTerms()
+		if err != nil {
+			return "", fmt.Errorf("Exporting /terms, %s", err)
+		}
+		return `{"status": "ok"}`, nil
 	}
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
@@ -808,20 +815,20 @@ func runDigitalObjectCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, er
 	objID := aspace.URIToID(obj.URI)
 	repoID := aspace.URIToRepoID(obj.URI)
 	if repoID == 0 {
-		return "", fmt.Errorf("Can't determine repository ID from uri, %s", cmd.Payload)
+		return "", fmt.Errorf(`Can't determine repository ID from uri, e.g. {"uri":"/repositories/2/digital_objects"} or {"uri":"/repositories/2/digital_objects/3"}`)
 	}
 	switch cmd.Action {
 	case "create":
 		response, err := api.CreateDigitalObject(repoID, obj)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("Create digital_object fialed, %s", err)
 		}
 		if response.Status != "Created" {
-			return "", fmt.Errorf("%s", response)
+			return "", fmt.Errorf("Create digital_object status, %s", response)
 		}
 		src, err := json.Marshal(response)
 		if err != nil {
-			return "", err
+			return "", fmt.Errorf("Create digital object response, %s", err)
 		}
 		return string(src), nil
 	case "list":
@@ -863,10 +870,15 @@ func runDigitalObjectCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, er
 		}
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
+	case "export":
+		err := api.ExportDigitalObjects(repoID)
+		if err != nil {
+			return "", fmt.Errorf("Exporting /repositories/%d/digital_objects, %s", repoID, err)
+		}
+		return `{"status": "ok"}`, nil
 	}
 	return "", fmt.Errorf("runDigitalObjectCmd() action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
-
 
 func runSearchCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	var (
@@ -997,7 +1009,7 @@ func main() {
 		if err != nil {
 			log.Fatalf("Cannot read %s", *payload)
 		}
-		cmd.Payload = string(src)
+		cmd.Payload = fmt.Sprintf("%s", src)
 	}
 
 	if cmd.Subject == "agent" && len(args) > 2 {
