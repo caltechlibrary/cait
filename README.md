@@ -177,3 +177,10 @@ Assuming the default setup, you could start the like
 ```
 
 Or you could add a startup script to /etc/init.d/ as appropriate.
+
+### _xlsximporter_
+
+_xlsximporter_ is a utilty to transform sheets from an Excel file in xlsx format to JSON blobs suitable for importation into ArchivesSpace (e.g. Digital Objects).  By default it transforms each row in the spreadsheet into an object where the property names correspond to the column headers (in the initial row of the spreadsheet).  You can perform more elaborate mappings using a javascript callback function.  You can see an example of that in the *xlsximporter-javascript-example* directory. 
+
+The general workflow would be to transform you rows to JSON objects on your local disc with _xlsximporter_ then use the _aspace_ utility to push the JSON blobs into ArchivesSpace itself.
+
