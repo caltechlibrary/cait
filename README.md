@@ -13,8 +13,8 @@
 
 + A working deployment of ArchivesSpace
 + Golang 1.5.3 or better to compile
-+ [Bleve](http://blevesearch.com) Golang based Search/Indexing library (think Lucene lite implemented in Golang)
-+ Two 3rd part Go packages
++ Three 3rd part Go packages
+    + [Bleve](https://github.com/blevesearch/bleve) by [Blevesearch](http://blevesearch.com), Apache License, Version 2.0  
     + [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
     + [xlsx](https://github.com/tealeg/xlsx) by Tealeg, BSD license
 
