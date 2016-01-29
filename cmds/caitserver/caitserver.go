@@ -22,33 +22,33 @@ import (
 	"strings"
 	"text/template" // Using text template because I am not HTML escaping results...
 
-	"../../../aspace"
+	"../../../cait"
 	"github.com/blevesearch/bleve"
 )
 
 var (
 	description = `
- USAGE: aspacesearch [OPTIONS]
+ USAGE: caitsearch [OPTIONS]
 
  OVERVIEW
 
-	aspacesearch provides search services defined by ASPACE_SEARCH_URL for the
-	website content defined by ASPACE_HTDOCS using the index defined
-	by ASPACE_BLEVE_INDEX.
+	caitsearch provides search services defined by CAIT_SEARCH_URL for the
+	website content defined by CAIT_HTDOCS using the index defined
+	by CAIT_BLEVE_INDEX.
 
  OPTIONS
 `
 	configuration = `
  CONFIGURATION
 
- aspacesearch can be configured through environment variables. The following
+ caitsearch can be configured through environment variables. The following
  variables are supported-
 
-   ASPACE_SEARCH_URL
+   CAIT_SEARCH_URL
 
-   ASPACE_BLEVE_INDEX
+   CAIT_BLEVE_INDEX
 
-   ASPACE_TEMPLATES
+   CAIT_TEMPLATES
 
 `
 	help         bool
@@ -102,13 +102,13 @@ type Records struct {
 	//Facets map[string]map[string]interface{} `json:"facets,omitempty"`
 	//{"facet_queries":{},"facet_fields":{},"facet_dates":{},"facet_ranges":{}
 
-	Records []*aspace.NormalizedAccessionView `json:"results,omitemty"`
+	Records []*cait.NormalizedAccessionView `json:"results,omitemty"`
 }
 
-func mapToSearchQuery(m map[string]string) (*aspace.SearchQuery, error) {
+func mapToSearchQuery(m map[string]string) (*cait.SearchQuery, error) {
 	var err error
 	fmt.Printf("DEBUG starting mapToSearchQuery: %v\n", m)
-	q := new(aspace.SearchQuery)
+	q := new(cait.SearchQuery)
 	if _, ok := m["uri"]; ok == true {
 		q.URI = m["uri"]
 		fmt.Printf("DEBUG q.URI: %s\n", q.URI)
@@ -309,10 +309,10 @@ func logger(next http.Handler) http.Handler {
 func init() {
 	var err error
 
-	uri := os.Getenv("ASPACE_SEARCH_URL")
-	indexName = os.Getenv("ASPACE_BLEVE_INDEX")
-	htdocsDir = os.Getenv("ASPACE_HTDOCS")
-	templatesDir = os.Getenv("ASPACE_TEMPLATES")
+	uri := os.Getenv("CAIT_SEARCH_URL")
+	indexName = os.Getenv("CAIT_BLEVE_INDEX")
+	htdocsDir = os.Getenv("CAIT_HTDOCS")
+	templatesDir = os.Getenv("CAIT_TEMPLATES")
 	flag.StringVar(&uri, "search", "http://localhost:8501", "The URL to listen on for search requests")
 	flag.StringVar(&indexName, "index", "index.bleve", "specify the Bleve index to use")
 	flag.StringVar(&htdocsDir, "htdocs", "htdocs", "specify where to write the HTML files to")

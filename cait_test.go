@@ -1,12 +1,12 @@
 //
-// Package aspace is a collection of structures and functions
+// Package cait is a collection of structures and functions
 // for interacting with ArchivesSpace's REST API
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
 // copyright (c) 2016
 // Caltech Library
 //
-package aspace
+package cait
 
 import (
 	"fmt"
@@ -20,28 +20,28 @@ import (
 
 // Get the environment variables needed for testing.
 var (
-	aspaceURL      = os.Getenv("ASPACE_API_URL")
-	aspaceToken    = os.Getenv("ASPACE_API_TOKEN")
-	aspaceUsername = os.Getenv("ASPACE_USERNAME")
-	aspacePassword = os.Getenv("ASPACE_PASSWORD")
+	caitURL      = os.Getenv("CAIT_API_URL")
+	caitToken    = os.Getenv("CAIT_API_TOKEN")
+	caitUsername = os.Getenv("CAIT_USERNAME")
+	caitPassword = os.Getenv("CAIT_PASSWORD")
 )
 
 func checkConfig(t *testing.T) bool {
 	isSetup := true
-	if aspaceURL == "" {
-		t.Error("ASPACE_API_URL environment variable not set.", aspaceURL)
+	if caitURL == "" {
+		t.Error("CAIT_API_URL environment variable not set.", caitURL)
 		isSetup = false
 	}
-	if aspaceToken != "" {
-		t.Error("ASPACE_API_TOKEN already set, should be empty for tests.", aspaceToken)
+	if caitToken != "" {
+		t.Error("CAIT_API_TOKEN already set, should be empty for tests.", caitToken)
 		isSetup = false
 	}
-	if aspaceUsername == "" {
-		t.Error("ASPACE_USERNAME environment variable not set.", aspaceUsername)
+	if caitUsername == "" {
+		t.Error("CAIT_USERNAME environment variable not set.", caitUsername)
 		isSetup = false
 	}
-	if aspacePassword == "" {
-		t.Error("ASPACE_PASSWORD environment variable not set.", aspacePassword)
+	if caitPassword == "" {
+		t.Error("CAIT_PASSWORD environment variable not set.", caitPassword)
 		isSetup = false
 	}
 	return isSetup
@@ -56,13 +56,13 @@ func TestSetup(t *testing.T) {
 		t.FailNow()
 	}
 	// Make sure we're not talking to a named system (should be localhost)
-	u, err := url.Parse(aspaceURL)
+	u, err := url.Parse(caitURL)
 	if err != nil {
-		log.Printf("aspaceURL value doesn't make sense %s %s", aspaceURL, err)
+		log.Printf("caitURL value doesn't make sense %s %s", caitURL, err)
 		t.FailNow()
 	}
 	if strings.Contains(u.Host, "localhost:") == false {
-		log.Printf("Tests expect to run on http://localhost:8089 not %s", aspaceURL)
+		log.Printf("Tests expect to run on http://localhost:8089 not %s", caitURL)
 		t.FailNow()
 	}
 	log.Printf("Test setup completed\n")
@@ -76,27 +76,27 @@ func TestArchiveSpaceAPI(t *testing.T) {
 		t.SkipNow()
 	}
 
-	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
-	if aspace.URL == nil {
-		t.Errorf("%s\t%s", aspace.URL.String(), aspaceURL)
+	cait := New(caitURL, caitUsername, caitPassword)
+	if cait.URL == nil {
+		t.Errorf("%s\t%s", cait.URL.String(), caitURL)
 	}
-	if strings.Compare(aspace.URL.String(), fmt.Sprintf("%s", aspaceURL)) != 0 {
-		t.Errorf("%s != %s\n", aspace.URL.String(), aspaceURL)
+	if strings.Compare(cait.URL.String(), fmt.Sprintf("%s", caitURL)) != 0 {
+		t.Errorf("%s != %s\n", cait.URL.String(), caitURL)
 	}
 
-	if aspace.IsAuth() == true {
-		t.Error("aspace.IsAuth() returning true before authentication")
+	if cait.IsAuth() == true {
+		t.Error("cait.IsAuth() returning true before authentication")
 	}
-	err := aspace.Login()
+	err := cait.Login()
 	if err != nil {
-		t.Errorf("%s\t%s", err, aspace.URL.String())
+		t.Errorf("%s\t%s", err, cait.URL.String())
 		t.FailNow()
 	}
-	if aspace.IsAuth() == false {
-		t.Error("aspace.IsAuth() return false after authentication")
+	if cait.IsAuth() == false {
+		t.Error("cait.IsAuth() return false after authentication")
 	}
 
-	err = aspace.Logout()
+	err = cait.Logout()
 	if err != nil {
 		t.Errorf("Logout() %s", err)
 	}
@@ -110,11 +110,11 @@ func TestRepository(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
+	cait := New(caitURL, caitUsername, caitPassword)
 	tm := time.Now()
 	repoCode := fmt.Sprintf("%d", tm.Unix())
 
-	err := aspace.Login()
+	err := cait.Login()
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -122,7 +122,7 @@ func TestRepository(t *testing.T) {
 	repo1 := new(Repository)
 	repo1.RepoCode = repoCode
 	repo1.Name = "This is a test generated from go_test"
-	response, err := aspace.CreateRepository(repo1)
+	response, err := cait.CreateRepository(repo1)
 	if err != nil {
 		t.Errorf("Error from CreateRepository() %s", err)
 	}
@@ -134,7 +134,7 @@ func TestRepository(t *testing.T) {
 	}
 	repo1.ID = response.ID
 
-	repo2, err := aspace.GetRepository(repo1.ID)
+	repo2, err := cait.GetRepository(repo1.ID)
 	if err != nil {
 		t.Errorf("GetRepository() error: %s", err)
 	}
@@ -151,7 +151,7 @@ func TestRepository(t *testing.T) {
 	repo2.Name = fmt.Sprintf("Modified Name: %s", repo2.Name)
 	repo2.URL = `http://www.archive.example.edu`
 	repo2.ImageURL = `http://www.archive.example.edu/logo.svg`
-	response, err = aspace.UpdateRepository(repo2)
+	response, err = cait.UpdateRepository(repo2)
 	if err != nil {
 		t.Errorf("UpdateRepository failed for %v: %s", repo2, err)
 	}
@@ -159,7 +159,7 @@ func TestRepository(t *testing.T) {
 		t.Errorf("UpdateRepository() should return a response.Status of Updated %s", response)
 	}
 	isOK := true
-	repo1, err = aspace.GetRepository(repo2.ID)
+	repo1, err = cait.GetRepository(repo2.ID)
 	if err != nil {
 		t.Errorf("GetRepository() %d after update failed %s", repo2.ID, err)
 		isOK = false
@@ -177,24 +177,24 @@ func TestRepository(t *testing.T) {
 		isOK = false
 	}
 	if isOK == false {
-		t.Logf("Auth Token: %s", aspace.AuthToken)
+		t.Logf("Auth Token: %s", cait.AuthToken)
 		t.FailNow()
 	}
 
-	repos, err := aspace.ListRepositories()
+	repos, err := cait.ListRepositories()
 	if err != nil {
-		t.Errorf("ListRepostiories failed for %v : %s", aspace, err)
+		t.Errorf("ListRepostiories failed for %v : %s", cait, err)
 	} else if len(repos) == 0 {
 		t.Errorf("Expected one or more in repository list: %v", repos)
 	}
 
-	_, err = aspace.DeleteRepository(repo2)
+	_, err = cait.DeleteRepository(repo2)
 	if err != nil {
 		t.Errorf("DeleteRepository failed for %v: %s", repo2, err)
 		t.FailNow()
 	}
 
-	_, err = aspace.GetRepository(repo1.ID)
+	_, err = cait.GetRepository(repo1.ID)
 	if err == nil {
 		t.Errorf("GetRepository() should return an error after a deleting repo id %d: %s", repo1.ID, err)
 		t.FailNow()
@@ -209,8 +209,8 @@ func TestAgent(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
-	err := aspace.Login()
+	cait := New(caitURL, caitUsername, caitPassword)
+	err := cait.Login()
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -218,11 +218,11 @@ func TestAgent(t *testing.T) {
 
 	// Test the listing of agents by Type or individually by type/id
 	for _, aType := range []string{"people", "families", "corporate_entities", "software"} {
-		if agentIDs, err := aspace.ListAgents(aType); err != nil {
+		if agentIDs, err := cait.ListAgents(aType); err != nil {
 			t.Errorf(`ListAgents("%s") error: %s`, aType, err)
 		} else if len(agentIDs) > 0 {
 			for _, id := range agentIDs {
-				if agentInfo, err := aspace.GetAgent(aType, id); err != nil {
+				if agentInfo, err := cait.GetAgent(aType, id); err != nil {
 					t.Errorf(`GetAgent("%s", %d) error: %s`, aType, id, err)
 				} else {
 					if agentInfo.ID != id {
@@ -248,7 +248,7 @@ func TestAgent(t *testing.T) {
 	agent0.Names = append(agent0.Names, name0)
 
 	aType := "people"
-	response, err := aspace.CreateAgent(aType, agent0)
+	response, err := cait.CreateAgent(aType, agent0)
 	if err != nil {
 		t.Errorf(`CreateAgent("%s", %s) error: %s`, aType, agent0, err)
 		t.FailNow()
@@ -259,7 +259,7 @@ func TestAgent(t *testing.T) {
 	}
 	agent0.ID = response.ID
 
-	agent1, err := aspace.GetAgent(aType, agent0.ID)
+	agent1, err := cait.GetAgent(aType, agent0.ID)
 	if err != nil {
 		t.Errorf(`GetAgent(%d) failed %s`, agent0.ID, err)
 		t.FailNow()
@@ -270,7 +270,7 @@ func TestAgent(t *testing.T) {
 		t.FailNow()
 	}
 	agent1.Names[0].NameOrder = "inverted"
-	response, err = aspace.UpdateAgent(agent1)
+	response, err = cait.UpdateAgent(agent1)
 	if err != nil {
 		t.Errorf(`UpdateAgent(%s), error: %s`, agent1, err)
 		t.FailNow()
@@ -279,12 +279,12 @@ func TestAgent(t *testing.T) {
 		t.Errorf(`UpdateAgent(%s), status error: %s`, agent1, response)
 		t.FailNow()
 	}
-	agent2, _ := aspace.GetAgent(aType, agent1.ID)
+	agent2, _ := cait.GetAgent(aType, agent1.ID)
 	if strings.Compare(agent2.Names[0].NameOrder, "inverted") != 0 {
 		t.Errorf("UpdateAgent(%s), error: Failed to update Names[0].NameOrder [%s] != [%s]", agent1, agent1.Names[0].NameOrder, agent2.Names[0].NameOrder)
 		t.FailNow()
 	}
-	response, err = aspace.DeleteAgent(agent2)
+	response, err = cait.DeleteAgent(agent2)
 	if err != nil {
 		t.Errorf("DeleteAgent(%s), error: %s", agent2, err)
 		t.FailNow()
@@ -315,8 +315,8 @@ func TestAccession(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
-	err := aspace.Login()
+	cait := New(caitURL, caitUsername, caitPassword)
+	err := cait.Login()
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -327,8 +327,8 @@ func TestAccession(t *testing.T) {
 	repo := new(Repository)
 	repo.RepoCode = repoCode
 	repo.Name = fmt.Sprintf("This is a test data generated from go_test for working with Accession data in test Repository %s", repoCode)
-	response, err := aspace.CreateRepository(repo)
-	defer aspace.DeleteRepository(repo)
+	response, err := cait.CreateRepository(repo)
+	defer cait.DeleteRepository(repo)
 	if err != nil {
 		t.Errorf("Error from CreateRepository() %s", err)
 	}
@@ -336,7 +336,7 @@ func TestAccession(t *testing.T) {
 		t.Errorf("Erro from CreateRepository() %s", response)
 	}
 	repo.ID = response.ID
-	repo, err = aspace.GetRepository(repo.ID)
+	repo, err = cait.GetRepository(repo.ID)
 	if repo == nil {
 		t.Errorf("Repository should not be nil")
 	}
@@ -346,7 +346,7 @@ func TestAccession(t *testing.T) {
 	}
 
 	// Test the listing of accessions
-	accessionIDs, err := aspace.ListAccessions(repo.ID)
+	accessionIDs, err := cait.ListAccessions(repo.ID)
 	if err != nil {
 		t.Errorf(`ListAccessions() error: %s`, err)
 		t.FailNow()
@@ -362,7 +362,7 @@ func TestAccession(t *testing.T) {
 		accession1.ID0 = fmt.Sprintf("%04d", tm.Year())
 		accession1.ID1 = fmt.Sprintf("%04d", i)
 		accession1.AccessionDate = fmt.Sprintf("%d-%02d-%02d", tm.Year(), tm.Month(), tm.Day())
-		response, err = aspace.CreateAccession(repo.ID, accession1)
+		response, err = cait.CreateAccession(repo.ID, accession1)
 		if err != nil {
 			t.Errorf("Can't create accession %v, %s", accession1, err)
 			t.FailNow()
@@ -373,7 +373,7 @@ func TestAccession(t *testing.T) {
 		}
 		accession1.ID = response.ID
 		accession1.URI = response.URI
-		accession2, err := aspace.GetAccession(repo.ID, accession1.ID)
+		accession2, err := cait.GetAccession(repo.ID, accession1.ID)
 		if err != nil {
 			t.Errorf("GetAccession(%d, %d) error %s", repo.ID, accession1.ID, err)
 		}
@@ -388,7 +388,7 @@ func TestAccession(t *testing.T) {
 		}
 	}
 
-	accessionIDs, err = aspace.ListAccessions(repo.ID)
+	accessionIDs, err = cait.ListAccessions(repo.ID)
 	if err != nil {
 		t.Errorf(`ListAccessions() error: %s`, err)
 		t.FailNow()
@@ -399,7 +399,7 @@ func TestAccession(t *testing.T) {
 	}
 
 	for _, id := range accessionIDs {
-		accessionInfo, err := aspace.GetAccession(repo.ID, id)
+		accessionInfo, err := cait.GetAccession(repo.ID, id)
 		if err != nil {
 			t.Errorf(`GetAccession(%d) error: %s`, id, err)
 		}
@@ -423,8 +423,8 @@ func TestVocabularies(t *testing.T) {
 		t.Skip()
 	}
 
-	aspace := New(aspaceURL, aspaceUsername, aspacePassword)
-	err := aspace.Login()
+	cait := New(caitURL, caitUsername, caitPassword)
+	err := cait.Login()
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
@@ -434,12 +434,12 @@ func TestVocabularies(t *testing.T) {
 	voc.Name = "test from Go"
 	voc.RefID = "testFromGo"
 
-	response, err := aspace.CreateVocabulary(voc)
+	response, err := cait.CreateVocabulary(voc)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	fmt.Printf("DEBUG aspace.CreateSubject() --> %s\n", response)
+	fmt.Printf("DEBUG cait.CreateSubject() --> %s\n", response)
 }
 
 //FIXME: Needs tests for Subject, Term, Vocalary, User, Search

@@ -5,7 +5,7 @@
 // row into a JSON blob.  If you provide a JavaScript file and callback function
 // It will use that callback function to generate the resulting JSON blob.
 // The JavaScript environment include Getenv() for accessing environment variables
-// (e.g. ASPACE_API_URL) as well as httpGET(), httpPOST() for interacting with
+// (e.g. CAIT_API_URL) as well as httpGET(), httpPOST() for interacting with
 // the ArchivesSpace REST API directly.
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
@@ -96,7 +96,7 @@ func usage() {
  + HttpGet() this performs a HTTP GET operation returning content retrieved.
 
  GetEnv() takes one argument, a string, matching the environment variable
- you will to retreive. E.g. Getenv("ASPACE_API_URL")
+ you will to retreive. E.g. Getenv("CAIT_API_URL")
 
  HttpGet() accepts a URL (including an parameters), optional headers and
  returns the response body. E.g.

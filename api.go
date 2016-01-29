@@ -1,12 +1,12 @@
 //
-// Package aspace is a collection of structures and functions
+// Package cait is a collection of structures and functions
 // for interacting with ArchivesSpace's REST API
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
 // copyright (c) 2016
 // Caltech Library
 //
-package aspace
+package cait
 
 import (
 	"bytes"
@@ -32,14 +32,14 @@ func MergeEnv(environmentVar, defaultValue string) string {
 // in the gas package.
 func New(apiURL, username, password string) *ArchivesSpaceAPI {
 	api := new(ArchivesSpaceAPI)
-	api.URL, _ = url.Parse(MergeEnv("ASPACE_API_URL", apiURL))
-	api.AuthToken = MergeEnv("ASPACE_API_TOKEN", "")
-	api.Username = MergeEnv("ASPACE_USERNAME", username)
-	api.Password = MergeEnv("ASPACE_PASSWORD", password)
-	api.DataSet = MergeEnv("ASPACE_DATASET", "data")
-	api.Htdocs = MergeEnv("ASPACE_HTDOCS", "htdocs")
-	api.Templates = MergeEnv("ASPACE_TEMPLATES", "templates")
-	api.BleveIndex = MergeEnv("ASPACE_BLEVE_INDEX", "index.bleve")
+	api.URL, _ = url.Parse(MergeEnv("CAIT_API_URL", apiURL))
+	api.AuthToken = MergeEnv("CAIT_API_TOKEN", "")
+	api.Username = MergeEnv("CAIT_USERNAME", username)
+	api.Password = MergeEnv("CAIT_PASSWORD", password)
+	api.DataSet = MergeEnv("CAIT_DATASET", "data")
+	api.Htdocs = MergeEnv("CAIT_HTDOCS", "htdocs")
+	api.Templates = MergeEnv("CAIT_TEMPLATES", "templates")
+	api.BleveIndex = MergeEnv("CAIT_BLEVE_INDEX", "index.bleve")
 	return api
 }
 
@@ -91,7 +91,7 @@ func (api *ArchivesSpaceAPI) Login() error {
 
 // Logout clear the authentication token for the session with the API
 func (api *ArchivesSpaceAPI) Logout() error {
-	// Save the token and invalidate the one in our aspace struct.
+	// Save the token and invalidate the one in our cait struct.
 	token := api.AuthToken
 	api.AuthToken = ""
 	// Using the copied token try to logout from the service.

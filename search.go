@@ -1,5 +1,5 @@
 //
-// Package aspace is a collection of structures and functions
+// Package cait is a collection of structures and functions
 // for interacting with ArchivesSpace's REST API
 //
 //
@@ -7,7 +7,7 @@
 // copyright (c) 2016
 // Caltech Library
 //
-package aspace
+package cait
 
 // SearchQuery represents the query options supported by search
 type SearchQuery struct {

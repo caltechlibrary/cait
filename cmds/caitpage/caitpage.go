@@ -1,5 +1,5 @@
 //
-// cmds/aspacepage/aspacepage.go - A command line utility that builds pages from the exported results of aspace.go
+// cmds/caitpage/caitpage.go - A command line utility that builds pages from the exported results of cait.go
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
 // copyright (c) 2016
@@ -19,34 +19,34 @@ import (
 	"strings"
 	"text/template"
 
-	"../../../aspace"
+	"../../../cait"
 )
 
 var (
 	description = `
- USAGE: aspacepage [OPTIONS]
+ USAGE: caitpage [OPTIONS]
 
  OVERVIEW
 
-	aspacepage generates HTML pages based on the JSON output form
-	aspace and templates associated with the command.
+	caitpage generates HTML pages based on the JSON output form
+	cait and templates associated with the command.
 
  OPTIONS
 `
 	configuration = `
  CONFIGURATION
 
-    aspacepages can be configured through setting the following environment
+    caitpages can be configured through setting the following environment
 	variables-
 
-    ASPACE_DATASET    this is the directory that contains the output of the
-                      'aspace instance export' command. Defaults to ./data
+    CAIT_DATASET    this is the directory that contains the output of the
+                      'cait instance export' command. Defaults to ./data
 
-    ASPACE_TEMPLATES  this is the directory that contains the templates
+    CAIT_TEMPLATES  this is the directory that contains the templates
                       used used to generate the static content of the website.
                       Defaults to ./templates/default.
 
-    ASPACE_HTDOCS     this is the directory where the HTML files are written.
+    CAIT_HTDOCS     this is the directory where the HTML files are written.
                       Defaults to ./htdocs
 
 `
@@ -62,7 +62,7 @@ var (
 	aIncTmplName  = "accession.include"
 	aIncTmpl      = template.New(aIncTmplName)
 
-	subjects = make(map[string]*aspace.Subject)
+	subjects = make(map[string]*cait.Subject)
 )
 
 func usage() {
@@ -89,7 +89,7 @@ func loadTemplates(templateDir string) error {
 
 func loadSubjects(subjectDir string) error {
 	var err error
-	subjects, err = aspace.MakeSubjectMap(subjectDir)
+	subjects, err = cait.MakeSubjectMap(subjectDir)
 	return err
 }
 
@@ -100,7 +100,7 @@ func walkRepositories(p string, f os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
-		accession := new(aspace.Accession)
+		accession := new(cait.Accession)
 		err = json.Unmarshal(src, &accession)
 		if err != nil {
 			return err
@@ -169,9 +169,9 @@ func processData() error {
 }
 
 func init() {
-	dataDir = os.Getenv("ASPACE_DATASET")
-	templateDir = os.Getenv("ASPACE_TEMPLATES")
-	htdocsDir = os.Getenv("ASPACE_HTDOCS")
+	dataDir = os.Getenv("CAIT_DATASET")
+	templateDir = os.Getenv("CAIT_TEMPLATES")
+	htdocsDir = os.Getenv("CAIT_HTDOCS")
 	flag.StringVar(&htdocsDir, "htdocs", "htdocs", "specify where to write the HTML files to")
 	flag.StringVar(&dataDir, "data", "data", "specify where to read the JSON files from")
 	flag.StringVar(&templateDir, "templates", path.Join("templates", "default"), "specify where to read the templates from")

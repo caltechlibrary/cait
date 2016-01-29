@@ -1,5 +1,5 @@
 //
-// cmds/aspace/aspace.go - A command line utility using the aspace package to work
+// cmds/cait/cait.go - A command line utility using the cait package to work
 // with ArchivesSpace's REST API.
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
@@ -18,7 +18,7 @@ import (
 	"path"
 	"strings"
 
-	"../../../aspace"
+	"../../../cait"
 	"github.com/blevesearch/bleve"
 )
 
@@ -60,9 +60,9 @@ var (
 // These are the global environment variables defaults used by various combinations of subjects and actions
 var (
 	description = `
-  USAGE: aspace SUBJECT ACTION [OPTIONS|PAYLOAD]
+  USAGE: cait SUBJECT ACTION [OPTIONS|PAYLOAD]
 
-  aspace is a command line utility for interacting with an ArchivesSpace
+  cait is a command line utility for interacting with an ArchivesSpace
   instance.  The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
 
     SUBJECT can be %s.
@@ -77,18 +77,18 @@ var (
 	configuration = `
  CONFIGURATION
 
-  aspace also relies on the shell environment for information about connecting
+  cait also relies on the shell environment for information about connecting
   to the ArchivesSpace instance. The following shell variables are used
 
-    ASPACE_API_URL           (e.g. http://localhost:8089)
-    ASPACE_API_TOKEN         (e.g. long token string of letters and numbers)
+    CAIT_API_URL           (e.g. http://localhost:8089)
+    CAIT_API_TOKEN         (e.g. long token string of letters and numbers)
 
-  If ASPACE_API_TOKEN is not set then ASPACE_USERNAME and ASPACE_PASSWORD
+  If CAIT_API_TOKEN is not set then CAIT_USERNAME and CAIT_PASSWORD
   are used if available.
 
   EXAMPLES:
 
-  	aspace repository create '{"repo_code":"MyTest","name":"My Test Repository"}'
+  	cait repository create '{"repo_code":"MyTest","name":"My Test Repository"}'
 
   The subject is "repository", the action is "create", the target is "MyTest"
   and the options are "My Test Repository".
@@ -98,22 +98,22 @@ var (
 
   You can check to see what repositories exists with
 
-    aspace repository list
+    cait repository list
 
   Or for a specific repository by ID with
 
-    aspace repository list '{"uri": "/repositories/2"}'
+    cait repository list '{"uri": "/repositories/2"}'
 
   Other SUBJECTS and ACTIONS work in a similar fashion.
 
 `
-	aspaceAPIURL     = `http://localhost:8089`
-	aspaceUsername   = ``
-	aspacePassword   = ``
-	aspaceDataSet    = `data`
-	aspaceHtdocs     = `htdocs`
-	aspaceTemplates  = `templates`
-	aspaceBleveIndex = `index.bleve`
+	caitAPIURL     = `http://localhost:8089`
+	caitUsername   = ``
+	caitPassword   = ``
+	caitDataSet    = `data`
+	caitHtdocs     = `htdocs`
+	caitTemplates  = `templates`
+	caitBleveIndex = `index.bleve`
 )
 
 func usage() {
@@ -134,7 +134,7 @@ func containsElement(src []string, elem string) bool {
 	return false
 }
 
-func exportInstance(api *aspace.ArchivesSpaceAPI) error {
+func exportInstance(api *cait.ArchivesSpaceAPI) error {
 	var err error
 
 	log.Println("Starting Export")
@@ -206,7 +206,7 @@ func exportInstance(api *aspace.ArchivesSpaceAPI) error {
 	return nil
 }
 
-func importInstance(api *aspace.ArchivesSpaceAPI) error {
+func importInstance(api *cait.ArchivesSpaceAPI) error {
 	return fmt.Errorf(`importInstance("%s") not implemented`, api)
 }
 
@@ -238,7 +238,7 @@ func parseCmd(args []string) (*command, error) {
 	return cmd, nil
 }
 
-func runInstanceCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
+func runInstanceCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
@@ -249,18 +249,18 @@ func runInstanceCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) 
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runRepoCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
+func runRepoCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
 	repoID := 0
-	repo := new(aspace.Repository)
+	repo := new(cait.Repository)
 	if cmd.Payload != "" {
 		err := json.Unmarshal([]byte(cmd.Payload), repo)
 		if err != nil {
 			return "", fmt.Errorf("Problem unmashalling JSON repository request, %s", err)
 		}
-		repoID = aspace.URIToID(repo.URI)
+		repoID = cait.URIToID(repo.URI)
 	}
 	switch cmd.Action {
 	case "create":
@@ -329,17 +329,17 @@ func runRepoCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runAgentCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
+func runAgentCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
 	//Agent Type Payload as JSON encoded objects
-	agent := new(aspace.Agent)
+	agent := new(cait.Agent)
 	err := json.Unmarshal([]byte(cmd.Payload), &agent)
 	if err != nil {
 		return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
 	}
-	agentID := aspace.URIToID(agent.URI)
+	agentID := cait.URIToID(agent.URI)
 	p := strings.Split(agent.URI, "/")
 	if len(p) < 3 {
 		return "", fmt.Errorf(`Agent commands require a uri in the JSON payload, e.g. {"uri":"/agents/people"} or {"uri":/"agents/poeple/3"}, %s`, cmd.Payload)
@@ -410,18 +410,18 @@ func runAgentCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runAccessionCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
+func runAccessionCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
 	// Repo ID is passed as a JSON object
-	accession := new(aspace.Accession)
+	accession := new(cait.Accession)
 	err := json.Unmarshal([]byte(cmd.Payload), &accession)
 	if err != nil {
 		return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
 	}
-	accessionID := aspace.URIToID(accession.URI)
-	repoID := aspace.URIToRepoID(accession.URI)
+	accessionID := cait.URIToID(accession.URI)
+	repoID := cait.URIToRepoID(accession.URI)
 	if repoID == 0 {
 		return "", fmt.Errorf(`{"error":"Could not determine repository id from uri"}`)
 	}
@@ -488,18 +488,18 @@ func runAccessionCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error)
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runSubjectCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
+func runSubjectCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
-	subject := new(aspace.Subject)
+	subject := new(cait.Subject)
 	if cmd.Payload != "" {
 		err := json.Unmarshal([]byte(cmd.Payload), &subject)
 		if err != nil {
 			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
 		}
 	}
-	subjectID := aspace.URIToID(subject.URI)
+	subjectID := cait.URIToID(subject.URI)
 	switch cmd.Action {
 	case "create":
 		response, err := api.CreateSubject(subject)
@@ -563,18 +563,18 @@ func runSubjectCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runLocationCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
+func runLocationCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
-	location := new(aspace.Location)
+	location := new(cait.Location)
 	if cmd.Payload != "" {
 		err := json.Unmarshal([]byte(cmd.Payload), &location)
 		if err != nil {
 			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
 		}
 	}
-	locationID := aspace.URIToID(location.URI)
+	locationID := cait.URIToID(location.URI)
 	switch cmd.Action {
 	case "create":
 		response, err := api.CreateLocation(location)
@@ -638,18 +638,18 @@ func runLocationCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) 
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runVocabularyCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
+func runVocabularyCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
-	vocabulary := new(aspace.Vocabulary)
+	vocabulary := new(cait.Vocabulary)
 	if cmd.Payload != "" {
 		err := json.Unmarshal([]byte(cmd.Payload), &vocabulary)
 		if err != nil {
 			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
 		}
 	}
-	vocabularyID := aspace.URIToID(vocabulary.URI)
+	vocabularyID := cait.URIToID(vocabulary.URI)
 	switch cmd.Action {
 	case "create":
 		response, err := api.CreateVocabulary(vocabulary)
@@ -714,19 +714,19 @@ func runVocabularyCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runTermCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
+func runTermCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
-	term := new(aspace.Term)
+	term := new(cait.Term)
 	if cmd.Payload != "" {
 		err := json.Unmarshal([]byte(cmd.Payload), &term)
 		if err != nil {
 			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
 		}
 	}
-	termID := aspace.URIToID(term.URI)
-	vocabularyID := aspace.URIToVocabularyID(term.URI)
+	termID := cait.URIToID(term.URI)
+	vocabularyID := cait.URIToVocabularyID(term.URI)
 	if vocabularyID == 0 {
 		return "", fmt.Errorf(`Can't determine vocabulary ID from uri, e.g. {"uri":"/vocabularies/1/terms"} or {"uri":"/vocabularies/1/terms/2"}, %s`, cmd.Payload)
 	}
@@ -796,19 +796,19 @@ func runTermCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runDigitalObjectCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
+func runDigitalObjectCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
-	obj := new(aspace.DigitalObject)
+	obj := new(cait.DigitalObject)
 	if cmd.Payload != "" {
 		err := json.Unmarshal([]byte(cmd.Payload), &obj)
 		if err != nil {
 			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
 		}
 	}
-	objID := aspace.URIToID(obj.URI)
-	repoID := aspace.URIToRepoID(obj.URI)
+	objID := cait.URIToID(obj.URI)
+	repoID := cait.URIToRepoID(obj.URI)
 	if repoID == 0 {
 		return "", fmt.Errorf(`Can't determine repository ID from uri, e.g. {"uri":"/repositories/2/digital_objects"} or {"uri":"/repositories/2/digital_objects/3"}`)
 	}
@@ -875,9 +875,9 @@ func runDigitalObjectCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, er
 	return "", fmt.Errorf("runDigitalObjectCmd() action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runSearchCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
+func runSearchCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	var (
-		opt *aspace.SearchQuery
+		opt *cait.SearchQuery
 		err error
 	)
 	if cmd.Payload != "" {
@@ -886,7 +886,7 @@ func runSearchCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
 		}
 	}
-	bleveIndex := os.Getenv("ASPACE_BLEVE_INDEX")
+	bleveIndex := os.Getenv("CAIT_BLEVE_INDEX")
 	if bleveIndex == "" {
 		// Fall back to the ArchivesSpace search API
 		if err := api.Login(); err != nil {
@@ -918,7 +918,7 @@ func runSearchCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 	return fmt.Sprintf("%s", results), nil
 }
 
-func runCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
+func runCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	switch cmd.Subject {
 	case "instance":
 		return runInstanceCmd(api, cmd)
@@ -957,15 +957,15 @@ func main() {
 	flag.StringVar(payload, "i", "", "Use this filepath for the payload")
 	flag.BoolVar(version, "v", false, "Display version info")
 
-	aspaceAPIURL = aspace.MergeEnv("ASPACE_API_URL", aspaceAPIURL)
-	aspaceUsername = aspace.MergeEnv("ASPACE_USERNAME", aspaceUsername)
-	aspacePassword = aspace.MergeEnv("ASPACE_PASSWORD", aspacePassword)
-	aspaceDataSet = aspace.MergeEnv("ASPACE_DATASET", aspaceDataSet)
-	aspaceHtdocs = aspace.MergeEnv("ASPACE_HTDOCS", aspaceHtdocs)
-	aspaceTemplates = aspace.MergeEnv("ASPACE_TEMPLATES", aspaceTemplates)
-	aspaceBleveIndex = aspace.MergeEnv("ASPACE_BLEVE_INDEX", aspaceBleveIndex)
+	caitAPIURL = cait.MergeEnv("CAIT_API_URL", caitAPIURL)
+	caitUsername = cait.MergeEnv("CAIT_USERNAME", caitUsername)
+	caitPassword = cait.MergeEnv("CAIT_PASSWORD", caitPassword)
+	caitDataSet = cait.MergeEnv("CAIT_DATASET", caitDataSet)
+	caitHtdocs = cait.MergeEnv("CAIT_HTDOCS", caitHtdocs)
+	caitTemplates = cait.MergeEnv("CAIT_TEMPLATES", caitTemplates)
+	caitBleveIndex = cait.MergeEnv("CAIT_BLEVE_INDEX", caitBleveIndex)
 
-	api := aspace.New(aspaceAPIURL, aspaceUsername, aspacePassword)
+	api := cait.New(caitAPIURL, caitUsername, caitPassword)
 
 	flag.Parse()
 	if *help == true {
@@ -973,13 +973,13 @@ func main() {
 	}
 
 	if *version == true {
-		fmt.Printf("Version: %s\n", aspace.Version)
+		fmt.Printf("Version: %s\n", cait.Version)
 		os.Exit(0)
 	}
 
 	args := os.Args[1:]
 	if len(args) < 2 {
-		log.Fatalf("Missing commands options. For more info try: aspace -h")
+		log.Fatalf("Missing commands options. For more info try: cait -h")
 	}
 
 	cmd, err := parseCmd(args)
@@ -995,7 +995,7 @@ func main() {
 	}
 
 	if *version == true {
-		log.Printf("Version: %s\n", aspace.Version)
+		log.Printf("Version: %s\n", cait.Version)
 		os.Exit(0)
 	}
 

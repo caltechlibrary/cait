@@ -1,5 +1,5 @@
 //
-// Package aspace is a collection of structures and functions
+// Package cait is a collection of structures and functions
 // for interacting with ArchivesSpace's REST API
 //
 //
@@ -7,7 +7,7 @@
 // copyright (c) 2016
 // Caltech Library
 //
-package aspace
+package cait
 
 import (
 	"encoding/json"
@@ -25,7 +25,13 @@ type NormalizedAccessionView struct {
 	URI                string   `json:"uri"`
 	Title              string   `json:"title"`
 	ContentDescription string   `json:"content_description,omitempty"`
+	ConditionDescription string `json:"content_description,omitempty"`
 	Subjects           []string `json:"subjects,omitempty"`
+	Extents []string `json:"extents,omitempty"`
+	RelatedResource []string `json:"related_resources,omitempty"`
+	Instances []string `json:"instances,omitempty"`
+	LinkedAgents []string `json:"linked_agents,omitempty"`
+	DigitalObjects []map[string]interface{} `json:"digital_objects,omitempty"`
 }
 
 // MakeSubjectList given a base data directory read in the subject JSON blobs and builds

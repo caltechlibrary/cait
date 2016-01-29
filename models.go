@@ -1,12 +1,12 @@
 //
-// Package aspace is a collection of structures and functions
+// Package cait is a collection of structures and functions
 // for interacting with ArchivesSpace's REST API
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
 // copyright (c) 2016
 // Caltech Library
 //
-package aspace
+package cait
 
 import (
 	"encoding/json"
@@ -17,7 +17,7 @@ import (
 )
 
 //
-// models.go - these are the models implemented in the ArchivesSpace by aspace.go.
+// models.go - these are the models implemented in the ArchivesSpace by cait.go.
 // They are a subset of those available from the ArchivesSpace API. It also includes
 // simple methods to stringify the models so it is easy to verify visual their contents.
 //
@@ -29,7 +29,7 @@ type ArchivesSpaceAPI struct {
 	AuthToken  string   `json:"token,omitempty"`
 	Username   string   `json:"username,omitempty"`
 	Password   string   `json:"password,omitempty"`
-	DataSet    string   `json:"aspace_dataset,omitempty"`
+	DataSet    string   `json:"cait_dataset,omitempty"`
 	Htdocs     string   `json:"htdocs,omitempty"`
 	Templates  string   `json:"templates,omitempty"`
 	BleveIndex string   `json:"bleve_index,omitempty"`
@@ -2254,7 +2254,7 @@ type Vocabulary struct {
 }
 
 //
-// String functions for aspace public structures
+// String functions for cait public structures
 //
 func stringify(o interface{}) string {
 	src, _ := json.Marshal(o)
@@ -2262,13 +2262,13 @@ func stringify(o interface{}) string {
 }
 
 // String convert NoteText struct as a JSON formatted string
-func (aspace *NoteText) String() string {
-	return stringify(aspace)
+func (cait *NoteText) String() string {
+	return stringify(cait)
 }
 
 // String convert an ArchicesSpaceAPI struct as a JSON formatted string
-func (aspace *ArchivesSpaceAPI) String() string {
-	return stringify(aspace)
+func (cait *ArchivesSpaceAPI) String() string {
+	return stringify(cait)
 }
 
 // String return a Repository as a JSON formatted string

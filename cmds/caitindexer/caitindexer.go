@@ -1,5 +1,5 @@
 //
-// aspaceindexer.go - A search indexer for [Bleve Search](https://github.com/blevesearch/bleve)
+// caitindexer.go - A search indexer for [Bleve Search](https://github.com/blevesearch/bleve)
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
 // copyright (c) 2016
@@ -20,18 +20,18 @@ import (
 
 	"github.com/blevesearch/bleve"
 
-	"../../../aspace"
+	"../../../cait"
 )
 
 var (
 	description = `
- USAGE: aspaceindexer [-h|--help]
+ USAGE: caitindexer [-h|--help]
 
  SYNOPSIS
 
- aspaceindexer is a command line utility to index content fetched from
+ caitindexer is a command line utility to index content fetched from
  an ArchivesSpace instance via the ArchivesSpace REST API (e.g. with
- aspace tool). It indexes content for the Bleve search library.
+ cait tool). It indexes content for the Bleve search library.
  Configuration is done through environmental variables.
 
  OPTIONS
@@ -41,15 +41,15 @@ var (
 
  CONFIGURATION
 
- aspaceindexer relies on the following environment variables for
+ caitindexer relies on the following environment variables for
  configuration when overriding the defaults:
 
-    ASPACE_HTDOCS       This should be the path to the directory tree
+    CAIT_HTDOCS       This should be the path to the directory tree
                         containings the content (e.g. JSON files) to be index.
-                        This is generally populated with the aspacepage command.
+                        This is generally populated with the caitpage command.
 						Defaults to ./htdocs.
 
-    ASPACE_BLEVE_INDEX	This is the directory that will contain all the Bleve
+    CAIT_BLEVE_INDEX	This is the directory that will contain all the Bleve
                         indexes. Defaults to ./index.bleve
 
 `
@@ -71,8 +71,8 @@ func usage() {
 func init() {
 	htdocsDir = "htdocs"
 	indexName = "index.bleve"
-	htdocsDir = os.Getenv("ASPACE_HTDOCS")
-	indexName = os.Getenv("ASPACE_BLEVE_INDEX")
+	htdocsDir = os.Getenv("CAIT_HTDOCS")
+	indexName = os.Getenv("CAIT_BLEVE_INDEX")
 	flag.StringVar(&htdocsDir, "htdocs", "htdocs", "The document root for the website")
 	flag.StringVar(&indexName, "index", "index.bleve", "The name of the Bleve index")
 	flag.BoolVar(&help, "h", false, "this help message")
@@ -105,7 +105,7 @@ func walkHtdocs(p string, f os.FileInfo, err error) error {
 			log.Printf("Can't read %s, %s", p, err)
 			return nil
 		}
-		view := new(aspace.NormalizedAccessionView)
+		view := new(cait.NormalizedAccessionView)
 		err = json.Unmarshal(src, &view)
 		if err != nil {
 			log.Printf("Can't parse %s, %s", p, err)
