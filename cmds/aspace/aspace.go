@@ -54,7 +54,6 @@ var (
 		"update",
 		"delete",
 		"export",
-		"import",
 	}
 )
 
@@ -246,8 +245,6 @@ func runInstanceCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) 
 	switch cmd.Action {
 	case "export":
 		return "", exportInstance(api)
-	case "import":
-		return "", importInstance(api)
 	}
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
@@ -326,12 +323,6 @@ func runRepoCmd(api *aspace.ArchivesSpaceAPI, cmd *command) (string, error) {
 		)
 		if err != nil {
 			return "", fmt.Errorf("Exporting /repositories, %s", err)
-		}
-		return `{"status": "ok"}`, nil
-	case "import":
-		err := api.ImportRepository(path.Join(api.DataSet, "repositories", fmt.Sprintf("%d.json", repoID)))
-		if err != nil {
-			return "", err
 		}
 		return `{"status": "ok"}`, nil
 	}
