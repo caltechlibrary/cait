@@ -37,7 +37,7 @@ var (
 
 var (
 	subjects = []string{
-		"deployment",
+		"archivesspace",
 		"repository",
 		"agent",
 		"accession",
@@ -79,7 +79,7 @@ var (
  CONFIGURATION
 
   cait also relies on the shell environment for information about connecting
-  to the ArchivesSpace deployment. The following shell variables are used
+  to ArchivesSpace. The following shell variables are used
 
     CAIT_API_URL           (e.g. http://localhost:8089)
     CAIT_API_TOKEN         (e.g. long token string of letters and numbers)
@@ -189,15 +189,15 @@ func exportArchivesSpace(api *cait.ArchivesSpaceAPI) error {
 		return fmt.Errorf("Can't get a list of repository ids, %s", err)
 	}
 	for _, id := range ids {
-		log.Printf("Exporting /repositories/%d/digital_objects\n", id)
+		log.Printf("Exporting repositories/%d/digital_objects\n", id)
 		err = api.ExportDigitalObjects(id)
 		if err != nil {
-			return fmt.Errorf("Can't export /repositories/%d/digital_objects, %s", id, err)
+			return fmt.Errorf("Can't export repositories/%d/digital_objects, %s", id, err)
 		}
 		log.Printf("Exporting repositories/%d/accessions\n", id)
 		err = api.ExportAccessions(id)
 		if err != nil {
-			return fmt.Errorf("Can't export /repositories/%d/accessions, %s", id, err)
+			return fmt.Errorf("Can't export repositories/%d/accessions, %s", id, err)
 		}
 	}
 	log.Printf("Export complete")
@@ -319,7 +319,7 @@ func runRepoCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 			fmt.Sprintf("%d.json", repoID),
 		)
 		if err != nil {
-			return "", fmt.Errorf("Exporting /repositories, %s", err)
+			return "", fmt.Errorf("Exporting repositories, %s", err)
 		}
 		return `{"status": "ok"}`, nil
 	}
@@ -478,7 +478,7 @@ func runAccessionCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	case "export":
 		err := api.ExportAccessions(repoID)
 		if err != nil {
-			return "", fmt.Errorf("Exporting /repositories/%d/accessions, %s", repoID, err)
+			return "", fmt.Errorf("Exporting repositories/%d/accessions, %s", repoID, err)
 		}
 		return `{"status": "ok"}`, nil
 	}
@@ -865,7 +865,7 @@ func runDigitalObjectCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, erro
 	case "export":
 		err := api.ExportDigitalObjects(repoID)
 		if err != nil {
-			return "", fmt.Errorf("Exporting /repositories/%d/digital_objects, %s", repoID, err)
+			return "", fmt.Errorf("Exporting repositories/%d/digital_objects, %s", repoID, err)
 		}
 		return `{"status": "ok"}`, nil
 	}
