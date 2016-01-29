@@ -53,7 +53,7 @@ var // Spreadsheet description of columns c??
     Titles = [],
     // You could start with object IDs at 1, but this may need to be changed
     // if you have other Digital Objects already ingested.
-    ObjectIDOffset = 200;
+    ObjectIDOffset = 1;
 
 //
 // Helper functions
