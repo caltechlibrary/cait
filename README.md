@@ -1,8 +1,7 @@
 
 # aspace
 
-_aspace_ is a set of utilities written in the [Go](http://golang.org) language that
-work with and augment the [ArchivesSpace](http://archivesspace.org) API.
+[aspace](https://github.com/caltechlibrary/aspace) is a set of utilities written in the [Go](http://golang.org) language that work with and augment the [ArchivesSpace](http://archivesspace.org) API.
 
 + aspace - a command line utility for ArchivesSpace interaction (basic CRUD operations and export)
 + aspacepage - a simple static page generator based on export ArchivesSpace content
@@ -21,8 +20,7 @@ work with and augment the [ArchivesSpace](http://archivesspace.org) API.
 
 ## Compiling
 
-If you already have [Go](https://golang.org) setup and installed compiling the utilties are pretty
-straight forward.
+If you already have [Go](https://golang.org) setup and installed compiling the utilities are pretty straight forward.
 
 1. Clone the git repository for the project
 2. "Go get" the 3rd party libraries
@@ -44,21 +42,18 @@ Here's a typical example of setting things up.
     go build -o bin/xlsximporter cmds/xlsximporter/xlsximporter.go
 ```
 
-At this point you should have your command line utilities ready to go in the *bin* directory. You
-are now ready to setup your environment variables.
+At this point you should have your command line utilities ready to go in the *bin* directory. You are now ready to setup your environment variables.
 
 
 ## Setting up your environment
 
-The command line tools and services are configured via environment variables. Below is an example
-of setting things up under Bash running on your favorite Unix-like system.
+The command line tools and services are configured via environment variables. Below is an example of setting things up under Bash running on your favorite Unix-like system.
 
 
 ```
     #
     # setup.sh - this script sets the environment variables for aspace project.
-    # You would source file before using aspace, aspaceindexer, aspacesearch
-    # or aspacedashbaord.
+    # You would source file before using aspace, aspaceindexer, or aspacesearch.
     #
 
     #

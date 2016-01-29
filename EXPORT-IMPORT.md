@@ -3,7 +3,7 @@
 
 This document covers some examples of using the _aspace_ command line utilities to export
 content from a production ArchivesSpace deployment to a local development ArchivesSpace deployment.
-The most recent version of this document can be found at https://github.com/rsdoiel/aspace.
+The most recent version of this document can be found at https://github.com/caltechlibrary/aspace.
 
 
 ## Exporting from a production deployment
