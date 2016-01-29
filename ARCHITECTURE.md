@@ -24,12 +24,12 @@ more options for batch editing content with more general tools like R, Open Refi
 ### caitpage
 
 _caitpage_ renders the content dumped by _cait_ into a website structure suitable
-for hosting with _caitsearch_ search engine and webserver.  It does NOT talk
+for hosting with _caitserver_ search engine and webserver.  It does NOT talk
 directly to ArchivesSpace so can does not increase the load on your ArchivesSpace server.
 
 ### caitindexer
 
-_caitindexer_ is a utility to creating or updating a Bleve index used by _caitsearch_
+_caitindexer_ is a utility to creating or updating a Bleve index used by _caitserver_
 web server.  It crawls the website tree an ingests JSON files found in the
 accessions directories. It can be run manually but is more suited to run periodically
 via a cronjob (say once every day as needed).   For my collection of about 10,000
@@ -38,15 +38,15 @@ index structure then updating an existing one.  The current implementation is ov
 simplistic and certainly can be improved (e.g. rather than indexing files
 individually it could batch and index)
 
-### caitsearch
+### caitserver
 
-_caitsearch_ is a webserver and search engine. It is intended to run behind a more
+_caitserver_ is a webserver and search engine. It is intended to run behind a more
 traditional webserver like NginX or Apache.  Output of the search results are controlled
 by the Golang HTML templates.  This is an early implementation so this will see change
 as the project gets deployed into a production setting.
 
-_caitsearch_ can be started manually but more typically would be brought up by
-your init process (e.g. /etc/init.d/caitsearch start). An example init file
+_caitserver_ can be started manually but more typically would be brought up by
+your init process (e.g. /etc/init.d/caitserver start). An example init file
 is provided
 
 ### xlsximporter

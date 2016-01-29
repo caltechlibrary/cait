@@ -28,11 +28,11 @@ import (
 
 var (
 	description = `
- USAGE: caitsearch [OPTIONS]
+ USAGE: caitserver [OPTIONS]
 
  OVERVIEW
 
-	caitsearch provides search services defined by CAIT_SEARCH_URL for the
+	caitserver provides search services defined by CAIT_SEARCH_URL for the
 	website content defined by CAIT_HTDOCS using the index defined
 	by CAIT_BLEVE_INDEX.
 
@@ -41,7 +41,7 @@ var (
 	configuration = `
  CONFIGURATION
 
- caitsearch can be configured through environment variables. The following
+ caitserver can be configured through environment variables. The following
  variables are supported-
 
    CAIT_SEARCH_URL

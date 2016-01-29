@@ -6,7 +6,7 @@
 + cait - a command line utility for ArchivesSpace interaction (basic CRUD operations and export)
 + caitpage - a simple static page generator based on export ArchivesSpace content
 + caitindexer - for indexing exported JSON structures with [Bleve](https://github.com/blevesearch/bleve)
-+ caitsearch - a web service providing public search services and content browsing
++ caitserver - a web service providing public search services and content browsing
 + xlsximporter - a tool for turning Excel spreadsheets in .xlsx format into JSON files suitable for importing into ArchivesSpace
 
 ## Requirements
@@ -39,7 +39,7 @@ Here's a typical example of setting things up.
     go build -o bin/cait cmds/cait/cait.go
     go build -o bin/caitpage  cmds/caitpage/caitpage.go
     go build -o bin/caitindexer cmds/caitindexer/caitindexer.go
-    go build -o bin/caitsearch cmds/caitsearch/caitsearch.go
+    go build -o bin/caitserver cmds/caitserver/caitserver.go
     go build -o bin/xlsximporter cmds/xlsximporter/xlsximporter.go
 ```
 
@@ -54,7 +54,7 @@ The command line tools and services are configured via environment variables. Be
 ```
     #
     # setup.sh - this script sets the environment variables for cait project.
-    # You would source file before using cait, caitindexer, or caitsearch.
+    # You would source file before using cait, caitindexer, or caitserver.
     #
 
     #
@@ -144,7 +144,7 @@ Assuming the default settings you'll see new webpages in your local *htdocs* dir
 
 ### _caitindexer_
 
-This command creates [bleve](http://blevesearch.com) indexes for use by _caitsearch_.
+This command creates [bleve](http://blevesearch.com) indexes for use by _caitserver_.
 
 Current _caitindexer_ operates on JSON content exported with _cait_. It expects
 a specific directory structure with each individual JSON blob named after its
@@ -157,11 +157,11 @@ _caitindexer_ depends on four environment variables
 + CAIT_BLEVE_INDEX, the name of the Bleve index (created or maintained)
 + CAIT_BLEVE_MAPPING, the name of the Bleve map file (assuming you're not using the default mapping)
 
-### _caitsearch_
+### _caitserver_
 
-_caitsearch_ provides both a static webserver as well as web search service.
+_caitserver_ provides both a static webserver as well as web search service.
 
-Current _caitsearch_ uses the Bleve indexes created with _caitindexer_. It also
+Current _caitserver_ uses the Bleve indexes created with _caitindexer_. It also
 uses the search page and results templates defined in CAIT_TEMPLATES.
 
 It uses the following environment variables
@@ -173,7 +173,7 @@ It uses the following environment variables
 Assuming the default setup, you could start the like
 
 ```
-    ./bin/caitsearch
+    ./bin/caitserver
 ```
 
 Or you could add a startup script to /etc/init.d/ as appropriate.
