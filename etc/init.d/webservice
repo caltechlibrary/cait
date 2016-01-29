@@ -1,0 +1,42 @@
+#!/bin/bash
+#
+# This is an example init.d script for starting the website service
+#
+
+PROGDIR=/archivesspace/aspace/bin
+PROGNAME=aspacesearch
+PROGPATH=$PROGDIR/$PROGNAME
+LOGDIR=/archivesspace/logs
+LOGPATH=$LOGDIR/website.log
+
+# Set place for log
+mkdir -p $LOGDIR
+touch $LOGPATH
+
+# Handle requested action
+case "$1" in
+  start)
+    $PROGPATH &>> $LOGPATH &
+    PID="$!"
+    echo "$PID" >> /var/run/$PROGNAME.pid
+    echo "Started $PID"
+    ;;
+  stop)
+    cat /var/run/$PROGNAME.pid | while read PID; do
+    	echo "Stopping $PROGNAME $PID" >> /var/run/$PROGNAME.pid
+        echo "Stopping $PID"
+        kill $PID
+        sleep 3
+    done
+    /bin/rm /var/run/$PROGNAME.pid
+    ;;
+  status)
+    if [ -f /var/run/$PROGNAME.pid ]; then
+        echo "$PROGNAME running as $(cat /var/run/$PROGNAME.pid)"
+    else
+        echo "$PROGNAME not running"
+    fi
+    ;;
+  *)
+    echo 'usage: '$PROGNAME' [start|stop|status]'
+esac

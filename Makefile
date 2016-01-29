@@ -1,7 +1,7 @@
 #
 # Simple Makefile for conviently testing, building and deploying experiment.
 #
-build: aspace.go models.go views.go export.go
+build: api.go  aspace.go export.go  models.go  search.go  views.go
 	go build
 	go build -o bin/aspace cmds/aspace/aspace.go
 	go build -o bin/aspacepage cmds/aspacepage/aspacepage.go
@@ -19,9 +19,3 @@ clean:
 	if [ -f bin/aspacesearch ]; then rm bin/aspacesearch; fi
 	if [ -f bin/xlsximporter ]; then rm bin/xlsximporter; fi
 
-install:
-	go install cmds/aspace/aspace.go
-	go install cmds/aspacepage/aspacepage.go
-	go install cmds/aspaceindexer/aspaceindexer.go
-	go install cmds/aspacesearch/aspacesearch.go
-	go install cmds/xlsximporter/xlsximporter.go
