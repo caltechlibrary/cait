@@ -5,20 +5,18 @@
 #
 # Local Development setup
 #
-export ASPACE_API_URL=http://localhost:8089
-export ASPACE_USERNAME=admin
-export ASPACE_PASSWORD=admin
-export ASPACE_DATASETS=data
-export ASPACE_HTDOCS=htdocs
-export ASPACE_TEMPLATES=templates/default
-export ASPACE_SEARCH_URL=http://localhost:8501
-export ASPACE_BLEVE_INDEX=index.bleve
+export CAIT_API_URL=http://localhost:8089
+export CAIT_USERNAME=admin
+export CAIT_PASSWORD=admin
+export CAIT_DATASETS=data
+export CAIT_HTDOCS=htdocs
+export CAIT_TEMPLATES=templates/default
+export CAIT_SEARCH_URL=http://localhost:8501
+export CAIT_BLEVE_INDEX=index.bleve
 
 #
 # Create the necessary directory structure
 #
-mkdir -p $ASPACE_DATASETS
-mkdir -p $ASPACE_HTDOCS
-mkdir -p $ASPACE_TEMPLATES
-
-
+mkdir -p $CAIT_DATASETS
+mkdir -p $CAIT_HTDOCS
+mkdir -p $CAIT_TEMPLATES
