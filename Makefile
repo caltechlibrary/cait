@@ -20,7 +20,6 @@ clean:
 	if [ -f bin/xlsximporter ]; then rm bin/xlsximporter; fi
 
 install:
-	if [ ! -d "$GOBIN" ] && [ "$GOBIN" != "" ]; then mkdir -p "$GOBIN"; fi
 	go install cmds/aspace/aspace.go
 	go install cmds/aspacepage/aspacepage.go
 	go install cmds/aspaceindexer/aspaceindexer.go
