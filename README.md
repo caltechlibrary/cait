@@ -1,42 +1,58 @@
 
 # aspace
 
-## Golang ArchivesSpace REST API package and utilities
+_aspace_ is a set of utilities written in the [Go](http://golang.org) language that
+work with and augment the [ArchivesSpace](http://archivesspace.org) API.
 
-_aspace_ is a proof of concept Golang package for working with the ArchicesSpace
-REST API. In addition it provides several (hopefully) useful tools
-
-+ aspace - a command line utility for ArchivesSpace interaction (CRUD and Search)
++ aspace - a command line utility for ArchivesSpace interaction (basic CRUD operations and export)
++ aspacepage - a simple static page generator based on export ArchivesSpace content
 + aspaceindexer - for indexing exported JSON structures with [Bleve](https://github.com/blevesearch/bleve)
 + aspacesearch - a web service providing public search services and content browsing
-+ aspacedashboard - a web service providing administrative search services
++ xlsximporter - a tool for turning Excel spreadsheets in .xlsx format into JSON files suitable for importing into ArchivesSpace
 
-Most the ArchivesSpace REST API for Agents and Accessions have be implemented in the
-aspace package (aspace.go, models.go). It should be possible to support the full API
-give time to create all the JSON models and appropriate test code.
+## Requirements
 
-
-## Requires
-
-+ A working ArchivesSpace instance reachable on the network
-+ Golang 1.5 or better to compile
++ A working deployment of ArchivesSpace
++ Golang 1.5.3 or better to compile
 + [Bleve](http://blevesearch.com) Golang based Search/Indexing library (think Lucene lite implemented in Golang)
++ Two 3rd part Go packages
+    + [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
+    + [xlsx](https://github.com/tealeg/xlsx) by Tealeg, BSD license
 
-See NOTES.md for more details.
+## Compiling
 
-If you want to run the shell scripts see [github.com/caltechlibrary/aspace-shell-scripts](https://github.com/caltechlibrary/aspace-shell-scripts).
+If you already have [Go](https://golang.org) setup and installed compiling the utilties are pretty
+straight forward.
 
-You can setup the environment to use the _aspace_ command by sourcing _shell/api-login.sh_
+1. Clone the git repository for the project
+2. "Go get" the 3rd party libraries
+3. Compile
+4. Setup the necessary environment variables for using the utilities
+
+Here's a typical example of setting things up.
 
 ```
-    . shell/api-login.sh # Answer the prompts to set things up
+    git clone git@github.com:rsdoiel/aspace.git
+    cd aspace
+    go get github.com/robertkrimen/otto
+    go get github.com/tealeg/xlsx
+    mkdir bin
+    go build -o bin/aspace cmds/aspace/aspace.go
+    go build -o bin/aspacepage  cmds/aspacepage/aspacepage.go
+    go build -o bin/aspaceindexer cmds/aspaceindexer/aspaceindexer.go
+    go build -o bin/aspacesearch cmds/aspacesearch/aspacesearch.go
+    go build -o bin/xlsximporter cmds/xlsximporter/xlsximporter.go
 ```
 
-## configured by environment
+At this point you should have your command line utilities ready to go in the *bin* directory. You
+are now ready to setup your environment variables.
 
-The command line tools and services are configured via Unix environment. This is
-trivial to set in a shell script and to source into your current environment.
-Here's is an example Bash script that would set the environment variables.
+
+## Setting up your environment
+
+The command line tools and services are configured via environment variables. Below is an example
+of setting things up under Bash running on your favorite Unix-like system.
+
 
 ```
     #
@@ -51,14 +67,19 @@ Here's is an example Bash script that would set the environment variables.
     export ASPACE_API_URL=http://localhost:8089
     export ASPACE_USERNAME=admin
     export ASPACE_PASSWORD=admin
+    export ASPACE_DATASETS=data
+    export ASPACE_SEARCH_URL=http://localhost:8501
+    export ASPACE_HTDOCS=htdocs
+    export ASPACE_TEMPLATES=templates/default
     export ASPACE_BLEVE_INDEX=index.bleve
-    export ASPACE_BLEVE_MAPPING=index.map
-    export ASPACE_SEARCH_TEMPLATES=templates/search
-    export ASPACE_SEARCH_SITE=public
-    export ASPACE_SEARCH_URL=http://localhost:8580
-    export ASPACE_DASHBOARD_TEMPLATES=templates/dashboard
-    export ASPACE_DASHBOARD_SITE=dashboard
-    export ASPACE_DASHBOARD_URL=http://localhost:8581
+
+    #
+    # Create the necessary directory structure
+    #
+    mkdir -p $ASPACE_DATASETS
+    mkdir -p $ASPACE_HTDOCS
+    mkdir -p $ASPACE_TEMPLATES
+
 ```
 
 Assuming Bash and that you've named the file _setup.sh_ you could
@@ -72,50 +93,67 @@ This command is a general purpose tool for fetch ArchivesSpace data from the
 ArchivesSpace REST API, saving or modifying that data as well as querying the
 locally capture output of the API.
 
-Current _aspace_ supports operations on repositories, agents, and accessions.
-It supports
+Current _aspace_ supports operations on repositories, subjects, agents, accessions and digital_objects.
+
+These are the common actions that can be performed
 
 + create
-+ list (individually or all repositories)
-+ update (uses a JSON blob generated from listing a specific repository)
++ list (individually or all ids)
++ update (can use a file instead of the command line, see -i option)
 + delete
-+ export (for use with _aspaceindexer_)
++ export (useful with integrating into static websites or batch processing via scripts)
 
-Here's an example session of using the _aspace_ command line tool.
+Here's an example session of using the _aspace_ command line tool on the repository object.
 
 ```shell
     . setup.sh # Source my setup file so I can get access to the API
-    aspace repository create "My Archive" "This is an example of my archive"
-    aspace repository list all # show a list of archives, for example purposes we'll use archive ID of 11
-    aspace repository list 11   # Show only the archive JSON for repository ID equal to 11,
-    # Example output is {"id":11,"repo_code":"My Archive","name":"This is an example of my archive","uri":"/repositories/11","agent_representation":{"    ref":"/agents/corporate_entities/9"},"image_url":"","lock_version":1,"created_by":"admin","last_modified_by":"admin","create_time":"2015-12-01T00:52:55Z","s    ystem_time":"0001-01-01T00:00:00Z","user_mtime":"2015-12-01T01:00:29Z"}
-    # Change 'My Archive to Test Archives'
-    aspace repository update {"id":11,"repo_code":"Test Archives","name":"This is an example of my archive","uri":"/repositories/11","agent_representation":{"ref":"/agents/corporate_entities/9"},"image_url":"","lock_version":1,"created_by":"admin","last_modified_by":"admin","create_time":"2015-12-01T00:52:55Z","system_time":"0001-01-01T00:00:00Z","user_mtime":"2015-12-01T01:00:29Z"}
-    aspace repository list 11 # See the update output for repo ID 11
-    aspace repository delete 11 # remove repository ID 2
+    aspace repository create '{"uri":"/repositories/3","repo_code":"My Archive","name":"My Archive"}' # Create an archive called My Archive
+    aspace repository list # show a list of archives, for example purposes we'll use archive ID of 3
+    aspace repository list '{"uri":"/repositories/3"}' # Show only the archive JSON for repository ID equal to 3
+    aspace repository list '{"uri":"/repositories/3"}' > repo2.json # Save the output to the file repo3.json
+    aspace repository update -i repo3.json # Save your changes back to ArchivesSpace
+    aspace repository export '{"uri":"/repositories/3"}' # export the repository metadata to data/repositories/3.json
+    aspace repository delete '{"uri":"/repositories/3"}' # remove repository ID 3
 ```
 
-_aspace_ also supports searching JSON content exported if you've index the content
-with _aspaceindexer_.
+This is the general pattern also used with subject, agent, accession, digital_object.
+
 
 The _aspace_ command uses the following environment variables
 
 + ASPACE_API_URL, the URL to the ArchivesSpace API (e.g. http://localhost:8089 in v1.4.2)
 + ASPACE_USERNAME, username to access the ArchivesSpace API
 + ASPACE_PASSWORD, to access the ArchivesSpace API
-+ ASPACE_BLEVE_INDEX, (optional) the Bleve index file created with _aspaceindexer_
-    + you only need for the _aspace search_ type commands
++ ASPACE_DATASET, the directory for exported content
+
+### _aspacepage_
+
+This command generates static webpages from exported ArchivesSpace content.
+
+It relies on the following environment variables
+
++ ASPACE_DATASET, where you've exported your ArchivesSpace content
++ ASPACE_HTDOCS, where you want to write your static pages
++ ASPACE_TEMPLATES, the templates to use (this defaults to template/defaults but you probably want custom templates for your site)
+
+The typical process would use _aspace_ to export all your content and then run _aspacepage_ to generate your website content.
+
+```
+    ./bin/aspace instance export # this takes a while
+    ./bin/aspacepage # this is faster
+```
+
+Assuming the default settings you'll see new webpages in your local *htdocs* directory.
 
 
 ### _aspaceindexer_
 
-This command creates [bleve](http://blevesearch.com) indexes for using by aspace, aspacesearch and aspacedashboard.
+This command creates [bleve](http://blevesearch.com) indexes for use by _aspacesearch_.
 
 Current _aspaceindexer_ operates on JSON content exported with _aspace_. It expects
-a specific directory structure with each individual JSON blob names after its
-numeric ID and the extension .json. E.g. Agents/People would be found in
-_data/agents/people/_ with filenames like _1.json_ and _2800.json_ depending on
-the numeric ID of the person's record.
+a specific directory structure with each individual JSON blob named after its
+numeric ID and the extension .json. E.g. data/repositories/2/accession/1.json would
+correspond to accession id 1 for repository 2.
 
 _aspaceindexer_ depends on four environment variables
 
@@ -125,24 +163,23 @@ _aspaceindexer_ depends on four environment variables
 
 ### _aspacesearch_
 
-This command runs a web service for publicly accessible ASPACE content (e.g. agents and
-accessions that are published and not suppressed or restricted).
+_aspacesearch_ provides both a static webserver as well as web search service.
 
 Current _aspacesearch_ uses the Bleve indexes created with _aspaceindexer_. It also
-uses the templates defined in ASPACE_SEARCH_TEMPLATES for rendering the search pages
-results and browsable records.
+uses the search page and results templates defined in ASPACE_TEMPLATES.
+
+It uses the following environment variables
 
 + ASPACE_BLEVE_INDEX, the Bleve index to use to drive the search service
-+ ASPACE_SEARCH_TEMPLATES, templates for search service as well as browsable static pages
-+ ASPACE_SEARCH_SITE, static content for the _aspacesearch_ web service
-+ ASPACE_SEARCH_PREFIX, the website prefix (e.g. http://locahost:8580/seach)
++ ASPACE_TEMPLATES, templates for search service as well as browsable static pages
++ ASPACE_SEARCH_URL, the url you want to run the search service on (e.g. http://localhost:8501) 
 
-## _aspacedashboard_ command
+Assuming the default setup, you could start the like
 
-Current _aspacedashboard_ uses the Bleve indexes created with _aspaceindexer_. It also
-uses the templates defined in ASPACE_DASHBOARD_TEMPLATES for rendering the search pages
-results and browsable records.
+```
+    ./bin/aspacesearch
+```
 
-+ ASPACE_BLEVE_INDEX, the Bleve index to use to drive the dashboard service
-+ ASPACE_DASHBOARD_SITESEARCH_TEMPLATES, templates for search service as well as browsable static pages
-+ ASPACE_DASHBOARD_SITE, static content for the _aspacedashboard_ web service
+Or you could add a startup script to /etc/init.d/ as appropraite.
+
+
