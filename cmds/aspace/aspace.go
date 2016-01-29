@@ -1,7 +1,11 @@
-/**
- * cmds/aspace/aspace.go - A command line utility using the aspace package to work
- * with ArchivesSpace's REST API.
- */
+//
+// cmds/aspace/aspace.go - A command line utility using the aspace package to work
+// with ArchivesSpace's REST API.
+//
+// @author R. S. Doiel, <rsdoiel@caltech.edu>
+// copyright (c) 2016
+// Caltech Library
+//
 package main
 
 import (

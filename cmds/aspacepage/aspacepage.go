@@ -1,6 +1,10 @@
-/**
- * cmds/aspacepage/aspacepage.go - A command line utility that builds pages from the exported results of aspace.go
- */
+//
+// cmds/aspacepage/aspacepage.go - A command line utility that builds pages from the exported results of aspace.go
+//
+// @author R. S. Doiel, <rsdoiel@caltech.edu>
+// copyright (c) 2016
+// Caltech Library
+//
 package main
 
 import (

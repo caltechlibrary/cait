@@ -1,8 +1,11 @@
-/**
- * cmds/aspacesearch/aspacesearch.go - A command line utility runs search
- * for the site defined by ASPACE_HTDOCS using the index identified by
- * ASPACE_BLEVE_INDEX.
- */
+//
+// This is a static file webserver and search service.
+// for interacting with ArchivesSpace's REST API
+//
+// @author R. S. Doiel, <rsdoiel@caltech.edu>
+// copyright (c) 2016
+// Caltech Library
+//
 package main
 
 import (

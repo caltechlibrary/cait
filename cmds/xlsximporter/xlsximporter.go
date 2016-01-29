@@ -10,6 +10,7 @@
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
 // copyright (c) 2016
+// Caltech Library
 //
 package main
 

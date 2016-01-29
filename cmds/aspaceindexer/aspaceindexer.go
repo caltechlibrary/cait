@@ -1,6 +1,10 @@
-/**
- * aspaceindexer.go - A search indexer for [Bleve Search](https://github.com/blevesearch/bleve)
- */
+//
+// aspaceindexer.go - A search indexer for [Bleve Search](https://github.com/blevesearch/bleve)
+//
+// @author R. S. Doiel, <rsdoiel@caltech.edu>
+// copyright (c) 2016
+// Caltech Library
+//
 package main
 
 import (
