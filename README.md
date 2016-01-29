@@ -4,7 +4,7 @@
 [cait](https://github.com/caltechlibrary/cait) is a set of utilities written in the [Go](http://golang.org) language that work with and augment the [ArchivesSpace](http://archivesspace.org) API.
 
 + cait - a command line utility for ArchivesSpace interaction (basic CRUD operations and export)
-+ caitpage - a simple static page generator based on export ArchivesSpace content
++ caitpage - a simple static page generator based on exported ArchivesSpace content
 + caitindexer - for indexing exported JSON structures with [Bleve](https://github.com/blevesearch/bleve)
 + caitserver - a web service providing public search services and content browsing
 + xlsximporter - a tool for turning Excel spreadsheets in .xlsx format into JSON files suitable for importing into ArchivesSpace
@@ -79,7 +79,11 @@ The command line tools and services are configured via environment variables. Be
 ```
 
 Assuming Bash and that you've named the file _setup.sh_ you could
-source the file from your shell prompt by typing `. setup.sh`.
+source the file from your shell prompt by typing 
+
+```
+    . setup.sh
+```
 
 ## Utilities
 
