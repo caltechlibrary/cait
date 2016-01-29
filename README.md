@@ -172,7 +172,7 @@ It uses the following environment variables
 
 + ASPACE_BLEVE_INDEX, the Bleve index to use to drive the search service
 + ASPACE_TEMPLATES, templates for search service as well as browsable static pages
-+ ASPACE_SEARCH_URL, the url you want to run the search service on (e.g. http://localhost:8501) 
++ ASPACE_SEARCH_URL, the url you want to run the search service on (e.g. http://localhost:8501)
 
 Assuming the default setup, you could start the like
 
@@ -180,6 +180,4 @@ Assuming the default setup, you could start the like
     ./bin/aspacesearch
 ```
 
-Or you could add a startup script to /etc/init.d/ as appropraite.
-
-
+Or you could add a startup script to /etc/init.d/ as appropriate.

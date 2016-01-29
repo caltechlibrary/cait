@@ -1,14 +1,14 @@
 
 # The Utilities
 
-This document covers some examples of using the _aspace_ command line utlities to export
+This document covers some examples of using the _aspace_ command line utilities to export
 content from a production ArchivesSpace deployment to a local development ArchivesSpace deployment.
 The most recent version of this document can be found at https://github.com/rsdoiel/aspace.
 
 
 ## Exporting from a production deployment
 
-The easist way to export content from a production ArchivesSpace deployment is using the _aspace_ utility.
+The easiest way to export content from a production ArchivesSpace deployment is using the _aspace_ utility.
 
 1. Set you environment variables
 2. Use the instance export option to create a local dump
@@ -42,7 +42,7 @@ I am also assuming you have installed the _aspace_ utility in *./bin/aspace*
 ```
 
 This will take a while but it will create a local dump of the content in a directory called *data*. Each file is a JSON blob.
-Since you don't want to accidentally disturb your production system it is a good idea that you unset the environent variables
+Since you don't want to accidentally disturb your production system it is a good idea that you unset the environment variables
 when the export is complete.
 
 ## Importing into a development deployment

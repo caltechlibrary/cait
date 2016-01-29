@@ -5,7 +5,7 @@ _aspace_ is a go library wrapping the [ArchivesSpace](http://archivesspace.org) 
 It include support for content export, static site generation, indexing and independent
 search engine service.  This means you can manage your content in ArchivesSpace but
 server and search the public content independent of the status of ArchivesSpace itself.
-This gives you more options for deployment as well as providing a clean seperation of
+This gives you more options for deployment as well as providing a clean separation of
 concerns for public/admin uses.
 
 All tools can be configured through environment variables. Some have additional
