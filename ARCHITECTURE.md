@@ -24,7 +24,7 @@ more options for batch editing content with more general tools like R, Open Refi
 ### caitpage
 
 _caitpage_ renders the content dumped by _cait_ into a website structure suitable
-for hosting with _caitserver_ search engine and webserver.  It does NOT talk
+for hosting with _caitserver_ search engine and web server.  It does NOT talk
 directly to ArchivesSpace so can does not increase the load on your ArchivesSpace server.
 
 ### caitindexer
@@ -40,8 +40,8 @@ individually it could batch and index)
 
 ### caitserver
 
-_caitserver_ is a webserver and search engine. It is intended to run behind a more
-traditional webserver like NginX or Apache.  Output of the search results are controlled
+_caitserver_ is a web server and search engine. It is intended to run behind a more
+traditional web server like NginX or Apache.  Output of the search results are controlled
 by the Golang HTML templates.  This is an early implementation so this will see change
 as the project gets deployed into a production setting.
 
@@ -51,4 +51,4 @@ is provided
 
 ### xlsximporter
 
-_xlsximporter_ is a utility that reads and Excel file in xlsx format and turns each row of a spreadsheet into a JSON object. By default the properities correspond to the column names but you can also provide a JavaScript file and callback that let's you custom the objects produced. This latter capability is useful when migrating content into ArchivesSpace (e.g. previously existing EADs).
+_xlsximporter_ is a utility that reads and Excel file in xlsx format and turns each row of a spreadsheet into a JSON object. By default the properties correspond to the column names but you can also provide a JavaScript file and callback that let's you custom the objects produced. This latter capability is useful when migrating content into ArchivesSpace (e.g. previously existing EADs).

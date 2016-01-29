@@ -1,10 +1,10 @@
 #!/bin/bash
 #
-# This is an example init.d script for starting the website service
+# This is an example init.d script for starting caitserver
 #
 
-PROGDIR=/archivesspace/aspace/bin
-PROGNAME=aspacesearch
+PROGDIR=/archivesspace/cait/bin
+PROGNAME=caitserver
 PROGPATH=$PROGDIR/$PROGNAME
 LOGDIR=/archivesspace/logs
 LOGPATH=$LOGDIR/$PROGNAME.log

@@ -1,5 +1,5 @@
 //
-// This is a static file webserver and search service.
+// This is a static file web server and search service.
 // for interacting with ArchivesSpace's REST API
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
@@ -352,7 +352,7 @@ func main() {
 	defer index.Close()
 
 	// Setup static detail pages
-	// Wake up our search webserver
+	// Wake up our search web server
 	http.HandleFunc("/search/advanced/", searchHandler)
 	http.HandleFunc("/search/basic/", searchHandler)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {

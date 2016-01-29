@@ -159,7 +159,7 @@ _caitindexer_ depends on four environment variables
 
 ### _caitserver_
 
-_caitserver_ provides both a static webserver as well as web search service.
+_caitserver_ provides both a static web server as well as web search service.
 
 Current _caitserver_ uses the Bleve indexes created with _caitindexer_. It also
 uses the search page and results templates defined in CAIT_TEMPLATES.
