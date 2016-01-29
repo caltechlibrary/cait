@@ -13,7 +13,7 @@
 
 + A working deployment of ArchivesSpace
 + Golang 1.5.3 or better to compile
-+ Three 3rd part Go packages
++ Three 3rd party Go packages
     + [Bleve](https://github.com/blevesearch/bleve) by [Blevesearch](http://blevesearch.com), Apache License, Version 2.0  
     + [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
     + [xlsx](https://github.com/tealeg/xlsx) by Tealeg, BSD license
