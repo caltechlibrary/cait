@@ -48,3 +48,7 @@ as the project gets deployed into a production setting.
 _aspacesearch_ can be started manually but more typically would be brought up by
 your init process (e.g. /etc/init.d/aspacesearch start). An example init file
 is provided
+
+### xlsximporter
+
+_xlsximporter_ is a utility that reads and Excel file in xlsx format and turns each row of a spreadsheet into a JSON object. By default the properities correspond to the column names but you can also provide a JavaScript file and callback that let's you custom the objects produced. This latter capability is useful when migrating content into ArchivesSpace (e.g. previously existing EADs).
