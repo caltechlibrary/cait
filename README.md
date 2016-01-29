@@ -32,8 +32,9 @@ Here's a typical example of setting things up.
 ```
     git clone git@github.com:rsdoiel/aspace.git
     cd aspace
-    go get github.com/robertkrimen/otto
-    go get github.com/tealeg/xlsx
+    go get -u github.com/blevesearch/bleve/... 
+    go get -u github.com/robertkrimen/otto
+    go get -u github.com/tealeg/xlsx
     mkdir bin
     go build -o bin/aspace cmds/aspace/aspace.go
     go build -o bin/aspacepage  cmds/aspacepage/aspacepage.go
