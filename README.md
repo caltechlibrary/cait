@@ -135,7 +135,7 @@ It relies on the following environment variables
 The typical process would use _cait_ to export all your content and then run _caitpage_ to generate your website content.
 
 ```
-    ./bin/cait instance export # this takes a while
+    ./bin/cait archivesspace export # this takes a while
     ./bin/caitpage # this is faster
 ```
 

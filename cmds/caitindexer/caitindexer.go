@@ -30,7 +30,7 @@ var (
  SYNOPSIS
 
  caitindexer is a command line utility to index content fetched from
- an ArchivesSpace instance via the ArchivesSpace REST API (e.g. with
+ an ArchivesSpace via the ArchivesSpace REST API (e.g. with
  cait tool). It indexes content for the Bleve search library.
  Configuration is done through environmental variables.
 

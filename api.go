@@ -215,7 +215,7 @@ func (api *ArchivesSpaceAPI) DeleteAPI(url string, obj interface{}) (*ResponseMs
 	return data, nil
 }
 
-// ListAPI return a list of IDs from an ArchivesSpace instance for given URL
+// ListAPI return a list of IDs from ArchivesSpace for given URL
 func (api *ArchivesSpaceAPI) ListAPI(url string) ([]int, error) {
 	content, err := api.API("GET", url, nil)
 	if err != nil {
@@ -232,8 +232,8 @@ func (api *ArchivesSpaceAPI) ListAPI(url string) ([]int, error) {
 	return ids, nil
 }
 
-// CreateRepository will create a respository via the REST API for the
-// ArchivesSpace instance defined in the ArchivesSpaceAPI struct.
+// CreateRepository will create a respository via the REST API for
+// ArchivesSpace defined in the ArchivesSpaceAPI struct.
 // It will return the created record.
 func (api *ArchivesSpaceAPI) CreateRepository(repo *Repository) (*ResponseMsg, error) {
 	u := *api.URL
@@ -410,14 +410,14 @@ func (api *ArchivesSpaceAPI) ListAccessions(repositoryID int) ([]int, error) {
 	return api.ListAPI(u.String())
 }
 
-// CreateSubject creates a new Subject in ArchivesSpace instance
+// CreateSubject creates a new Subject in ArchivesSpace
 func (api *ArchivesSpaceAPI) CreateSubject(subject *Subject) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = "/subjects"
 	return api.CreateAPI(u.String(), subject)
 }
 
-// GetSubject retrieves a subject record from an ArchivesSpace instance
+// GetSubject retrieves a subject record from ArchivesSpace
 func (api *ArchivesSpaceAPI) GetSubject(subjectID int) (*Subject, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/subjects/%d", subjectID)
@@ -434,21 +434,21 @@ func (api *ArchivesSpaceAPI) GetSubject(subjectID int) (*Subject, error) {
 	return subject, nil
 }
 
-// UpdateSubject updates an existing subject record in an ArchivesSpace instance
+// UpdateSubject updates an existing subject record in ArchivesSpace
 func (api *ArchivesSpaceAPI) UpdateSubject(subject *Subject) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = subject.URI
 	return api.UpdateAPI(u.String(), subject)
 }
 
-// DeleteSubject deletes a subject from an ArchivesSpace instance
+// DeleteSubject deletes a subject from ArchivesSpace
 func (api *ArchivesSpaceAPI) DeleteSubject(subject *Subject) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = subject.URI
 	return api.DeleteAPI(u.String(), subject)
 }
 
-// ListSubjects return a list of Subject IDs from an ArchivesSpace instance
+// ListSubjects return a list of Subject IDs from ArchivesSpace
 func (api *ArchivesSpaceAPI) ListSubjects() ([]int, error) {
 	u := *api.URL
 	u.Path = `/subjects`
@@ -458,14 +458,14 @@ func (api *ArchivesSpaceAPI) ListSubjects() ([]int, error) {
 	return api.ListAPI(u.String())
 }
 
-// CreateVocabulary creates a new Vocabulary in ArchivesSpace instance
+// CreateVocabulary creates a new Vocabulary in ArchivesSpace
 func (api *ArchivesSpaceAPI) CreateVocabulary(vocabulary *Vocabulary) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = "/vocabularies"
 	return api.CreateAPI(u.String(), vocabulary)
 }
 
-// GetVocabulary retrieves a vocabulary record from an ArchivesSpace instance
+// GetVocabulary retrieves a vocabulary record from ArchivesSpace
 func (api *ArchivesSpaceAPI) GetVocabulary(vocabularyID int) (*Vocabulary, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/vocabularies/%d", vocabularyID)
@@ -482,21 +482,21 @@ func (api *ArchivesSpaceAPI) GetVocabulary(vocabularyID int) (*Vocabulary, error
 	return vocabulary, nil
 }
 
-// UpdateVocabulary updates an existing vocabulary record in an ArchivesSpace instance
+// UpdateVocabulary updates an existing vocabulary record in ArchivesSpace
 func (api *ArchivesSpaceAPI) UpdateVocabulary(vocabulary *Vocabulary) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = vocabulary.URI
 	return api.UpdateAPI(u.String(), vocabulary)
 }
 
-// DeleteVocabulary deletes a vocabulary from an ArchivesSpace instance
+// DeleteVocabulary deletes a vocabulary from ArchivesSpace
 func (api *ArchivesSpaceAPI) DeleteVocabulary(vocabulary *Vocabulary) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = vocabulary.URI
 	return api.DeleteAPI(u.String(), vocabulary)
 }
 
-// ListVocabularies return a list of Vocabulary IDs from an ArchivesSpace instance
+// ListVocabularies return a list of Vocabulary IDs from ArchivesSpace
 func (api *ArchivesSpaceAPI) ListVocabularies() ([]int, error) {
 	u := *api.URL
 	u.Path = `/vocabularies`
@@ -525,14 +525,14 @@ func (api *ArchivesSpaceAPI) ListVocabularies() ([]int, error) {
 	return ids, nil
 }
 
-// CreateTerm creates a new Term in ArchivesSpace instance
+// CreateTerm creates a new Term in ArchivesSpace
 func (api *ArchivesSpaceAPI) CreateTerm(vocabularyID int, term *Term) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/vocabularies/%d/terms", vocabularyID)
 	return api.CreateAPI(u.String(), term)
 }
 
-// GetTerm retrieves a term record from an ArchivesSpace instance
+// GetTerm retrieves a term record from ArchivesSpace
 func (api *ArchivesSpaceAPI) GetTerm(vocabularyID, termID int) (*Term, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/vocabularies/%d/terms", vocabularyID)
@@ -552,7 +552,7 @@ func (api *ArchivesSpaceAPI) GetTerm(vocabularyID, termID int) (*Term, error) {
 	return nil, nil
 }
 
-// UpdateTerm updates an existing term record in an ArchivesSpace instance
+// UpdateTerm updates an existing term record in ArchivesSpace
 func (api *ArchivesSpaceAPI) UpdateTerm(term *Term) (*ResponseMsg, error) {
 	u := api.URL
 	u.Path = term.URI
@@ -560,14 +560,14 @@ func (api *ArchivesSpaceAPI) UpdateTerm(term *Term) (*ResponseMsg, error) {
 	return api.UpdateAPI(u.String(), term)
 }
 
-// DeleteTerm deletes a term from an ArchivesSpace instance
+// DeleteTerm deletes a term from ArchivesSpace
 func (api *ArchivesSpaceAPI) DeleteTerm(term *Term) (*ResponseMsg, error) {
 	u := api.URL
 	u.Path = term.URI
 	return api.DeleteAPI(u.String(), term)
 }
 
-// ListTermIDs return a list of Term IDs from an ArchivesSpace instance
+// ListTermIDs return a list of Term IDs from ArchivesSpace
 func (api *ArchivesSpaceAPI) ListTermIDs(vocabularyID int) ([]int, error) {
 	u := api.URL
 	u.Path = fmt.Sprintf(`/vocabularies/%d/terms`, vocabularyID)
@@ -596,7 +596,7 @@ func (api *ArchivesSpaceAPI) ListTermIDs(vocabularyID int) ([]int, error) {
 	return ids, nil
 }
 
-// ListTerms return a list of Term IDs from an ArchivesSpace instance
+// ListTerms return a list of Term IDs from ArchivesSpace
 func (api *ArchivesSpaceAPI) ListTerms(vocabularyID int) ([]*Term, error) {
 	u := api.URL
 	u.Path = fmt.Sprintf(`/vocabularies/%d/terms`, vocabularyID)
@@ -621,14 +621,14 @@ func (api *ArchivesSpaceAPI) ListTerms(vocabularyID int) ([]*Term, error) {
 	return terms, nil
 }
 
-// CreateLocation creates a new Location in ArchivesSpace instance
+// CreateLocation creates a new Location in ArchivesSpace
 func (api *ArchivesSpaceAPI) CreateLocation(location *Location) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/locations")
 	return api.CreateAPI(u.String(), location)
 }
 
-// GetLocation retrieves a location record from an ArchivesSpace instance
+// GetLocation retrieves a location record from ArchivesSpace
 func (api *ArchivesSpaceAPI) GetLocation(ID int) (*Location, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/locations/%d", ID)
@@ -648,21 +648,21 @@ func (api *ArchivesSpaceAPI) GetLocation(ID int) (*Location, error) {
 	return location, nil
 }
 
-// UpdateLocation updates an existing location record in an ArchivesSpace instance
+// UpdateLocation updates an existing location record in ArchivesSpace
 func (api *ArchivesSpaceAPI) UpdateLocation(location *Location) (*ResponseMsg, error) {
 	u := api.URL
 	u.Path = location.URI
 	return api.UpdateAPI(u.String(), location)
 }
 
-// DeleteLocation deletes a location from an ArchivesSpace instance
+// DeleteLocation deletes a location from ArchivesSpace
 func (api *ArchivesSpaceAPI) DeleteLocation(location *Location) (*ResponseMsg, error) {
 	u := api.URL
 	u.Path = location.URI
 	return api.DeleteAPI(u.String(), location)
 }
 
-// ListLocations return a list of Location IDs from an ArchivesSpace instance
+// ListLocations return a list of Location IDs from ArchivesSpace
 func (api *ArchivesSpaceAPI) ListLocations() ([]int, error) {
 	u := api.URL
 	u.Path = fmt.Sprintf(`/locations`)
@@ -717,7 +717,7 @@ func (api *ArchivesSpaceAPI) ListDigitalObjects(repoID int) ([]int, error) {
 	return api.ListAPI(u.String())
 }
 
-// Search return a JSON content from search results from an ArchivesSpace instance
+// Search return a JSON content from search results from ArchivesSpace
 func (api *ArchivesSpaceAPI) Search(opt *SearchQuery) ([]byte, error) {
 	u := api.URL
 	if opt.URI != "" {

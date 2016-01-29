@@ -37,7 +37,7 @@ var (
 
 var (
 	subjects = []string{
-		"instance",
+		"deployment",
 		"repository",
 		"agent",
 		"accession",
@@ -62,8 +62,8 @@ var (
 	description = `
   USAGE: cait SUBJECT ACTION [OPTIONS|PAYLOAD]
 
-  cait is a command line utility for interacting with an ArchivesSpace
-  instance.  The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
+  cait is a command line utility for interacting with ArchivesSpace.
+  The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
 
     SUBJECT can be %s.
 
@@ -74,11 +74,12 @@ var (
  OPTIONS addition flags based parameters appropriate apply to the SUBJECT, ACTION or PAYLOAD
 
 `
+
 	configuration = `
  CONFIGURATION
 
   cait also relies on the shell environment for information about connecting
-  to the ArchivesSpace instance. The following shell variables are used
+  to the ArchivesSpace deployment. The following shell variables are used
 
     CAIT_API_URL           (e.g. http://localhost:8089)
     CAIT_API_TOKEN         (e.g. long token string of letters and numbers)
@@ -117,7 +118,7 @@ var (
 )
 
 func usage() {
-	fmt.Println(description,
+	fmt.Printf(description,
 		strings.Join(subjects, ", "),
 		strings.Join(actions, ", "))
 	flag.PrintDefaults()
@@ -134,7 +135,7 @@ func containsElement(src []string, elem string) bool {
 	return false
 }
 
-func exportInstance(api *cait.ArchivesSpaceAPI) error {
+func exportArchivesSpace(api *cait.ArchivesSpaceAPI) error {
 	var err error
 
 	log.Println("Starting Export")
@@ -206,10 +207,6 @@ func exportInstance(api *cait.ArchivesSpaceAPI) error {
 	return nil
 }
 
-func importInstance(api *cait.ArchivesSpaceAPI) error {
-	return fmt.Errorf(`importInstance("%s") not implemented`, api)
-}
-
 func parseCmd(args []string) (*command, error) {
 	cmd := new(command)
 
@@ -238,13 +235,13 @@ func parseCmd(args []string) (*command, error) {
 	return cmd, nil
 }
 
-func runInstanceCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
+func runArchivesSpaceCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	if err := api.Login(); err != nil {
 		return "", err
 	}
 	switch cmd.Action {
 	case "export":
-		return "", exportInstance(api)
+		return "", exportArchivesSpace(api)
 	}
 	return "", fmt.Errorf("action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
@@ -920,8 +917,8 @@ func runSearchCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 
 func runCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	switch cmd.Subject {
-	case "instance":
-		return runInstanceCmd(api, cmd)
+	case "archivesspace":
+		return runArchivesSpaceCmd(api, cmd)
 	case "repository":
 		return runRepoCmd(api, cmd)
 	case "agent":

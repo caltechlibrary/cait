@@ -40,7 +40,7 @@ var (
 	variables-
 
     CAIT_DATASET    this is the directory that contains the output of the
-                      'cait instance export' command. Defaults to ./data
+                      'cait archivesspace export' command. Defaults to ./data
 
     CAIT_TEMPLATES  this is the directory that contains the templates
                       used used to generate the static content of the website.

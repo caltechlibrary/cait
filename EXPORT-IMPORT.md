@@ -11,7 +11,7 @@ The most recent version of this document can be found at https://github.com/calt
 The easiest way to export content from a production ArchivesSpace deployment is using the _cait_ utility.
 
 1. Set you environment variables
-2. Use the instance export option to create a local dump
+2. Use the *archivesspace export* option to create a local dump
 
 ### Example Assumptions
 
@@ -35,7 +35,7 @@ I am also assuming you have installed the _cait_ utility in *./bin/cait*
     export CAIT_PASSWORD=admin
     export CAIT_DATASETS=data
 
-    ./bin/cait instance export
+    ./bin/cait archivesspace export
     unset CAIT_USERNAME
     unset CAIT_PASSWORD
     unset CAIT_API_URL
@@ -52,7 +52,7 @@ and the _cait_ utilities are installed in *./bin/*.
 
 The basic setups are
 
-1. Bring up an empty ArchivesSpace instance (follow the instructions at http://archiesspace.org)
+1. Bring up an empty ArchivesSpace (follow the instructions at http://archiesspace.org)
 2. Create a repository (this usually gets created as Repo ID 2)
 3. Create any custom controlled vocabularies you need (e.g. extent types)
 4. Load the Agents (I am assuming you only are interested in the people in this example)
