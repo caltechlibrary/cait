@@ -7,7 +7,7 @@ PROGDIR=/archivesspace/aspace/bin
 PROGNAME=aspacesearch
 PROGPATH=$PROGDIR/$PROGNAME
 LOGDIR=/archivesspace/logs
-LOGPATH=$LOGDIR/website.log
+LOGPATH=$LOGDIR/$PROGNAME.log
 
 # Set place for log
 mkdir -p $LOGDIR
