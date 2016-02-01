@@ -43,7 +43,7 @@ var (
 
  OVERVIEW
 
-	caitserver provides search services defined by CAIT_SEARCH_URL for the
+	caitserver provides search services defined by CAIT_SITE_URL for the
 	website content defined by CAIT_HTDOCS using the index defined
 	by CAIT_BLEVE_INDEX.
 
@@ -55,7 +55,7 @@ var (
  caitserver can be configured through environment variables. The following
  variables are supported-
 
-   CAIT_SEARCH_URL
+   CAIT_SITE_URL
 
    CAIT_BLEVE_INDEX
 
@@ -320,7 +320,7 @@ func logger(next http.Handler) http.Handler {
 func init() {
 	var err error
 
-	uri := os.Getenv("CAIT_SEARCH_URL")
+	uri := os.Getenv("CAIT_SITE_URL")
 	indexName = os.Getenv("CAIT_BLEVE_INDEX")
 	htdocsDir = os.Getenv("CAIT_HTDOCS")
 	templatesDir = os.Getenv("CAIT_TEMPLATES")

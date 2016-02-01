@@ -66,7 +66,7 @@ The command line tools and services are configured via environment variables. Be
     export CAIT_USERNAME=admin
     export CAIT_PASSWORD=admin
     export CAIT_DATASETS=data
-    export CAIT_SEARCH_URL=http://localhost:8501
+    export CAIT_SITE_URL=http://localhost:8501
     export CAIT_HTDOCS=htdocs
     export CAIT_TEMPLATES=templates/default
     export CAIT_BLEVE_INDEX=index.bleve
@@ -180,7 +180,7 @@ It uses the following environment variables
 
 + CAIT_BLEVE_INDEX, the Bleve index to use to drive the search service
 + CAIT_TEMPLATES, templates for search service as well as browsable static pages
-+ CAIT_SEARCH_URL, the url you want to run the search service on (e.g. http://localhost:8501)
++ CAIT_SITE_URL, the url you want to run the search service on (e.g. http://localhost:8501)
 
 Assuming the default setup, you could start the like
 

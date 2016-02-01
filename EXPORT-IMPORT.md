@@ -22,7 +22,7 @@ The easiest way to export content from a production ArchivesSpace deployment is 
 
 The following environment variables not note used in the export process
 
-+ CAIT_SEARCH_URL
++ CAIT_SITE_URL
 + CAIT_HTDOCS
 + CAIT_TEMPLATES
 + CAIT_BLEVE_INDEX
@@ -69,7 +69,7 @@ The basic setups are
 
 The following environment variables not note used in the import process
 
-+ CAIT_SEARCH_URL
++ CAIT_SITE_URL
 + CAIT_HTDOCS
 + CAIT_TEMPLATES
 + CAIT_BLEVE_INDEX
@@ -94,3 +94,25 @@ into repository id of 2.
 
 
 You can import content from one ArchivesSpace deployment to the next using a combination of the _cait_ utility and basic shell scripting.
+
+## Building a local dev site
+
+The basic steps I take after having setup ArchivesSpace for development and loaded it with data is as follows.
+The instructions assume you're in your *cait* repository directory and that all the *cait* tools are compiled and
+installed in *./bin*.
+
+### Environment required
+
++ CAIT_DATASETS
++ CAIT_HTDOCS
++ CAIT_SITE_URL
++ CAIT_TEMPLATES
++ CAIT_BLEVE_INDEX
+
+### The workflow
+
+1. Make sure the *CAIT_* environment variables are set.
+2. Build the website with `./bin/caitpage`
+3. Create/update the sitemap with `./bin/sitemapper $CAIT_HTDOCS $CAIT_HTDOCS/sitemap.xml $CAIT_SITE_URL`
+4. Index the site (this takes a while on my machine) `./bin/caitindexer`
+5. Launch `./bin/caitserver` and test with your web browser
