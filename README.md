@@ -8,13 +8,14 @@
 + caitindexer - for indexing exported JSON structures with [Bleve](https://github.com/blevesearch/bleve)
 + caitserver - a web service providing public search services and content browsing
 + xlsximporter - a tool for turning Excel spreadsheets in .xlsx format into JSON files suitable for importing into ArchivesSpace
++ sitemapper - a simple tool to generate a sitemap.xml file from pages rendered with caitpage
 
 ## Requirements
 
 + A working deployment of ArchivesSpace
 + Golang 1.5.3 or better to compile
 + Three 3rd party Go packages
-    + [Bleve](https://github.com/blevesearch/bleve) by [Blevesearch](http://blevesearch.com), Apache License, Version 2.0  
+    + [Bleve](https://github.com/blevesearch/bleve) by [Blevesearch](http://blevesearch.com), Apache License, Version 2.0
     + [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
     + [xlsx](https://github.com/tealeg/xlsx) by Tealeg, BSD license
 
@@ -41,6 +42,7 @@ Here's a typical example of setting things up.
     go build -o bin/caitindexer cmds/caitindexer/caitindexer.go
     go build -o bin/caitserver cmds/caitserver/caitserver.go
     go build -o bin/xlsximporter cmds/xlsximporter/xlsximporter.go
+    go build -o bin/sitemapper cmds/sitemapper/sitemapper.go
 ```
 
 At this point you should have your command line utilities ready to go in the *bin* directory. You are now ready to setup your environment variables.
