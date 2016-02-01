@@ -91,8 +91,7 @@ func main() {
 		log.Fatalf("Can't create %s, %s\n", args[1], err)
 	}
 	defer fp.Close()
-	fp.Write([]byte(`
-<?xml version="1.0" encoding="UTF-8"?>
+	fp.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 `))
 	for _, item := range locList {

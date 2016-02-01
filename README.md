@@ -189,3 +189,14 @@ Or you could add a startup script to /etc/init.d/ as appropriate.
 _xlsximporter_ is a utilty to transform sheets from an Excel file in xlsx format to JSON blobs suitable for importation into ArchivesSpace (e.g. Digital Objects).  By default it transforms each row in the spreadsheet into an object where the property names correspond to the column headers (in the initial row of the spreadsheet).  You can perform more elaborate mappings using a javascript callback function.  You can see an example of that in the *xlsximporter-javascript-example* directory.
 
 The general workflow would be to transform you rows to JSON objects on your local disc with _xlsximporter_ then use the _cait_ utility to push the JSON blobs into ArchivesSpace itself.
+
+### _sitemapper_
+
+_sitemapper_ generates a sitemap.xml file based on the arguments you envoke. It you're site's URL is http://archives.example.edu, your htdocs directory is htdocs and you want to save you sitemap.xml file as htdocs/sitemap.xml you could run the command with
+
+```
+    sitemapper htdocs htdocs/sitemap.xml http://archives.example.edu
+```
+
+This will generate a site map of the HTML files found in *htdocs* with the results saved in *htdocs/sitemap.xml*. For more informaiton about sitemaps see the [sitemaps.org](http://sitemaps.org) website.
+

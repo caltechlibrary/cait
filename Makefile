@@ -8,6 +8,7 @@ build: api.go  cait.go export.go  models.go  search.go  views.go
 	go build -o bin/caitindexer cmds/caitindexer/caitindexer.go
 	go build -o bin/caitserver cmds/caitserver/caitserver.go
 	go build -o bin/xlsximporter cmds/xlsximporter/xlsximporter.go
+	go build -o bin/sitemapper cmds/sitemapper/sitemapper.go
 
 test:
 	go test
@@ -18,3 +19,4 @@ clean:
 	if [ -f bin/caitindexer ]; then rm bin/caitindexer; fi
 	if [ -f bin/caitserver ]; then rm bin/caitserver; fi
 	if [ -f bin/xlsximporter ]; then rm bin/xlsximporter; fi
+	if [ -f bin/sitemapper ]; then rm bin/sitemapper; fi
