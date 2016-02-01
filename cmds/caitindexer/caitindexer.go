@@ -157,5 +157,5 @@ func main() {
 	// Walk our data import tree and index things
 	log.Printf("Start indexing of %s in %s\n", htdocsDir, indexName)
 	indexSite()
-	log.Printf("Finsihed")
+	log.Printf("Finished")
 }

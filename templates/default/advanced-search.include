@@ -1,5 +1,8 @@
     <section>
         <h1>Search - Advanced</h1>
+    <section>
+    <a href="/search/basic/">New Search</a>
+    </section>
         <form method="post" action="{{ .URI }}">
             <p>Find catalog entries that have...</p>
             <div><label>all of these words</label> <input type="text" name="q_required"></div>

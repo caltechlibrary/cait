@@ -24,25 +24,45 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"os"
 	"path"
+	"path/filepath"
+	"sort"
+	"strings"
 )
 
 //
 // Useful view driven data structures and functions
 //
 
+// NavRecord defined previous, next links used in paging results or browsable record lists
+type NavRecord struct {
+	ThisLabel string `json:"this_label,omitempty"`
+	ThisURI   string `json:"this_uri, omitempty"`
+	PrevURI   string `json:"prev_uri,omitempty"`
+	PrevLabel string `json:"prev_label,omitempty"`
+	NextURI   string `json:"next_uri,omitempty"`
+	NextLabel string `json:"next_label,omitempty"`
+}
+
 // NormalizedAccessionView returns a structure suitable for templating public web content.
 type NormalizedAccessionView struct {
-	URI                string   `json:"uri"`
-	Title              string   `json:"title"`
-	ContentDescription string   `json:"content_description,omitempty"`
-	ConditionDescription string `json:"content_description,omitempty"`
-	Subjects           []string `json:"subjects,omitempty"`
-	Extents []string `json:"extents,omitempty"`
-	RelatedResource []string `json:"related_resources,omitempty"`
-	Instances []string `json:"instances,omitempty"`
-	LinkedAgents []string `json:"linked_agents,omitempty"`
-	DigitalObjects []map[string]interface{} `json:"digital_objects,omitempty"`
+	URI                  string     `json:"uri"`
+	Title                string     `json:"title"`
+	ContentDescription   string     `json:"content_description,omitempty"`
+	ConditionDescription string     `json:"content_description,omitempty"`
+	Subjects             []string   `json:"subjects,omitempty"`
+	Extents              []*Extent  `json:"extents,omitempty"`
+	RelatedResources     []string   `json:"related_resources,omitempty"`
+	RelatedAccessions    []string   `json:"related_accessions,omitempty"`
+	Instances            []string   `json:"instances,omitempty"`
+	LinkedAgents         []string   `json:"linked_agents,omitempty"`
+	CreatedBy            string     `json:"created_by"`
+	Created              string     `json:"created"`
+	LastModifiedBy       string     `json:"last_modified_by,omitempty"`
+	LastModified         string     `json:"last_modified"`
+	Nav                  *NavRecord `json:"nav,omitempty"`
 }
 
 // MakeSubjectList given a base data directory read in the subject JSON blobs and builds
@@ -97,12 +117,31 @@ func MakeSubjectMap(dname string) (map[string]*Subject, error) {
 
 // NormalizeView returns a normalized view from an Accession structure and
 // an array of subject structures.
-func (a *Accession) NormalizeView(subjects map[string]*Subject) (*NormalizedAccessionView, error) {
-	var subjectLabels []string
+func (a *Accession) NormalizeView(subjects map[string]*Subject, nav *NavRecord) (*NormalizedAccessionView, error) {
+	var (
+		subjectLabels []string
+		instanceLinks []string
+	)
+
 	v := new(NormalizedAccessionView)
 	v.Title = a.Title
 	v.URI = a.URI
 	v.ContentDescription = a.ContentDescription
+	v.ConditionDescription = a.ConditionDescription
+	v.CreatedBy = a.CreatedBy
+	v.Created = a.CreateTime
+	v.LastModifiedBy = a.LastModifiedBy
+	v.LastModified = a.UserMTime
+	v.Extents = a.Extents
+	//FIXME: need to figure out how to handle these...
+	//v.RelatedResources = a.RelatedResources
+	//v.RelatedAccessions = a.RelatedAccessions
+	//v.LinkedAgents = a.LinkedAgents
+	for _, item := range a.Instances {
+		fmt.Printf("DEBUG instance item: %+v\n", item)
+		//FIXME: assign the URL link to v.Instance
+		instanceLinks = append(instanceLinks, fmt.Sprintf("%+v", item))
+	}
 	for _, item := range a.Subjects {
 		ref, ok := item["ref"]
 		if ok == true {
@@ -113,5 +152,84 @@ func (a *Accession) NormalizeView(subjects map[string]*Subject) (*NormalizedAcce
 		}
 	}
 	v.Subjects = subjectLabels
+	if nav != nil {
+		v.Nav = nav
+	}
 	return v, nil
+}
+
+//
+// Browsing data
+//
+
+// MakeAccessionTitleIndex crawls the path for accession records and generates
+// a map of navigation links that can be used in search results or browsing views.
+func MakeAccessionTitleIndex(path string) (map[string]*NavRecord, error) {
+	titleIndex := make(map[string]*NavRecord)
+	titles := []string{}
+	log.Printf("Making Accession Title Index")
+	filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
+		if strings.HasSuffix(p, ".json") {
+			src, err := ioutil.ReadFile(p)
+			if err != nil {
+				log.Printf("Can't read %s, %s", p, err)
+				return nil
+			}
+			accession := new(struct {
+				Title     string `json:"title,omitempty"`
+				URI       string `json:"uri"`
+				JSONModel string `json:"jsonmodel_type"`
+			})
+			err = json.Unmarshal(src, &accession)
+			if err != nil {
+				log.Printf("Can't unpack accession info %s, %s", p, err)
+			}
+			if accession.JSONModel == "accession" {
+				//FIXME: Store the info.
+				nav := new(NavRecord)
+				nav.ThisLabel = accession.Title
+				nav.ThisURI = accession.URI
+				titleIndex[accession.Title] = nav
+				titles = append(titles, accession.Title)
+			}
+			log.Printf("Recorded %s", p)
+		}
+		return nil
+	})
+
+	if len(titles) == 0 {
+		return nil, fmt.Errorf("No titles found")
+	}
+	if len(titleIndex) == 0 {
+		return nil, fmt.Errorf("title index empty")
+	}
+
+	// Sort the titles
+	log.Printf("Sorting %d titles", len(titles))
+	sort.Strings(titles)
+	// go through sorted titles and populate Next and Prev appropriately
+	log.Printf("Linked %d titles", len(titles))
+	lastI := len(titles) - 1
+	for i, title := range titles {
+		_, thisOk := titleIndex[title]
+		if thisOk == true {
+			if i > 0 {
+				prevTitle, prevOK := titleIndex[titles[i-1]]
+				if prevOK == true {
+					titleIndex[title].PrevLabel = prevTitle.ThisLabel
+					titleIndex[title].PrevURI = prevTitle.ThisURI
+				}
+			}
+
+			if i < lastI {
+				nextTitle, nextOK := titleIndex[titles[i+1]]
+				if nextOK == true {
+					titleIndex[title].NextLabel = nextTitle.ThisLabel
+					titleIndex[title].NextURI = nextTitle.ThisURI
+				}
+			}
+		}
+		log.Printf("%s, prev uri: %s, next uri: %s", title, titleIndex[title].PrevURI, titleIndex[title].NextURI)
+	}
+	return titleIndex, nil
 }

@@ -104,79 +104,78 @@ func loadSubjects(subjectDir string) error {
 	return err
 }
 
-func walkRepositories(p string, f os.FileInfo, err error) error {
-	// Process accession records
-	if strings.Contains(p, "accessions") == true && strings.HasSuffix(p, ".json") {
-		src, err := ioutil.ReadFile(p)
-		if err != nil {
-			return err
-		}
-		accession := new(cait.Accession)
-		err = json.Unmarshal(src, &accession)
-		if err != nil {
-			return err
-		}
-		if accession.Publish == true && accession.Suppressed == false {
-			// Create a normalized view of the accession to make it easier to work with
-			view, err := accession.NormalizeView(subjects)
+func processData(titleIndex map[string]*cait.NavRecord) error {
+	return filepath.Walk(path.Join(dataDir, "repositories"), func(p string, f os.FileInfo, err error) error {
+		// Process accession records
+		if strings.Contains(p, "accessions") == true && strings.HasSuffix(p, ".json") {
+			src, err := ioutil.ReadFile(p)
 			if err != nil {
-				return fmt.Errorf("Could not generate normalized view, %s", err)
-			}
-
-			// If the accession is published and the accession is not suppressed then generate the webpage
-			fname := path.Join(htdocsDir, fmt.Sprintf("%s.html", accession.URI))
-			dname := path.Dir(fname)
-			err = os.MkdirAll(dname, 0775)
-			if err != nil {
-				return fmt.Errorf("Can't create %s, %s", dname, err)
-			}
-			// Process HTML file
-			fp, err := os.Create(fname)
-			if err != nil {
-				return fmt.Errorf("Problem creating %s, %s", fname, err)
-			}
-			log.Printf("Writing %s", fname)
-			err = aHTMLTmpl.Execute(fp, view)
-			if err != nil {
-				log.Fatalf("template execute error %s, %s", "accession.html", err)
 				return err
 			}
-			fp.Close()
-
-			// Process Include file (just the HTML content)
-			fname = path.Join(htdocsDir, fmt.Sprintf("%s.include", accession.URI))
-			fp, err = os.Create(fname)
+			accession := new(cait.Accession)
+			err = json.Unmarshal(src, &accession)
 			if err != nil {
-				return fmt.Errorf("Problem creating %s, %s", fname, err)
-			}
-			log.Printf("Writing %s", fname)
-			err = aIncTmpl.Execute(fp, view)
-			if err != nil {
-				log.Fatalf("template execute error %s, %s", "accession.include", err)
 				return err
 			}
-			fp.Close()
+			if accession.Publish == true && accession.Suppressed == false {
+				// Create a normalized view of the accession to make it easier to work with
+				navRecord, _ := titleIndex[accession.Title]
+				view, err := accession.NormalizeView(subjects, navRecord)
+				if err != nil {
+					return fmt.Errorf("Could not generate normalized view, %s", err)
+				}
 
-			// Process JSON file (an abridged version of the JSON output in data)
-			fname = path.Join(htdocsDir, fmt.Sprintf("%s.json", accession.URI))
-			src, err := json.Marshal(view)
-			if err != nil {
-				return fmt.Errorf("Could not JSON encode %s, %s", fname, err)
+				// If the accession is published and the accession is not suppressed then generate the webpage
+				fname := path.Join(htdocsDir, fmt.Sprintf("%s.html", accession.URI))
+				dname := path.Dir(fname)
+				err = os.MkdirAll(dname, 0775)
+				if err != nil {
+					return fmt.Errorf("Can't create %s, %s", dname, err)
+				}
+				// Process HTML file
+				fp, err := os.Create(fname)
+				if err != nil {
+					return fmt.Errorf("Problem creating %s, %s", fname, err)
+				}
+				log.Printf("Writing %s", fname)
+				err = aHTMLTmpl.Execute(fp, view)
+				if err != nil {
+					log.Fatalf("template execute error %s, %s", "accession.html", err)
+					return err
+				}
+				fp.Close()
+
+				// Process Include file (just the HTML content)
+				fname = path.Join(htdocsDir, fmt.Sprintf("%s.include", accession.URI))
+				fp, err = os.Create(fname)
+				if err != nil {
+					return fmt.Errorf("Problem creating %s, %s", fname, err)
+				}
+				log.Printf("Writing %s", fname)
+				err = aIncTmpl.Execute(fp, view)
+				if err != nil {
+					log.Fatalf("template execute error %s, %s", "accession.include", err)
+					return err
+				}
+				fp.Close()
+
+				// Process JSON file (an abridged version of the JSON output in data)
+				fname = path.Join(htdocsDir, fmt.Sprintf("%s.json", accession.URI))
+				src, err := json.Marshal(view)
+				if err != nil {
+					return fmt.Errorf("Could not JSON encode %s, %s", fname, err)
+				}
+				log.Printf("Writing %s", fname)
+				err = ioutil.WriteFile(fname, src, 0664)
+				if err != nil {
+					log.Fatalf("could not write JSON view %s, %s", fname, err)
+					return err
+				}
+				fp.Close()
 			}
-			log.Printf("Writing %s", fname)
-			err = ioutil.WriteFile(fname, src, 0664)
-			if err != nil {
-				log.Fatalf("could not write JSON view %s, %s", fname, err)
-				return err
-			}
-			fp.Close()
 		}
-	}
-	return nil
-}
-
-func processData() error {
-	return filepath.Walk(path.Join(dataDir, "repositories"), walkRepositories)
+		return nil
+	})
 }
 
 func init() {
@@ -195,10 +194,13 @@ func main() {
 	if help == true {
 		usage()
 	}
-
+	titleIndex, err := cait.MakeAccessionTitleIndex(dataDir)
+	if err != nil {
+		log.Fatalf("Can't make a title index %s, %s", dataDir, err)
+	}
 	subjectDir := path.Join(dataDir, "subjects")
 	log.Printf("Reading Subjects from %s", subjectDir)
-	err := loadSubjects(subjectDir)
+	err = loadSubjects(subjectDir)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
@@ -208,7 +210,7 @@ func main() {
 		log.Fatalf("%s", err)
 	}
 	log.Printf("Processing data in %s\n", dataDir)
-	err = processData()
+	err = processData(titleIndex)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}

@@ -2,6 +2,9 @@
         {{ .Request.From }}/{{ .Request.Size }} of {{ .Total }}
     </nav>
     <section>
+    <a href="/search/basic/">New Search</a>
+    </section>
+    <section>
     {{ range .Hits }}
         <div class="search-result">
             {{ $href := (printf "%s.html" .ID)  }}
@@ -10,4 +13,7 @@
             {{ range .Fragments.content_description }}<p>{{ . }}</p>{{ end }}
         </div>
     {{ end }}
+    </section>
+    <section>
+    <a href="/search/basic/">New Search</a>
     </section>

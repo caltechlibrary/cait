@@ -10,4 +10,10 @@
                 <input type="submit" name="submit" value="Go">
             </div>
         </form>
+        <ul>
+            <li><a href="/search/advanced/">Advanced Search</a></li>
+            <li>Browse Collections
+                <ul><li>Not implemented yet.</li></ul>
+            </li>
+        </ul>
     </section>

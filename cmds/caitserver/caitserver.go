@@ -264,7 +264,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
-	logRequest(r)
+	//logRequest(r)
 	// If GET with Query String or POST pass to results handler
 	// else display Basic Search Form
 	query := r.URL.Query()
@@ -311,7 +311,6 @@ func logRequest(r *http.Request) {
 
 func logger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println("DEBUG testing call to logger...")
 		logRequest(r)
 		next.ServeHTTP(w, r)
 	})
@@ -366,14 +365,16 @@ func main() {
 	// Wake up our search web server
 	http.HandleFunc("/search/advanced/", searchHandler)
 	http.HandleFunc("/search/basic/", searchHandler)
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/search/basic/", http.StatusMovedPermanently)
-	})
+	/*
+		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			http.Redirect(w, r, "/search/basic/", http.StatusMovedPermanently)
+		})
+	*/
 	// Send static file request to the default handler
-	http.Handle("/repositories/", logger(http.FileServer(http.Dir(htdocsDir))))
+	http.Handle("/repositories/", http.FileServer(http.Dir(htdocsDir)))
 
 	log.Printf("Listening on %s\n", serviceURL.String())
-	err = http.ListenAndServe(serviceURL.Host, nil)
+	err = http.ListenAndServe(serviceURL.Host, logger(http.DefaultServeMux))
 	if err != nil {
 		log.Fatal(err)
 	}

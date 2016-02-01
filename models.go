@@ -203,7 +203,7 @@ type Accession struct {
 	Disposition            string                   `json:"disposition,omitempty"`
 	Inventory              string                   `json:"inventory,omitempty"`
 	Provenance             string                   `json:"provenance,omitempty"`
-	RelelatedAccessions    []map[string]interface{} `json:"related_accessions,omitempty"`
+	RelatedAccessions      []map[string]interface{} `json:"related_accessions,omitempty"`
 	AccessionDate          string                   `json:"accession_date,omitempty"`
 	Publish                bool                     `json:"publish"`
 	Classifications        []map[string]interface{} `json:"classifications,omitempty"`
@@ -216,7 +216,7 @@ type Accession struct {
 	Deaccessions           []*Deaccession           `json:"deaccession,omitempty"`
 	CollectionManagement   *CollectionManagement    `json:"collection_management,omitempty"`
 	UserDefined            *UserDefined             `json:"user_defined,omitempty"`
-	RelelatedResources     []map[string]interface{} `json:"related_resources,omitempty"`
+	RelatedResources       []map[string]interface{} `json:"related_resources,omitempty"`
 	Suppressed             bool                     `json:"suppressed"`
 	AcquisitionType        string                   `json:"acquision_type,omitempty"`
 	ResourceType           string                   `json:"resource_type,omitempty"`
