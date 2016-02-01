@@ -81,11 +81,17 @@ The command line tools and services are configured via environment variables. Be
 ```
 
 Assuming Bash and that you've named the file _setup.sh_ you could
-source the file from your shell prompt by typing 
+source the file from your shell prompt by typing
 
 ```
     . setup.sh
 ```
+
+### Setting up a dev box
+
+I run ArchivesSpace in a vagrant box for development use. You can find details to set that up at [github.com/caltechlibrary/archivesspace_vagrant](https://github.com/caltechlibrary/archivesspace_vagrant).
+I usually run the [cait](https://github.com/caltechlibrary/cait) tools locally. You can see
+and example workflow in the document [EXPORT-IMPORT.md](EXPORT-IMPORT.md).
 
 ## Utilities
 
@@ -199,4 +205,3 @@ _sitemapper_ generates a sitemap.xml file based on the arguments you envoke. It 
 ```
 
 This will generate a site map of the HTML files found in *htdocs* with the results saved in *htdocs/sitemap.xml*. For more informaiton about sitemaps see the [sitemaps.org](http://sitemaps.org) website.
-
