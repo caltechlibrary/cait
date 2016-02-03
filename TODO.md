@@ -5,6 +5,9 @@
 
 ### Bugs
 
++ Need to strip unneeded characters from input to prevent XSS attacks
++ Need a better title sort (e.g. remove stop words)
++ Empty Search results cause broken page
 + Simple Search Page
     + Missing Link to Advanced Search
     + Missing Link to browse "Manuscript Collections" and "Oral History"

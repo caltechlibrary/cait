@@ -1,5 +1,4 @@
     <section>
-        <h1>Basic Search</h1>
         <form method="post" action="{{ .URI }}">
             <input type="hidden" name="page" value="{{ .Page }}">
             <input type="hidden" name="page_size" value="{{ .PageSize }}">

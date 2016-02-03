@@ -219,3 +219,68 @@ func (api *ArchivesSpaceAPI) ExportDigitalObjects(repoID int) error {
 	}
 	return nil
 }
+
+// ExportArchivesSpace exports all content currently support by the Golang API implementation
+func (api *ArchivesSpaceAPI) ExportArchivesSpace() error {
+	var err error
+
+	log.Println("Exporting repositories")
+	err = api.ExportRepositories()
+	if err != nil {
+		return fmt.Errorf("Can't export repositories, %s", err)
+	}
+
+	log.Printf("Exporting subjects\n")
+	err = api.ExportSubjects()
+	if err != nil {
+		return fmt.Errorf("Can't export subjects, %s", err)
+	}
+
+	log.Printf("Exporting vocabularies\n")
+	err = api.ExportVocabularies()
+	if err != nil {
+		return fmt.Errorf("Can't export vocabularies, %s", err)
+	}
+
+	log.Printf("Exporting terms")
+	err = api.ExportTerms()
+	if err != nil {
+		return fmt.Errorf("Can't export terms, %s", err)
+	}
+
+	log.Printf("Exporting locations")
+	err = api.ExportLocations()
+	if err != nil {
+		return fmt.Errorf("Can't export locations, %s", err)
+	}
+
+	for _, agentType := range []string{"people", "corporate_entities", "families", "software"} {
+		log.Printf("Exporting agents/%s\n", agentType)
+		err = api.ExportAgents(agentType)
+		if err != nil {
+			return fmt.Errorf("Can't export agents, %s", err)
+		}
+	}
+
+	ids, err := api.ListRepositoryIDs()
+	if err != nil {
+		return fmt.Errorf("Can't get a list of repository ids, %s", err)
+	}
+	for _, id := range ids {
+		log.Printf("Exporting repositories/%d/digital_objects\n", id)
+		err = api.ExportDigitalObjects(id)
+		if err != nil {
+			return fmt.Errorf("Can't export repositories/%d/digital_objects, %s", id, err)
+		}
+		log.Printf("Exporting repositories/%d/accessions\n", id)
+		err = api.ExportAccessions(id)
+		if err != nil {
+			return fmt.Errorf("Can't export repositories/%d/accessions, %s", id, err)
+		}
+	}
+	log.Printf("Export complete")
+
+	//FIXME: Add other types as we start to use them
+	//FIXME: E.g. Resources, Extents, Instances, Group, Users
+	return nil
+}

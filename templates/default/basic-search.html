@@ -5,24 +5,7 @@
 </head>
 <body>
     <header><h1>Search - Basic</h1></header>
-    <section>
-        <form method="post" action="{{ .URI }}">
-            <input type="hidden" name="page" value="{{ .Page }}">
-            <input type="hidden" name="page_size" value="{{ .PageSize }}">
-            <div>
-                <label>Search</label> <input type="text" name="q" placeholder="Enter search expression here">
-            </dib>
-            <div>
-                <input type="submit" name="submit" value="Go">
-            </div>
-        </form>
-        <ul>
-            <li><a href="/search/advanced/">Advanced Search</a></li>
-            <li>Browse Collections
-                <ul><li>Not implemented yet.</li></ul>
-            </li>
-        </ul>
-    </section>
+    {{ template "basic-search.include" . }}
     <footer>
     </footer>
 </body>

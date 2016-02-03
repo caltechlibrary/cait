@@ -1,76 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Detailed template example - {{ .Title }}</title>
+    <title>Accession template example - {{ .Title }}</title>
 </head>
 <body>
-    <header><h1>Detailed Template Example</h1></header>
+    <header><h1>Accession Template Example</h1></header>
 
-    <section>
-    <a href="/search/basic/">Search</a>
-    </section>
-    <nav>
-    {{ if .Nav.PrevURI }}
-        <span class="prev-title"><a href="{{ .Nav.PrevURI }}.html" title="{{ .Nav.PrevLabel }}">Previous</a></span>
-    {{ end }}
-    {{ if .Nav.NextURI }}
-        <span class="next-title"><a href="{{ .Nav.NextURI }}.html" title="{{ .Nav.NextLabel }}">Next</a></span>
-    {{ end }}
-    </nav>
-    <section>
-    <h1 class="accession-title">{{ .Title }}</h1>
-    <div>URI: {{ .URI }} {{ .CreatedBy }} {{ .Created }}</div>
-    </div>
-    <div class="accession-extents">
-    {{ range .Extents }}
-    <pre>
-        {{ . }}
-    </pre>
-    <hr />
-    {{ end }}
-    </div>
-    <div class="accession-instances">
-    {{ range .Instances}}
-    <pre>
-        {{ . }}
-    </pre>
-    <hr />
-    {{ end }}
-    </div>
-    <div>{{ .ContentDescription }}</div>
-    <div>{{ .ConditionDescription }}</div>
-    <div>
-        {{ if .Subjects }}
-            <span>Related Subjects</span>
-            <ul>
-            {{ range .Subjects}}
-            <li>{{ . }}</li>
-            {{ end }}
-            </ul>
-        {{ end }}
-    </div>
-    <div>
-        {{ if .RelatedResources }}
-            {{ range .RelatedResources }}
-            <pre>
-                {{ . }}
-            </pre>
-            <hr />
-            {{ end }}
-        {{ end }}
-    </div>
-    <div>
-        {{ if .LinkedAgents }}
-            <span>Linked Agents</span>
-            <ul>
-            {{ range .LinkedAgents }}
-                <li>{{ . }}</li>
-            {{ end }}
-            </ul>
-        {{ end }}
-    </div>
-    </section>
-
+    {{ template "accession.include" . }}
     <footer>
     </footer>
 </body>

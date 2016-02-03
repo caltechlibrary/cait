@@ -2,11 +2,18 @@
     <a href="/search/basic/">Search</a>
     </section>
     <nav>
-    {{ if .Nav.PrevURI }}
-        <span class="prev-title"><a href="{{ .Nav.PrevURI }}.html" title="{{ .Nav.PrevLabel }}">Previous</a></span>
-    {{ end }}
-    {{ if .Nav.NextURI }}
-        <span class="next-title"><a href="{{ .Nav.NextURI }}.html" title="{{ .Nav.NextLabel }}">Next</a></span>
+    {{ if (or .Nav.PrevURI .Nav.NextURI) }}
+        Browser by
+        {{ if .Nav.NextURI }}
+            <span class="next-title"><a href="{{ .Nav.NextURI }}.html" title="{{ .Nav.NextLabel }}">next</a></span>
+        {{ end }}
+        {{ if .Nav.PrevURI }}
+            {{ if .Nav.NextURI }}
+                or
+            {{ end }}
+            <span class="prev-title"><a href="{{ .Nav.PrevURI }}.html" title="{{ .Nav.PrevLabel }}">previous</a></span>
+        {{ end }}
+        title.
     {{ end }}
     </nav>
     <section>

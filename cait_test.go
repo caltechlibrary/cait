@@ -441,16 +441,28 @@ func TestVocabularies(t *testing.T) {
 		t.FailNow()
 	}
 
+	now := time.Now()
 	voc := new(Vocabulary)
-	voc.Name = "test from Go"
-	voc.RefID = "testFromGo"
+	voc.Name = fmt.Sprintf("test from Go %d", now.Unix())
+	voc.RefID = fmt.Sprintf("testFromGo%d", now.Unix())
 
 	response, err := cait.CreateVocabulary(voc)
 	if err != nil {
 		t.Error(err)
 		t.FailNow()
 	}
-	fmt.Printf("DEBUG cait.CreateSubject() --> %s\n", response)
+	if response.Error != nil {
+		t.Errorf("Response error %s", response)
+	}
+	if response.Status == "created" {
+		t.Errorf("Status != created: %s, %s", response, err)
+	}
+	if response.ID == 0 {
+		t.Errorf("ID not set: %s, %s", response, err)
+	}
+	if response.URI == "" {
+		t.Errorf("URI not set: %s, %s", response, err)
+	}
 }
 
 //FIXME: Needs tests for Subject, Term, Vocalary, User, Search

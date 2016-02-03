@@ -1,12 +1,11 @@
     <section>
-        <h1>Search - Advanced</h1>
-    <section>
     <a href="/search/basic/">New Search</a>
     </section>
+    <section>
         <form method="post" action="{{ .URI }}">
             <p>Find catalog entries that have...</p>
             <div><label>all of these words</label> <input type="text" name="q_required"></div>
-            <div><label>this exact wording or phrase</label> <input type="text" name="q_phrase"> </div>
+            <div><label>this exact wording or phrase</label> <input type="text" name="q_exact"> </div>
             <div><label>one or more of these words</label> <input type="text" name="q"> </div>
 
             <p>But don't show entries that have...</p>

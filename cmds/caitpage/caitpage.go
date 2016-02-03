@@ -68,8 +68,6 @@ var (
 	templateDir   string
 	aHTMLTmplName = "accession.html"
 	aHTMLTmpl     = template.New(aHTMLTmplName)
-	aJSONTmplName = "accession.json"
-	aJSONTmpl     = template.New(aJSONTmplName)
 	aIncTmplName  = "accession.include"
 	aIncTmpl      = template.New(aIncTmplName)
 
@@ -85,15 +83,13 @@ func usage() {
 
 func loadTemplates(templateDir string) error {
 	var err error
-	fname := path.Join(templateDir, aHTMLTmplName)
-	aHTMLTmpl, err = aHTMLTmpl.ParseFiles(fname)
+	aHTMLTmpl, err = template.ParseFiles(path.Join(templateDir, aHTMLTmplName), path.Join(templateDir, aIncTmplName))
 	if err != nil {
-		return fmt.Errorf("Can't parse template %s, %s", fname, err)
+		return fmt.Errorf("Can't parse template %s, %s, %s", aHTMLTmplName, aIncTmplName, err)
 	}
-	fname = path.Join(templateDir, aIncTmplName)
-	aIncTmpl, err = aIncTmpl.ParseFiles(fname)
+	aIncTmpl, err = template.ParseFiles(path.Join(templateDir, aIncTmplName))
 	if err != nil {
-		return fmt.Errorf("Can't parse template %s, %s", fname, err)
+		return fmt.Errorf("Can't parse template %s, %s", aIncTmplName, err)
 	}
 	return nil
 }
@@ -119,7 +115,7 @@ func processData(titleIndex map[string]*cait.NavRecord) error {
 			}
 			if accession.Publish == true && accession.Suppressed == false {
 				// Create a normalized view of the accession to make it easier to work with
-				navRecord, _ := titleIndex[accession.Title]
+				navRecord, _ := titleIndex[accession.URI]
 				view, err := accession.NormalizeView(subjects, navRecord)
 				if err != nil {
 					return fmt.Errorf("Could not generate normalized view, %s", err)

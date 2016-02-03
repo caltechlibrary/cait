@@ -66,7 +66,7 @@ type NormalizedAccessionView struct {
 }
 
 // MakeSubjectList given a base data directory read in the subject JSON blobs and builds
-// a slice or subject data.
+// a slice or subject data. Takes the path to the subjects directory as a parameter.
 func MakeSubjectList(dname string) ([]*Subject, error) {
 	var subjects []*Subject
 
@@ -91,7 +91,7 @@ func MakeSubjectList(dname string) ([]*Subject, error) {
 }
 
 // MakeSubjectMap given a base data directory read in the subject JSON blobs and builds
-// a slice or subject data.
+// a slice or subject data. Takes the path to the subjects directory as a parameter.
 func MakeSubjectMap(dname string) (map[string]*Subject, error) {
 	subjects := make(map[string]*Subject)
 
@@ -164,11 +164,14 @@ func (a *Accession) NormalizeView(subjects map[string]*Subject, nav *NavRecord) 
 
 // MakeAccessionTitleIndex crawls the path for accession records and generates
 // a map of navigation links that can be used in search results or browsing views.
-func MakeAccessionTitleIndex(path string) (map[string]*NavRecord, error) {
+// The parameter dname usually is set to the value of $CAIT_DATASETS
+// Output is a map of URI pointing at NavRecord for that URI.
+func MakeAccessionTitleIndex(dname string) (map[string]*NavRecord, error) {
+	// Title index keyed by URI
 	titleIndex := make(map[string]*NavRecord)
-	titles := []string{}
+	titlesWithURI := []string{}
 	log.Printf("Making Accession Title Index")
-	filepath.Walk(path, func(p string, info os.FileInfo, err error) error {
+	filepath.Walk(dname, func(p string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(p, ".json") {
 			src, err := ioutil.ReadFile(p)
 			if err != nil {
@@ -189,47 +192,79 @@ func MakeAccessionTitleIndex(path string) (map[string]*NavRecord, error) {
 				nav := new(NavRecord)
 				nav.ThisLabel = accession.Title
 				nav.ThisURI = accession.URI
-				titleIndex[accession.Title] = nav
-				titles = append(titles, accession.Title)
+				titleIndex[accession.URI] = nav
+				titlesWithURI = append(titlesWithURI, fmt.Sprintf("%s|%s", accession.Title, accession.URI))
 			}
 			log.Printf("Recorded %s", p)
 		}
 		return nil
 	})
 
-	if len(titles) == 0 {
+	if len(titlesWithURI) == 0 {
 		return nil, fmt.Errorf("No titles found")
 	}
 	if len(titleIndex) == 0 {
 		return nil, fmt.Errorf("title index empty")
 	}
 
+	// make a uri extraction func
+	extractURI := func(s string) string {
+		pos := strings.LastIndex(s, "|")
+		pos++
+		return s[pos:]
+	}
+
 	// Sort the titles
-	log.Printf("Sorting %d titles", len(titles))
-	sort.Strings(titles)
+	log.Printf("Sorting %d titles", len(titlesWithURI))
+	sort.Strings(titlesWithURI)
 	// go through sorted titles and populate Next and Prev appropriately
-	log.Printf("Linked %d titles", len(titles))
-	lastI := len(titles) - 1
-	for i, title := range titles {
-		_, thisOk := titleIndex[title]
+	log.Printf("Linked %d titles", len(titleIndex))
+	lastI := len(titlesWithURI) - 1
+	for i, val := range titlesWithURI {
+		uri := extractURI(val)
+		log.Printf("DEBUG val: %s -> uri: %s", val, uri)
+		_, thisOk := titleIndex[uri]
 		if thisOk == true {
 			if i > 0 {
-				prevTitle, prevOK := titleIndex[titles[i-1]]
+				prevURI := extractURI(titlesWithURI[i-1])
+				prev, prevOK := titleIndex[prevURI]
 				if prevOK == true {
-					titleIndex[title].PrevLabel = prevTitle.ThisLabel
-					titleIndex[title].PrevURI = prevTitle.ThisURI
+					titleIndex[uri].PrevLabel = prev.ThisLabel
+					titleIndex[uri].PrevURI = prev.ThisURI
 				}
 			}
 
 			if i < lastI {
-				nextTitle, nextOK := titleIndex[titles[i+1]]
+				nextURI := extractURI(titlesWithURI[i+1])
+				next, nextOK := titleIndex[nextURI]
 				if nextOK == true {
-					titleIndex[title].NextLabel = nextTitle.ThisLabel
-					titleIndex[title].NextURI = nextTitle.ThisURI
+					titleIndex[uri].NextLabel = next.ThisLabel
+					titleIndex[uri].NextURI = next.ThisURI
 				}
 			}
 		}
-		log.Printf("%s, prev uri: %s, next uri: %s", title, titleIndex[title].PrevURI, titleIndex[title].NextURI)
+		log.Printf("%s, nav: %s\n", uri, titleIndex[uri])
 	}
 	return titleIndex, nil
+}
+
+//
+// String() implementations
+//
+func (nav *NavRecord) String() string {
+	var (
+		prev string
+		this string
+		next string
+	)
+	if nav.PrevURI != "" {
+		prev = fmt.Sprintf(`<a class="prev-item" href="%s" title="%s">prev</a>`, nav.PrevURI, nav.PrevLabel)
+	}
+	if nav.ThisURI != "" {
+		this = fmt.Sprintf(`<span class="this-item" data-uri="%s" data-title="%s"></span>`, nav.ThisURI, nav.ThisLabel)
+	}
+	if nav.NextURI != "" {
+		next = fmt.Sprintf(`<a class="next-item" href="%s" title="%s">next</a>`, nav.NextURI, nav.NextLabel)
+	}
+	return strings.Trim(fmt.Sprintf("%s %s %s", prev, this, next), " ")
 }

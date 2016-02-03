@@ -21,6 +21,7 @@ package main
 
 import (
 	//"encoding/json"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -92,7 +93,7 @@ type SearchForm struct {
 	Query string `json:"q,omitempty"`
 	// Advanced Search
 	QueryRequired string `json:"q_required,omitempty"`
-	QueryPhrase   string `json:"q_phrase,omitempty"`
+	QueryExact    string `json:"q_exact,omitempty"`
 	QueryExcluded string `json:"q_exclude,omitempty"`
 	// Subjects can be a comma delimited list of subjects (e.g. Manuscript Collection, Image Archive)
 	Subjects string `json:"q_subjects,omitempty"`
@@ -118,24 +119,20 @@ type Records struct {
 
 func mapToSearchQuery(m map[string]string) (*cait.SearchQuery, error) {
 	var err error
-	fmt.Printf("DEBUG starting mapToSearchQuery: %v\n", m)
 	q := new(cait.SearchQuery)
 	if _, ok := m["uri"]; ok == true {
 		q.URI = m["uri"]
-		fmt.Printf("DEBUG q.URI: %s\n", q.URI)
 	}
 	if _, ok := m["q"]; ok == true {
 		q.Q = m["q"]
 	}
 	if _, ok := m["page"]; ok == true {
-		fmt.Printf("DEBUG converting page: %s\n", m["page"])
 		q.Page, err = strconv.Atoi(m["page"])
 		if err != nil {
 			return nil, fmt.Errorf("%s", err)
 		}
 	}
 	if _, ok := m["page_size"]; ok == true {
-		fmt.Printf("DEBUG converting page_size: %s\n", m["page_size"])
 		q.PageSize, err = strconv.Atoi(m["page_size"])
 		if err != nil {
 			return nil, fmt.Errorf("%s", err)
@@ -170,7 +167,7 @@ func mapToSearchQuery(m map[string]string) (*cait.SearchQuery, error) {
 	*/
 
 	//FIXME: Facets, FilterTerm, SimpleFilter, Exclude... not sure how to form the key/value pairs for GET and POST
-	fmt.Printf("DEBUG resolved query submission: %s\n", q)
+	fmt.Printf("DEBUG resolved query submission: %+v\n", q)
 	return q, nil
 }
 
@@ -183,7 +180,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("DEBUG r.Form: %v\n", r.Form)
 	// Query ArchivesSpace's Solr API or ArchivesSpace's own API
 	// Output Results in results template for list or single record as appropriate
 	if err != nil {
@@ -197,7 +193,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	// Basic Search results
 	if r.Method == "GET" {
 		for k, v := range query {
-			fmt.Printf("DEBUG k %s v type: %T -> %v\n", k, v, v)
 			submission[k] = strings.Join(v, "")
 		}
 	}
@@ -205,7 +200,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	// Advanced Search results
 	if r.Method == "POST" {
 		for k, v := range r.Form {
-			fmt.Printf("DEBUG k %s v type: %T -> %v\n", k, v, v)
 			submission[k] = strings.Join(v, "")
 		}
 	}
@@ -213,10 +207,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	if _, ok := submission["page"]; ok != true {
 		submission["page"] = "1"
 	}
-
-	fmt.Printf("DEBUG r.Method: %s\n", r.Method)
-	fmt.Printf("DEBUG r.URL.Path: %s\n", r.URL.Path)
-	fmt.Printf("DEBUG submission: %v\n", submission)
 
 	//w.Header().Set("Content-Type", "text/html")
 	//w.Write([]byte(resultsPage))
@@ -227,7 +217,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
-	fmt.Printf("DEBUG q now: %v\n", q)
 	qry := bleve.NewMatchQuery(q.Q)
 	search := bleve.NewSearchRequest(qry)
 	search.Highlight = bleve.NewHighlightWithStyle("html")
@@ -239,27 +228,28 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
+	log.Printf("DEBUG searchResults: %+v\n", searchResults.Request.Query)
+	src, _ := json.Marshal(searchResults.Request.Query)
+	log.Printf("DEBUG src query: %s", src)
+	queryTerms := struct {
+		Match string `json:"match,omitempty"`
+	}{}
+	_ = json.Unmarshal(src, &queryTerms)
+	log.Printf("DEBUG query terms [%s]\n", queryTerms.Match)
 
-	log.Printf("DEBUG From %d\n", searchResults.Request.From)
-	log.Printf("DEBUG PageSize %d\n", searchResults.Request.Size)
-	log.Printf("DEBUG Total %d\n", searchResults.Total)
-	log.Printf("DEBUG Hits[0].ID %s\n", searchResults.Hits[0].ID)
-	log.Printf("DEBUG Hits[0].Fragments %v\n", searchResults.Hits[0].Fragments)
-	log.Printf("DEBUG Hits[0].Title %s\n", searchResults.Hits[0].Fragments["title"])
-	log.Printf("DEBUG Hits[0].Fragments[content_description] %s\n", searchResults.Hits[0].Fragments["content_description"])
+	//FIXME: Need to come up with an appropriate data structure for the results
+	// I need PrevPage, NextPage links, some specific fields that are not included in the Fragments
 
-	//content, _ := json.Marshal(searchResults)
-	//log.Printf("DEBUG content: %s\n", content)
-	/*
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(content)
-	*/
+	// Load my tempaltes and setup to execute them
+	tmpl, _ := template.ParseFiles(
+		path.Join(templatesDir, "results-search.html"),
+		path.Join(templatesDir, "results-search.include"),
+	)
+	// Render the page
 	w.Header().Set("Content-Type", "text/html")
-	tmpl := template.New("results-search.html")
-	tmpl.ParseFiles(path.Join(templatesDir, "results-search.html"))
 	err = tmpl.Execute(w, searchResults)
 	if err != nil {
-		log.Printf("Can't render %s/%s, %s", templatesDir, "results-search.html", err)
+		log.Printf("Can't render %s/%s, %s", templatesDir, "results-search.*", err)
 	}
 }
 
@@ -287,8 +277,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	if r.URL.Path == "/search/advanced/" {
 		formData.URI = "/search/advanced/"
-		tmpl := template.New("advanced-search.html")
-		tmpl, err := tmpl.ParseFiles(path.Join(templatesDir, "advanced-search.html"))
+		tmpl, err := template.ParseFiles(path.Join(templatesDir, "advanced-search.html"), path.Join(templatesDir, "advanced-search.include"))
 		err = tmpl.Execute(w, formData)
 		if err != nil {
 			w.Write([]byte(fmt.Sprintf("%s", err)))
@@ -297,8 +286,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	formData.URI = "/search/basic/"
-	tmpl := template.New("basic-search.html")
-	tmpl, err := tmpl.ParseFiles(path.Join(templatesDir, "basic-search.html"))
+	tmpl, err := template.ParseFiles(path.Join(templatesDir, "basic-search.html"), path.Join(templatesDir, "basic-search.include"))
 	err = tmpl.Execute(w, formData)
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
