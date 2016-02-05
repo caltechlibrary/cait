@@ -44,11 +44,11 @@ var // Spreadsheet description of columns c??
     columnNames = [ cA, cB, cC, cD, cE, cF, cG, cH ],
     // Auth and API vars
     apiToken = "",
-    apiURI = Getenv("ASPACE_API_URL"),
-    apiUsername = Getenv("ASPACE_USERNAME"),
-    apiPassword = Getenv("ASPACE_PASSWORD")
+    apiURI = Getenv("CAIT_API_URL"),
+    apiUsername = Getenv("CAIT_USERNAME"),
+    apiPassword = Getenv("CAIT_PASSWORD")
     // Local data locations
-    dataDir = Getenv("ASPACE_DATASETS"),
+    dataDir = Getenv("CAIT_DATASETS"),
     Subjects = {},
     Titles = [],
     // You could start with object IDs at 1, but this may need to be changed
@@ -144,11 +144,11 @@ function getSubjects() {
         if (subject.title !== undefined && subject.uri !== undefined) {
             subject.terms.forEach(function (term) {
                 if (term.term_type === "function") {
-                    console.log("DEBUG subject/function", subject.title, subject.uri);
+                    console.log("Collecting subject/function", subject.title, subject.uri);
                     functional[subject.title] = subject.uri;
                 }
                 if (term.term_type === "topical") {
-                    console.log("DEBUG subject/topical", subject.title, subject.uri);
+                    console.log("Collecting subject/topical", subject.title, subject.uri);
                     topical[subject.title] = subject.uri;
                 }
             });
@@ -166,7 +166,7 @@ function getAccessionTitles() {
     titleIDs.forEach(function(id) {
         accession = JSON.parse(HttpGet(apiURI + "/repositories/2/accessions/" + id, [{"X-ArchivesSpace-Session": apiToken}]));
         if (accession.title !== undefined && accession.uri !== undefined) {
-            console.log("DEBUG accession", accession.title, accession.uri);
+            console.log("Collecting accession", accession.title, accession.uri);
             titles.push({title: accession.title, uri: accession.uri});
         }
     });
@@ -192,6 +192,11 @@ Titles = getAccessionTitles();
 //
 // Main processing and callback
 //
+function makeDigitalObjectID(url_to_object) {
+    timestamp = (new Date()).toTimeString()
+    return url_to_object + ", imported " + timestamp
+
+}
 
 // callback() is the primary mapping function
 function callback(row) {
@@ -221,7 +226,7 @@ function callback(row) {
     // Digital Objects so we're going to offset our new object IDs
     objectID = parseInt(row[cA], 10) + ObjectIDOffset;
     obj = {
-        digital_object_id: row[cF],
+        //digital_object_id: row[cF],
         uri: "/repositories/2/digital_objects/" + objectID,
         title: row[cB],
         publish: true,

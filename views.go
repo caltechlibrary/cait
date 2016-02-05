@@ -36,38 +36,48 @@ import (
 // Useful view driven data structures and functions
 //
 
-// NavRecord defined previous, next links used in paging results or browsable record lists
-type NavRecord struct {
+// PageView is a simple container for rendering pages
+type PageView struct {
+	Nav     NavView
+	Content []interface{}
+}
+
+// NavElementView defined previous, next links used in paging results or browsable record lists
+type NavElementView struct {
 	ThisLabel string `json:"this_label,omitempty"`
 	ThisURI   string `json:"this_uri, omitempty"`
 	PrevURI   string `json:"prev_uri,omitempty"`
 	PrevLabel string `json:"prev_label,omitempty"`
 	NextURI   string `json:"next_uri,omitempty"`
 	NextLabel string `json:"next_label,omitempty"`
+	Weight    int    `json:"weight"`
 }
+
+// NavView is an array of NavelementViews
+type NavView []*NavElementView
 
 // NormalizedAccessionView returns a structure suitable for templating public web content.
 type NormalizedAccessionView struct {
-	URI                  string     `json:"uri"`
-	Title                string     `json:"title"`
-	ContentDescription   string     `json:"content_description"`
-	ConditionDescription string     `json:"condition_description"`
-	Subjects             []string   `json:"subjects,omitempty"`
-	Extents              []*Extent  `json:"extents,omitempty"`
-	RelatedResources     []string   `json:"related_resources,omitempty"`
-	RelatedAccessions    []string   `json:"related_accessions,omitempty"`
-	Instances            []string   `json:"instances,omitempty"`
-	LinkedAgents         []string   `json:"linked_agents,omitempty"`
-	CreatedBy            string     `json:"created_by"`
-	Created              string     `json:"created"`
-	LastModifiedBy       string     `json:"last_modified_by,omitempty"`
-	LastModified         string     `json:"last_modified"`
-	Nav                  *NavRecord `json:"nav,omitempty"`
+	URI                  string                   `json:"uri"`
+	Title                string                   `json:"title"`
+	ContentDescription   string                   `json:"content_description"`
+	ConditionDescription string                   `json:"condition_description"`
+	Subjects             []string                 `json:"subjects,omitempty"`
+	Extents              []string                 `json:"extents,omitempty"`
+	RelatedResources     []string                 `json:"related_resources,omitempty"`
+	RelatedAccessions    []string                 `json:"related_accessions,omitempty"`
+	Instances            []map[string]interface{} `json:"instances,omitempty"`
+	LinkedAgents         []string                 `json:"linked_agents,omitempty"`
+	AccessionDate        string                   `json:"accession_date"`
+	CreatedBy            string                   `json:"created_by"`
+	Created              string                   `json:"created"`
+	LastModifiedBy       string                   `json:"last_modified_by,omitempty"`
+	LastModified         string                   `json:"last_modified"`
 }
 
 // NormalizeView returns a normalized view from an Accession structure and
 // an array of subject structures.
-func (a *Accession) NormalizeView(subjects map[string]*Subject, nav *NavRecord) (*NormalizedAccessionView, error) {
+func (a *Accession) NormalizeView(subjects map[string]*Subject, digitalObjects map[string]*DigitalObject) (*NormalizedAccessionView, error) {
 	var (
 		subjectLabels []string
 		instanceLinks []string
@@ -78,11 +88,17 @@ func (a *Accession) NormalizeView(subjects map[string]*Subject, nav *NavRecord) 
 	v.URI = a.URI
 	v.ContentDescription = a.ContentDescription
 	v.ConditionDescription = a.ConditionDescription
+	v.AccessionDate = a.AccessionDate
 	v.CreatedBy = a.CreatedBy
 	v.Created = a.CreateTime
 	v.LastModifiedBy = a.LastModifiedBy
 	v.LastModified = a.UserMTime
-	v.Extents = a.Extents
+	for _, extent := range a.Extents {
+		v.Extents = append(v.Extents, extent.PhysicalDetails)
+	}
+	for _, kv := range a.Instances {
+		v.Instances = append(v.Instances, kv)
+	}
 	//FIXME: need to figure out how to handle these...
 	//v.RelatedResources = a.RelatedResources
 	//v.RelatedAccessions = a.RelatedAccessions
@@ -102,9 +118,6 @@ func (a *Accession) NormalizeView(subjects map[string]*Subject, nav *NavRecord) 
 		}
 	}
 	v.Subjects = subjectLabels
-	if nav != nil {
-		v.Nav = nav
-	}
 	return v, nil
 }
 
@@ -165,10 +178,10 @@ func MakeSubjectMap(dname string) (map[string]*Subject, error) {
 // MakeAccessionTitleIndex crawls the path for accession records and generates
 // a map of navigation links that can be used in search results or browsing views.
 // The parameter dname usually is set to the value of $CAIT_DATASETS
-// Output is a map of URI pointing at NavRecord for that URI.
-func MakeAccessionTitleIndex(dname string) (map[string]*NavRecord, error) {
+// Output is a map of URI pointing at NavElementView for that URI.
+func MakeAccessionTitleIndex(dname string) (map[string]*NavElementView, error) {
 	// Title index keyed by URI
-	titleIndex := make(map[string]*NavRecord)
+	titleIndex := make(map[string]*NavElementView)
 	titlesWithURI := []string{}
 	log.Printf("Making Accession Title Index")
 	filepath.Walk(dname, func(p string, info os.FileInfo, err error) error {
@@ -189,7 +202,7 @@ func MakeAccessionTitleIndex(dname string) (map[string]*NavRecord, error) {
 			}
 			if accession.JSONModel == "accession" {
 				//FIXME: Store the info.
-				nav := new(NavRecord)
+				nav := new(NavElementView)
 				nav.ThisLabel = accession.Title
 				nav.ThisURI = accession.URI
 				titleIndex[accession.URI] = nav
@@ -251,7 +264,7 @@ func MakeAccessionTitleIndex(dname string) (map[string]*NavRecord, error) {
 //
 // String() implementations
 //
-func (nav *NavRecord) String() string {
+func (nav *NavElementView) String() string {
 	var (
 		prev string
 		this string

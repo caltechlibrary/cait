@@ -685,8 +685,33 @@ func (api *ArchivesSpaceAPI) ListLocations() ([]int, error) {
 
 // CreateDigitalObject - return a new digital object
 func (api *ArchivesSpaceAPI) CreateDigitalObject(repoID int, obj *DigitalObject) (*ResponseMsg, error) {
+	uriPrefix := fmt.Sprintf("/repositories/%d/digital_objects", repoID)
+	if obj.URI != "" && strings.HasPrefix(obj.URI, uriPrefix+"/") {
+		if obj.DigitalObjectID == "" {
+			obj.DigitalObjectID = obj.URI
+		}
+		responseMsg, err := api.CreateAPI(obj.URI, obj)
+		if err != nil {
+			return responeMsg, err
+		}
+		//FIXME: If we're importing this we may need to attach to an existing accession
+		if len(obj.LinkedInstances) > 0 {
+			for _, instance := obj.LinkedInstances {
+				if val, ok := instance["ref"]
+					uri := fmt.Sprintf("%s", val)
+					parts := strings.Split(val)
+					if len(parts) > 4 {
+						accessionID, _ := strconv.Atoi(parts[4])
+						if accessionID > 0 {
+							accession, err := GetAccession(repoID, accessionID)
+						}
+					}
+			}
+		}
+
+	}
 	u := *api.URL
-	u.Path = fmt.Sprintf("/repositories/%d/digital_objects", repoID)
+	u.Path = uriPrefix
 	return api.CreateAPI(u.String(), obj)
 }
 
@@ -708,6 +733,7 @@ func (api *ArchivesSpaceAPI) GetDigitalObject(repoID, objID int) (*DigitalObject
 func (api *ArchivesSpaceAPI) UpdateDigitalObject(obj *DigitalObject) (*ResponseMsg, error) {
 	u := api.URL
 	u.Path = obj.URI
+	//FIXME: If we're Updating we may need to relink to an existing accession
 	return api.UpdateAPI(u.String(), obj)
 }
 
@@ -715,6 +741,7 @@ func (api *ArchivesSpaceAPI) UpdateDigitalObject(obj *DigitalObject) (*ResponseM
 func (api *ArchivesSpaceAPI) DeleteDigitalObject(obj *DigitalObject) (*ResponseMsg, error) {
 	u := api.URL
 	u.Path = obj.URI
+	//FIXME: If we're Updating we may need to unlink existing accessions
 	return api.DeleteAPI(u.String(), obj)
 }
 

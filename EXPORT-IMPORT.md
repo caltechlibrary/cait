@@ -85,7 +85,7 @@ into repository id of 2.
     export CAIT_DATASETS=data
 
     ./bin/cait repository create -i data/repositories/2.json
-    # If you have non-default extent types, create them before proceeding
+    # If you have non-default extent extent types, create them before proceeding
     find data/subjects -type f | while read ITEM; do ./bin/cait subject create -i $ITEM; done
     find data/agents/people -type f | while read ITEM; do ./bin/cait agent create -i $ITEM; done
     find data/repositories/2/accessions -type f | while read ITEM; do ./bin/cait accession create -i $ITEM; done
