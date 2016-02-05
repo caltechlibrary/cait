@@ -1,17 +1,25 @@
+<section>
+{{ if (or .QExact .QRequired .QExcluded ) }}
+    <a href="/search/advanced/">New Advanced Search</a>
+{{ else }}
+    <a href="/search/basic/">New Basic Search</a>
+{{ end }}
+</section>
+{{ with .DetailedResult }}
     <nav>
-    {{ if (or .Nav.PrevURI .Nav.NextURI) }}
-        Browser
-        {{ if .Nav.NextURI }}
-            <span class="next-title"><a href="{{ .Nav.NextURI }}.html" title="{{ .Nav.NextLabel }}">next</a></span>
-        {{ end }}
-        {{ if .Nav.PrevURI }}
+        {{ if (or .Nav.PrevURI .Nav.NextURI) }}
+            Browser
             {{ if .Nav.NextURI }}
-                or
+                <span class="next-title"><a href="{{ .Nav.NextURI }}.html" title="{{ .Nav.NextLabel }}">next</a></span>
             {{ end }}
-            <span class="prev-title"><a href="{{ .Nav.PrevURI }}.html" title="{{ .Nav.PrevLabel }}">previous</a></span>
+            {{ if .Nav.PrevURI }}
+                {{ if .Nav.NextURI }}
+                    or
+                {{ end }}
+                <span class="prev-title"><a href="{{ .Nav.PrevURI }}.html" title="{{ .Nav.PrevLabel }}">previous</a></span>
+            {{ end }}
+            result.
         {{ end }}
-        title.
-    {{ end }}
     </nav>
     <section>
     <h1 class="accession-title">{{ .Title }}</h1>
@@ -67,3 +75,4 @@
         {{ end }}
     </div>
     </section>
+{{ end }}

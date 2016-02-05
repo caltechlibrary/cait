@@ -50,8 +50,8 @@ type NavRecord struct {
 type NormalizedAccessionView struct {
 	URI                  string     `json:"uri"`
 	Title                string     `json:"title"`
-	ContentDescription   string     `json:"content_description,omitempty"`
-	ConditionDescription string     `json:"content_description,omitempty"`
+	ContentDescription   string     `json:"content_description"`
+	ConditionDescription string     `json:"condition_description"`
 	Subjects             []string   `json:"subjects,omitempty"`
 	Extents              []*Extent  `json:"extents,omitempty"`
 	RelatedResources     []string   `json:"related_resources,omitempty"`
@@ -63,6 +63,49 @@ type NormalizedAccessionView struct {
 	LastModifiedBy       string     `json:"last_modified_by,omitempty"`
 	LastModified         string     `json:"last_modified"`
 	Nav                  *NavRecord `json:"nav,omitempty"`
+}
+
+// NormalizeView returns a normalized view from an Accession structure and
+// an array of subject structures.
+func (a *Accession) NormalizeView(subjects map[string]*Subject, nav *NavRecord) (*NormalizedAccessionView, error) {
+	var (
+		subjectLabels []string
+		instanceLinks []string
+	)
+
+	v := new(NormalizedAccessionView)
+	v.Title = a.Title
+	v.URI = a.URI
+	v.ContentDescription = a.ContentDescription
+	v.ConditionDescription = a.ConditionDescription
+	v.CreatedBy = a.CreatedBy
+	v.Created = a.CreateTime
+	v.LastModifiedBy = a.LastModifiedBy
+	v.LastModified = a.UserMTime
+	v.Extents = a.Extents
+	//FIXME: need to figure out how to handle these...
+	//v.RelatedResources = a.RelatedResources
+	//v.RelatedAccessions = a.RelatedAccessions
+	//v.LinkedAgents = a.LinkedAgents
+	for _, item := range a.Instances {
+		fmt.Printf("DEBUG instance item: %+v\n", item)
+		//FIXME: assign the URL link to v.Instance
+		instanceLinks = append(instanceLinks, fmt.Sprintf("%+v", item))
+	}
+	for _, item := range a.Subjects {
+		ref, ok := item["ref"]
+		if ok == true {
+			rec := subjects[fmt.Sprintf("%s", ref)]
+			if rec != nil {
+				subjectLabels = append(subjectLabels, rec.Title)
+			}
+		}
+	}
+	v.Subjects = subjectLabels
+	if nav != nil {
+		v.Nav = nav
+	}
+	return v, nil
 }
 
 // MakeSubjectList given a base data directory read in the subject JSON blobs and builds
@@ -113,49 +156,6 @@ func MakeSubjectMap(dname string) (map[string]*Subject, error) {
 		subjects[subject.URI] = subject
 	}
 	return subjects, nil
-}
-
-// NormalizeView returns a normalized view from an Accession structure and
-// an array of subject structures.
-func (a *Accession) NormalizeView(subjects map[string]*Subject, nav *NavRecord) (*NormalizedAccessionView, error) {
-	var (
-		subjectLabels []string
-		instanceLinks []string
-	)
-
-	v := new(NormalizedAccessionView)
-	v.Title = a.Title
-	v.URI = a.URI
-	v.ContentDescription = a.ContentDescription
-	v.ConditionDescription = a.ConditionDescription
-	v.CreatedBy = a.CreatedBy
-	v.Created = a.CreateTime
-	v.LastModifiedBy = a.LastModifiedBy
-	v.LastModified = a.UserMTime
-	v.Extents = a.Extents
-	//FIXME: need to figure out how to handle these...
-	//v.RelatedResources = a.RelatedResources
-	//v.RelatedAccessions = a.RelatedAccessions
-	//v.LinkedAgents = a.LinkedAgents
-	for _, item := range a.Instances {
-		fmt.Printf("DEBUG instance item: %+v\n", item)
-		//FIXME: assign the URL link to v.Instance
-		instanceLinks = append(instanceLinks, fmt.Sprintf("%+v", item))
-	}
-	for _, item := range a.Subjects {
-		ref, ok := item["ref"]
-		if ok == true {
-			rec := subjects[fmt.Sprintf("%s", ref)]
-			if rec != nil {
-				subjectLabels = append(subjectLabels, rec.Title)
-			}
-		}
-	}
-	v.Subjects = subjectLabels
-	if nav != nil {
-		v.Nav = nav
-	}
-	return v, nil
 }
 
 //

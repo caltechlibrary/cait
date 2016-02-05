@@ -30,7 +30,6 @@ import (
 	"strings"
 
 	"../../../cait"
-	"github.com/blevesearch/bleve"
 )
 
 type command struct {
@@ -57,7 +56,6 @@ var (
 		"term",
 		"location",
 		"digital_object",
-		"search",
 	}
 	actions = []string{
 		"create",
@@ -171,12 +169,6 @@ func parseCmd(args []string) (*command, error) {
 		return nil, fmt.Errorf("%s is not a subject (e.g. %s)", args[0], strings.Join(subjects, ", "))
 	}
 	cmd.Subject = args[0]
-
-	if cmd.Subject == "search" {
-		cmd.Action = ""
-		cmd.Payload = strings.Join(args[1:], " ")
-		return cmd, nil
-	}
 
 	if containsElement(actions, args[1]) == false {
 		return nil, fmt.Errorf("%s is not an action (e.g. %s)", args[1], strings.Join(actions, ", "))
@@ -825,49 +817,6 @@ func runDigitalObjectCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, erro
 	return "", fmt.Errorf("runDigitalObjectCmd() action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
-func runSearchCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
-	var (
-		opt *cait.SearchQuery
-		err error
-	)
-	if cmd.Payload != "" {
-		err := json.Unmarshal([]byte(cmd.Payload), &opt)
-		if err != nil {
-			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
-		}
-	}
-	bleveIndex := os.Getenv("CAIT_BLEVE_INDEX")
-	if bleveIndex == "" {
-		// Fall back to the ArchivesSpace search API
-		if err := api.Login(); err != nil {
-			return "", err
-		}
-		results, err := api.Search(opt)
-		if err != nil {
-			return "", fmt.Errorf(`{"error": "%s"}`, err)
-		}
-		return string(results), nil
-	}
-
-	// search for some text
-	index, err := bleve.Open(bleveIndex)
-	if err != nil {
-		return "", fmt.Errorf("Can't open index %s, %s", bleveIndex, err)
-	}
-	defer index.Close()
-	query := bleve.NewMatchQuery(opt.Q)
-	if opt.PageSize == 0 {
-		opt.PageSize = 10
-	}
-	request := bleve.NewSearchRequestOptions(query, opt.PageSize, opt.Page, opt.Explain)
-
-	results, err := index.Search(request)
-	if err != nil {
-		return "", fmt.Errorf("Search error, terms [%s], %s", opt.Q, err)
-	}
-	return fmt.Sprintf("%s", results), nil
-}
-
 func runCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	switch cmd.Subject {
 	case "archivesspace":
@@ -886,8 +835,6 @@ func runCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		return runVocabularyCmd(api, cmd)
 	case "term":
 		return runTermCmd(api, cmd)
-	case "search":
-		return runSearchCmd(api, cmd)
 	case "digital_object":
 		return runDigitalObjectCmd(api, cmd)
 	}

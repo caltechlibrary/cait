@@ -1,8 +1,14 @@
+<section>
+{{ if (or .QExact .QRequired .QExcluded ) }}
+    <a href="/search/advanced/">New Advanced Search</a>
+{{ else }}
+    <a href="/search/basic/">New Basic Search</a>
+{{ end }}
+</section>
     <section>
-    <a href="/search/basic/">New Search</a>
-    </section>
-    <section>
-        <form method="post" action="{{ .URI }}">
+        <form method="get" action="{{ .URI }}">
+            <input type="hidden" name="page" value="{{ .Page }}">
+            <input type="hidden" name="page_size" value="{{ .PageSize }}">
             <p>Find catalog entries that have...</p>
             <div><label>all of these words</label> <input type="text" name="q_required"></div>
             <div><label>this exact wording or phrase</label> <input type="text" name="q_exact"> </div>

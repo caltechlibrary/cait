@@ -1111,7 +1111,7 @@ type Event struct {
 type Extent struct {
 	Portion          string `json:"portion,omitempty"`
 	Number           string `json:"number,omitempty"`
-	ExtendType       string `json:"extent_type,omitempty"`
+	ExtentType       string `json:"extent_type,omitempty"`
 	ContainerSummary string `json:"container_summary,omitempty"`
 	PhysicalDetails  string `json:"physical_details,omitempty"`
 	Dimensions       string `json:"dimensions,omitempty"`

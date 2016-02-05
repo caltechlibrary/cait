@@ -20,7 +20,6 @@
 package main
 
 import (
-	//"encoding/json"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -30,9 +29,10 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
-	"text/template" // Using text template because I am not HTML escaping results...
+	"text/template"
 
 	"../../../cait"
 	"github.com/blevesearch/bleve"
@@ -82,96 +82,50 @@ func usage() {
 	os.Exit(0)
 }
 
-// SearchForm holds the expected values for both Basic and Advanced search
-type SearchForm struct {
-	Method   string `json:"method"`
-	Action   string `json:"action"`
-	AllIDs   bool   `json:"all_ids,omitempty"`
-	PageSize int    `json:"page_size,omitempty"`
-	Page     int    `json:"page,omitempty"`
-	// Simple Search
-	Query string `json:"q,omitempty"`
-	// Advanced Search
-	QueryRequired string `json:"q_required,omitempty"`
-	QueryExact    string `json:"q_exact,omitempty"`
-	QueryExcluded string `json:"q_exclude,omitempty"`
-	// Subjects can be a comma delimited list of subjects (e.g. Manuscript Collection, Image Archive)
-	Subjects string `json:"q_subjects,omitempty"`
-}
-
-// Records are the return structure with all search results and metadata to navigate them
-type Records struct {
-	Prefix string
-	// SearchTerms resolves string to a search expression (Strange Attraction+subjects:Manuscript Collection-chemestry)
-	SearchTerms string
-	FirstPage   int `json:"first_page,omitempty"`
-	LastPage    int `json:"last_page,omitempty"`
-	ThisPage    int `json:"this_page,omitempty"`
-	OffsetFirst int `json:"offset_first,omitempty"`
-	OffsetLast  int `json:"offset_last"`
-	TotalHits   int `json:"total_hits,omitempty"`
-
-	//Facets map[string]map[string]interface{} `json:"facets,omitempty"`
-	//{"facet_queries":{},"facet_fields":{},"facet_dates":{},"facet_ranges":{}
-
-	Records []*cait.NormalizedAccessionView `json:"results,omitemty"`
-}
-
-func mapToSearchQuery(m map[string]string) (*cait.SearchQuery, error) {
+func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
 	var err error
 	q := new(cait.SearchQuery)
-	if _, ok := m["uri"]; ok == true {
-		q.URI = m["uri"]
+	src, err := json.Marshal(m)
+	if err != nil {
+		return nil, fmt.Errorf("Can't marshal %+v, %s", m, err)
 	}
-	if _, ok := m["q"]; ok == true {
-		q.Q = m["q"]
+	err = json.Unmarshal(src, &q)
+	if err != nil {
+		return nil, fmt.Errorf("Can't unmarshal %s, %s", src, err)
 	}
-	if _, ok := m["page"]; ok == true {
-		q.Page, err = strconv.Atoi(m["page"])
-		if err != nil {
-			return nil, fmt.Errorf("%s", err)
-		}
-	}
-	if _, ok := m["page_size"]; ok == true {
-		q.PageSize, err = strconv.Atoi(m["page_size"])
-		if err != nil {
-			return nil, fmt.Errorf("%s", err)
-		}
-	}
-
-	/*
-		if _, ok := m["repo_id"]; ok == true {
-			q.RepoID, err = strconv.Atoi(m["repo_id"])
-			if err != nil {
-				return nil, fmt.Errorf("%s", err)
-			}
-		}
-		if _, ok := m["type"]; ok == true {
-			q.Type = m["type"]
-		}
-		if _, ok := m["sort"]; ok == true {
-			q.Sort = m["sort"]
-		}
-		if _, ok := m["id_set"]; ok == true {
-			q.IDSet, err = strconv.Atoi(m["id_set"])
-			if err != nil {
-				return nil, fmt.Errorf("%s", err)
-			}
-		}
-		if _, ok := m["all_ids"]; ok == true {
-			q.AllIDs, err = strconv.ParseBool(m["all_ids"])
-			if err != nil {
-				return nil, fmt.Errorf("%s", err)
-			}
-		}
-	*/
-
-	//FIXME: Facets, FilterTerm, SimpleFilter, Exclude... not sure how to form the key/value pairs for GET and POST
-	fmt.Printf("DEBUG resolved query submission: %+v\n", q)
 	return q, nil
 }
 
+func urlToRepoAccessionIDs(uri string) (int, int, error) {
+	var err error
+	repoID := 0
+	accessionID := 0
+
+	log.Printf("DEBUG uri in: %s\n", uri)
+	parts := strings.SplitN(uri, "/", 7)
+	log.Printf("DEBUG split path: %+v\n", parts)
+	if len(parts) > 4 {
+		repoID, err = strconv.Atoi(parts[4])
+		if err != nil {
+			return 0, 0, fmt.Errorf("Cannot parse repository id %s, %s", uri, err)
+		}
+	}
+	if len(parts) >= 6 {
+		id := filepath.Base(uri)
+		accessionID, err = strconv.Atoi(id)
+		if err != nil {
+			return repoID, 0, fmt.Errorf("Cannot parse accession id %s, %s", uri, err)
+		}
+	}
+	return repoID, accessionID, nil
+}
+
 func resultsHandler(w http.ResponseWriter, r *http.Request) {
+	var (
+		pageHTML    = "results-search.html"
+		pageInclude = "results-search.include"
+	)
+
 	query := r.URL.Query()
 	err := r.ParseForm()
 	if err != nil {
@@ -180,36 +134,38 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Query ArchivesSpace's Solr API or ArchivesSpace's own API
-	// Output Results in results template for list or single record as appropriate
-	if err != nil {
-		log.Printf("API access error %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf("%s", err)))
-		return
-	}
-	submission := make(map[string]string)
-
+	submission := make(map[string]interface{})
 	// Basic Search results
 	if r.Method == "GET" {
+		fmt.Printf("DEBUG GET submitted: %+v\n", query)
 		for k, v := range query {
-			submission[k] = strings.Join(v, "")
+			if k == "all_ids" {
+				b, _ := strconv.ParseBool(strings.Join(v, ""))
+				submission[k] = b
+			} else if k == "page" || k == "page_size" || k == "total" {
+				i, _ := strconv.Atoi(strings.Join(v, ""))
+				submission[k] = i
+			} else {
+				submission[k] = strings.Join(v, "")
+			}
 		}
 	}
-
 	// Advanced Search results
 	if r.Method == "POST" {
+		fmt.Printf("DEBUG POST submitted: %+v\n", r.Form)
 		for k, v := range r.Form {
-			submission[k] = strings.Join(v, "")
+			if k == "all_ids" {
+				b, _ := strconv.ParseBool(strings.Join(v, ""))
+				submission[k] = b
+			} else if k == "page" || k == "page_size" || k == "total" {
+				i, _ := strconv.Atoi(strings.Join(v, ""))
+				submission[k] = i
+			} else {
+				submission[k] = strings.Join(v, "")
+			}
 		}
 	}
 
-	if _, ok := submission["page"]; ok != true {
-		submission["page"] = "1"
-	}
-
-	//w.Header().Set("Content-Type", "text/html")
-	//w.Write([]byte(resultsPage))
 	q, err := mapToSearchQuery(submission)
 	if err != nil {
 		log.Printf("API access error %s", err)
@@ -217,39 +173,79 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
-	qry := bleve.NewMatchQuery(q.Q)
-	search := bleve.NewSearchRequest(qry)
-	search.Highlight = bleve.NewHighlightWithStyle("html")
-	//search.Explain = true
-	searchResults, err := index.Search(search)
-	if err != nil {
-		log.Printf("Bleve results error %v, %s", qry, err)
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(fmt.Sprintf("%s", err)))
-		return
-	}
-	log.Printf("DEBUG searchResults: %+v\n", searchResults.Request.Query)
-	src, _ := json.Marshal(searchResults.Request.Query)
-	log.Printf("DEBUG src query: %s", src)
-	queryTerms := struct {
-		Match string `json:"match,omitempty"`
-	}{}
-	_ = json.Unmarshal(src, &queryTerms)
-	log.Printf("DEBUG query terms [%s]\n", queryTerms.Match)
+	q.DetailsBaseURI = "/search/results"
 
-	//FIXME: Need to come up with an appropriate data structure for the results
-	// I need PrevPage, NextPage links, some specific fields that are not included in the Fragments
+	// FIXME: Are we requesting a detailed result or a list result?
+	if strings.HasPrefix(r.URL.Path, "/search/results/repositories/") == true {
+		// FIXME: Handle carrying the search contents with the detailed page contents
+		repoID, accessionID, err := urlToRepoAccessionIDs(r.URL.Path)
+		if err != nil {
+			log.Printf("Could not determine repo and accession IDs %s, %s", r.URL.Path, err)
+			w.WriteHeader(http.StatusBadRequest)
+			w.Write([]byte(fmt.Sprintf("%s", err)))
+			return
+
+		}
+		src, err := ioutil.ReadFile(path.Join(htdocsDir, "repositories", fmt.Sprintf("%d", repoID), "accessions", fmt.Sprintf("%d.json", accessionID)))
+		if err != nil {
+			log.Printf("Can't decode /repositories/%d/accessions/%d.json, %s", repoID, accessionID, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("%s", err)))
+			return
+		}
+		err = json.Unmarshal(src, &q.DetailedResult)
+		pageHTML = "details-search.html"
+		pageInclude = "details-search.include"
+	} else {
+		// FIXME: Add logic to handle basic and advanced search...
+
+		// q match
+		// q_required match all
+		// q_exact match phrase
+		// q_excluded disjunct with match
+
+		qry := bleve.NewMatchQuery(q.Q)
+		search := bleve.NewSearchRequest(qry)
+		search.Highlight = bleve.NewHighlightWithStyle("html")
+
+		searchResults, err := index.Search(search)
+		if err != nil {
+			log.Printf("Bleve results error %v, %s", qry, err)
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(fmt.Sprintf("%s", err)))
+			return
+		}
+		log.Printf("DEBUG searchResults: %+v\n", searchResults.Request.Query)
+		src, _ := json.Marshal(searchResults.Request.Query)
+		log.Printf("DEBUG src query: %s", src)
+		queryTerms := struct {
+			Match string `json:"match,omitempty"`
+		}{}
+		_ = json.Unmarshal(src, &queryTerms)
+		log.Printf("DEBUG query terms [%s]\n", queryTerms.Match)
+
+		// q (ciat.SearchQuery) performs double duty as both the structure for query submission as well
+		// as carring the results to support paging and other types of navigation through
+		// the query set. Results are a query with the bleve.SearchReults merged
+		q.AttachSearchResults(searchResults)
+		pageHTML = "results-search.html"
+		pageInclude = "results-search.include"
+	}
 
 	// Load my tempaltes and setup to execute them
-	tmpl, _ := template.ParseFiles(
-		path.Join(templatesDir, "results-search.html"),
-		path.Join(templatesDir, "results-search.include"),
-	)
+	tmpl, err := cait.AssembleTemplate(path.Join(templatesDir, pageHTML), path.Join(templatesDir, pageInclude))
+	if err != nil {
+		log.Printf("Template Errors: %s, %s, %s\n", pageHTML, pageInclude, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("Template errors: %s", err)))
+		return
+	}
 	// Render the page
 	w.Header().Set("Content-Type", "text/html")
-	err = tmpl.Execute(w, searchResults)
+	err = tmpl.Execute(w, q)
 	if err != nil {
-		log.Printf("Can't render %s/%s, %s", templatesDir, "results-search.*", err)
+		log.Printf("Can't render %s, %s/%s, %s", templatesDir, pageHTML, pageInclude, err)
+		w.Write([]byte(fmt.Sprintf("Template error")))
 	}
 }
 
@@ -262,44 +258,63 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		resultsHandler(w, r)
 		return
 	}
-	// Shared form data fields.
+
+	// Shared form data fields for a New Search.
 	formData := struct {
-		URI      string
-		Page     int
-		PageSize int
+		URI string
 	}{
-		URI:      "/",
-		Page:     1,
-		PageSize: 10,
+		URI: "/",
 	}
 
 	// Handle the basic or advanced search form requests.
+	var (
+		tmpl *template.Template
+		err  error
+	)
 	w.Header().Set("Content-Type", "text/html")
-	if r.URL.Path == "/search/advanced/" {
+	if strings.HasPrefix(r.URL.Path, "/search/advanced") == true {
 		formData.URI = "/search/advanced/"
-		tmpl, err := template.ParseFiles(path.Join(templatesDir, "advanced-search.html"), path.Join(templatesDir, "advanced-search.include"))
-		err = tmpl.Execute(w, formData)
+		tmpl, err = cait.AssembleTemplate(path.Join(templatesDir, "advanced-search.html"), path.Join(templatesDir, "advanced-search.include"))
 		if err != nil {
-			w.Write([]byte(fmt.Sprintf("%s", err)))
+			fmt.Printf("Can't read advanced-search templates, %s", err)
+			return
 		}
-		return
+	} else {
+		formData.URI = "/search/basic/"
+		tmpl, err = cait.AssembleTemplate(path.Join(templatesDir, "basic-search.html"), path.Join(templatesDir, "basic-search.include"))
+		if err != nil {
+			log.Printf("Can't read basic-search templates, %s\n", err)
+			return
+		}
 	}
 
-	formData.URI = "/search/basic/"
-	tmpl, err := template.ParseFiles(path.Join(templatesDir, "basic-search.html"), path.Join(templatesDir, "basic-search.include"))
 	err = tmpl.Execute(w, formData)
 	if err != nil {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 	}
 }
 
-func logRequest(r *http.Request) {
-	log.Printf("Request: %s Path: %s RemoteAddr: %s UserAgent: %s\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
+func requestLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Request: %s Path: %s RemoteAddr: %s UserAgent: %s\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
+		next.ServeHTTP(w, r)
+	})
 }
 
-func logger(next http.Handler) http.Handler {
+func searchRoutes(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logRequest(r)
+		// Handler are searches and results
+		if strings.HasPrefix(r.URL.Path, "/search/results/") == true {
+			log.Printf("DEBUG results handler: %s", r.URL.Path)
+			resultsHandler(w, r)
+			return
+		}
+		if strings.HasPrefix(r.URL.Path, "/search/") == true {
+			log.Printf("DEBUG search handler: %s", r.URL.Path)
+			searchHandler(w, r)
+			return
+		}
+		// If it is not a search request send it on to the next handler...
 		next.ServeHTTP(w, r)
 	})
 }
@@ -349,20 +364,12 @@ func main() {
 	}
 	defer index.Close()
 
-	// Setup static detail pages
-	// Wake up our search web server
-	http.HandleFunc("/search/advanced/", searchHandler)
-	http.HandleFunc("/search/basic/", searchHandler)
-	/*
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-			http.Redirect(w, r, "/search/basic/", http.StatusMovedPermanently)
-		})
-	*/
-	// Send static file request to the default handler
-	http.Handle("/repositories/", http.FileServer(http.Dir(htdocsDir)))
+	// Send static file request to the default handler,
+	// search routes are handled by middleware searchRoutes()
+	http.Handle("/", http.FileServer(http.Dir(htdocsDir)))
 
 	log.Printf("Listening on %s\n", serviceURL.String())
-	err = http.ListenAndServe(serviceURL.Host, logger(http.DefaultServeMux))
+	err = http.ListenAndServe(serviceURL.Host, requestLogger(searchRoutes(http.DefaultServeMux)))
 	if err != nil {
 		log.Fatal(err)
 	}

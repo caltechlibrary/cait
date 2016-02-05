@@ -20,85 +20,73 @@
 //
 package cait
 
+import (
+	//"encoding/json"
+	"fmt"
+	"net/url"
+	"strconv"
+
+	"github.com/blevesearch/bleve"
+)
+
 // SearchQuery represents the query options supported by search
 type SearchQuery struct {
-	JSONModelType string            `json:"json_model_type,omitempty"`
-	URI           string            `json:"uri,omitempty"`
-	Q             string            `json:"q,omitempty"`
-	Page          int               `json:"page,omitempty"`
-	PageSize      int               `json:"page_size,omitempty"`
-	Explain       bool              `json:"explain,omitempty"`
-	FilterTerm    map[string]string `json:"filter_term,omitempty"`
-	Type          string            `json:"type,omitempty"`
+	// Bleve specific properties
+	Explain    bool              `json:"explain,omitempty"`
+	FilterTerm map[string]string `json:"filter_term,omitempty"`
+	Type       string            `json:"type,omitempty"`
 
-	//FIXME: some of these I don't understand what their data structure actually are, RSD 2016-01-11
-	//RepoID        int    `json:"repo_id,omitempty"`
-	//Type          string `json:"type,omitempty"` //NOTE: empty string means search all record types
-	//Sort          string `json:"sort,omitempty"`
-	//Facet         SearchFacets      `json:"facet,omitemtpy"`
-	//SimpleFilter string `json:"simple_filter,omitempty"`
-	//Exclude      []int  `json:"exclude,omitempty"`
-	//RESTHelpers  bool   `json:"RESTHelpers,omitempty"`
-	//RootRecord   string `json:"root_record,omitempty"`
-	//IDSet    []int `json:"id_set,omitempty"`
-	//AllIDs bool `json:"all_ids,omitempty"`
+	// Unified search form properties, works for both Basic and Advanced search
+	Method   string `json:"method"`
+	Action   string `json:"action"`
+	AllIDs   bool   `json:"all_ids"`
+	PageSize int    `json:"page_size"`
+	Page     int    `json:"page"`
+	// Simple Search
+	Q string `json:"q,omitempty"`
+	// Advanced Search
+	QRequired string `json:"q_required"`
+	QExact    string `json:"q_exact"`
+	QExcluded string `json:"q_excluded"`
+
+	// Subjects can be a comma delimited list of subjects (e.g. Manuscript Collection, Image Archive)
+	Subjects string `json:"q_subjects"`
+
+	// These fields are where we carry search results and request for nav usage
+	Total           int    `json:"total"`
+	DetailsBaseURI  string `json:"details_base_uri"`
+	QueryURLEncoded string
+	DetailedResult  NormalizedAccessionView
+	Request         *bleve.SearchRequest
+	Results         *bleve.SearchResult
 }
 
-// SearchFacets presents the facets requested in a search request
-type SearchFacets map[string]map[string]string
-
-// SearchResults represents the paged results return from a search request
-type SearchResults struct {
-	FirstPage   int `json:"first_page,omitempty"`
-	LastPage    int `json:"last_page,omitempty"`
-	ThisPage    int `json:"this_page,omitempty"`
-	OffsetFirst int `json:"offset_first,omitempty"`
-	OffsetLast  int `json:"offset_last,omitempty"`
-	TotalHits   int `json:"total_hits,omitempty"`
-	Results     []SearchResult
-	Facets      SearchFacets
+func uInt64ToInt(u uint64) (int, error) {
+	return strconv.Atoi(fmt.Sprintf("%d", u))
 }
 
-// SearchResult represents individual reult from the dataset returned by a search request
-type SearchResult struct {
-	ID               int      `json:"id,omitempty"`
-	Title            string   `json:"title,omitempty"`
-	Types            []string `json:"types,omitempty"`
-	JSON             string   `json:"json,omitempty"`
-	Suppressed       bool     `json:"suppressed,omitmepty"`
-	SystemGenerated  bool     `json:"system_generated,omitempty"`
-	Repository       string   `json:"repository,omitempty"`
-	SourceEnumS      []string `json:"source_enum_s,omitemtpy"`
-	RulesEnumS       []string `json:"rules_enum_s,omitempty"`
-	NameOrderEnumS   []string `json:"name_order_enum_s,omitempty"`
-	CreatedBy        string   `json:"created_by,omitempty,omitempty"`
-	CreateTime       string   `json:"create_time,omitempty,omitempty"`
-	SystemMTime      string   `json:"system_mtime,omitempty,omitempty"`
-	UserMTime        string   `json:"user_mtime,omitempty,omitempty"`
-	LastModifiedBy   string   `json:"last_modified_by,omitempty"`
-	Source           string   `json:"source,omitempty"`
-	Rules            string   `json:"rules,omitempty"`
-	LinkedAgentRoles []string `json:"linked_agent_roles,omitempty"`
-	URI              string   `json:"uri,omitempty"`
-	JSONModelType    string   `json:"json_model_type,omitempty"`
+// AttachSearchResults sets the value os the SearchResults field in SearchQuery structs.
+func (sq *SearchQuery) AttachSearchResults(sr *bleve.SearchResult) {
+	sq.Results = sr
+	sq.Total, _ = uInt64ToInt(sr.Total)
+	sq.Request = sr.Request
+
+	v := url.Values{}
+	if sq.AllIDs == true {
+		v.Add("all_ids", "true")
+	}
+	v.Add("page_size", fmt.Sprintf("%d", sq.PageSize))
+	v.Add("page", fmt.Sprintf("%d", sq.Page))
+	v.Add("total", fmt.Sprintf("%d", sq.Total))
+	v.Add("q", sq.Q)
+	v.Add("q_required", sq.QRequired)
+	v.Add("q_exact", sq.QExact)
+	v.Add("q_excluded", sq.QExcluded)
+	sq.QueryURLEncoded = v.Encode()
+	fmt.Printf("DEBUG sq.QueryURLEncoded: %+v\n", sq.QueryURLEncoded)
 }
 
 //String return a SearchQuery
-func (searchquery *SearchQuery) String() string {
-	return stringify(searchquery)
-}
-
-//String return a SearchFacets
-func (searchfacets *SearchFacets) String() string {
-	return stringify(searchfacets)
-}
-
-//String return a SearchResults
-func (searchresults *SearchResults) String() string {
-	return stringify(searchresults)
-}
-
-//String return a SearchResult
-func (searchresult *SearchResult) String() string {
-	return stringify(searchresult)
+func (sq *SearchQuery) String() string {
+	return stringify(sq)
 }

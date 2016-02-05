@@ -1,27 +1,27 @@
-    <!-- DEBUG START -->
-    {{ with .Request }}
-        <pre>DEBUG: {{ . }}</pre>
-    {{ end }}
-    <!-- DEBUG END -->
-
     <section>
     <a href="/search/basic/">New Search</a>
     </section>
     <nav>
-        {{ .Request.From }}/{{ .Request.Size }} of {{ .Total }}<br />
+        {{ .Request.From }} of {{ .Total }}<br />
+        {{ if (gt .Page 0) }}
+            <a href="?page={{ (prevPage .Request.From .Page .PageSize .Total) }}&page_size={{ .PageSize }}&q={{ .Q }}&q_required={{ .QRequired }}&q_exact={{ .QExact }}&q_excluded={{ .QExcluded }}">Prev Page</a>
+        {{ end }}
+        {{ if (lt .Request.From .Total) }}
+            <a href="?page={{ (nextPage .Request.From .Page .PageSize .Total) }}&page_size={{ .PageSize }}&q={{ .Q }}&q_required={{ .QRequired }}&q_exact={{ .QExact }}&q_excluded={{ .QExcluded }}">Next Page</a>
+        {{ end }}
     </nav>
     <section>
     {{ if (eq .Total 0) }}
-    No items found for {{ .Request.Query }}
+    No items found for {{ with .Request.Query.Match }} {{ . }} {{ else }} [] {{ end }}
     {{ end }}
-    {{ range .Hits }}
+    {{ $baseURI := (printf "%s" .DetailsBaseURI) }}
+    {{ $queryParams := (printf "%s" .QueryURLEncoded) }}
+    {{ range .Results.Hits }}
         <div class="search-result">
-            {{ $href := (printf "%s.html" .ID)  }}
+            {{ $href := (printf "%s%s.html?%s" $baseURI .ID $queryParams)  }}
+            {{ $subjectCount := (arraylength .Fragments.subjects) }}
             {{ range .Fragments.title }}<h2><a href="{{ $href }}">{{ . }}</a></h2>{{ end }}
-            {{ range .Fragments.subjects }}<h3><a href="{{ $href }}">{{ . }}</a></h3>{{ end }}
-            {{ range .Fragments.content_description }}<p>{{ . }}</p>{{ end }}
-            {{ range .Fragments.extents}}<pre>{{ . }}</pre>{{ end }}
-            <pre>{{ .Fragments }}</pre>
+            {{ range .Fragments.subjects }}<div>{{ if (lt $subjectCount 2) }} Subject:{{ else }}Subjects{{ end }} {{ . }}</div>{{ end }}
         </div>
     {{ end }}
     </section>

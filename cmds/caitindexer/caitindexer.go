@@ -28,6 +28,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/blevesearch/bleve"
 
@@ -69,7 +70,6 @@ var (
 	indexName string
 	dirCount  int
 	fileCount int
-	index     bleve.Index
 )
 
 func usage() {
@@ -95,6 +95,7 @@ func getIndex(indexName string) (bleve.Index, error) {
 		log.Printf("Creating Bleve index at %s\n", indexName)
 		mapping := bleve.NewIndexMapping()
 		mapping.DefaultAnalyzer = "en"
+		//FIXME: Figure out what additional mappings I need
 		index, err := bleve.New(indexName, mapping)
 		if err != nil {
 			return nil, fmt.Errorf("Can't create new bleve index %s, %s", indexName, err)
@@ -109,35 +110,53 @@ func getIndex(indexName string) (bleve.Index, error) {
 	return index, nil
 }
 
-func walkHtdocs(p string, f os.FileInfo, err error) error {
-	if strings.Contains(p, "/accessions/") == true && strings.HasSuffix(p, ".json") == true {
-		src, err := ioutil.ReadFile(p)
-		if err != nil {
-			log.Printf("Can't read %s, %s", p, err)
-			return nil
-		}
-		view := new(cait.NormalizedAccessionView)
-		err = json.Unmarshal(src, &view)
-		if err != nil {
-			log.Printf("Can't parse %s, %s", p, err)
-			return nil
-		}
-		// Trim the htdocsDir and trailing .json extension
-		i := len(htdocsDir)
-		j := len(p)
-		err = index.Index(p[i:j-5], view)
-		if err != nil {
-			log.Printf("Indexing error %s, %s", p, err)
-			return nil
-		}
-		log.Printf("Indexed %s", p)
-	}
-	return nil
-}
-
-func indexSite() error {
+func indexSite(index bleve.Index, batchSize int) error {
+	startT := time.Now()
+	count := 0
+	batch := index.NewBatch()
 	//FIXME: Need to switch this for indexing on batch.
-	return filepath.Walk(path.Join(htdocsDir, "repositories"), walkHtdocs)
+	err := filepath.Walk(path.Join(htdocsDir, "repositories"), func(p string, f os.FileInfo, err error) error {
+		if strings.Contains(p, "/accessions/") == true && strings.HasSuffix(p, ".json") == true {
+			src, err := ioutil.ReadFile(p)
+			if err != nil {
+				log.Printf("Can't read %s, %s", p, err)
+				return nil
+			}
+			view := new(cait.NormalizedAccessionView)
+			err = json.Unmarshal(src, &view)
+			if err != nil {
+				log.Printf("Can't parse %s, %s", p, err)
+				return nil
+			}
+			// Trim the htdocsDir and trailing .json extension
+			//log.Printf("Queued %s", p)
+			err = batch.Index(strings.TrimSuffix(strings.TrimPrefix(p, htdocsDir), "json"), view)
+			if err != nil {
+				log.Printf("Indexing error %s, %s", p, err)
+				return nil
+			}
+			if batch.Size() >= batchSize {
+				err := index.Batch(batch)
+				if err != nil {
+					log.Fatal(err)
+				}
+				count += batch.Size()
+				batch = index.NewBatch()
+				log.Printf("Indexed: %d items, running %s\n", count, time.Now().Sub(startT))
+			}
+		}
+		return nil
+	})
+	if batch.Size() > 0 {
+		err := index.Batch(batch)
+		if err != nil {
+			log.Fatal(err)
+		}
+		count += batch.Size()
+		log.Printf("Indexed: %d items, running %s\n", count, time.Now().Sub(startT))
+	}
+	log.Printf("Total indexed: %d times, total run time %s\n", count, time.Now().Sub(startT))
+	return err
 }
 
 func main() {
@@ -148,7 +167,7 @@ func main() {
 		usage()
 	}
 
-	index, err = getIndex(indexName)
+	index, err := getIndex(indexName)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
@@ -156,6 +175,6 @@ func main() {
 
 	// Walk our data import tree and index things
 	log.Printf("Start indexing of %s in %s\n", htdocsDir, indexName)
-	indexSite()
+	indexSite(index, 500)
 	log.Printf("Finished")
 }

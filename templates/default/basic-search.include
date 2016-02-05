@@ -1,7 +1,5 @@
     <section>
-        <form method="post" action="{{ .URI }}">
-            <input type="hidden" name="page" value="{{ .Page }}">
-            <input type="hidden" name="page_size" value="{{ .PageSize }}">
+        <form method="get" action="{{ .URI }}">
             <div>
                 <label>Search</label> <input type="text" name="q" placeholder="Enter search expression here">
             </dib>

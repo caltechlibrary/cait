@@ -39,7 +39,7 @@ var (
 
  OVERVIEW
 
-	caitpage generates HTML pages based on the JSON output form
+	caitpage generates HTML, .include pages and normalized JSON based on the JSON output form
 	cait and templates associated with the command.
 
  OPTIONS
@@ -62,14 +62,10 @@ var (
 
 `
 
-	help          bool
-	htdocsDir     string
-	dataDir       string
-	templateDir   string
-	aHTMLTmplName = "accession.html"
-	aHTMLTmpl     = template.New(aHTMLTmplName)
-	aIncTmplName  = "accession.include"
-	aIncTmpl      = template.New(aIncTmplName)
+	help        bool
+	htdocsDir   string
+	dataDir     string
+	templateDir string
 
 	subjects = make(map[string]*cait.Subject)
 )
@@ -81,17 +77,16 @@ func usage() {
 	os.Exit(0)
 }
 
-func loadTemplates(templateDir string) error {
-	var err error
-	aHTMLTmpl, err = template.ParseFiles(path.Join(templateDir, aHTMLTmplName), path.Join(templateDir, aIncTmplName))
+func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.Template, *template.Template, error) {
+	aHTMLTmpl, err := cait.AssembleTemplate(path.Join(templateDir, aHTMLTmplName), path.Join(templateDir, aIncTmplName))
 	if err != nil {
-		return fmt.Errorf("Can't parse template %s, %s, %s", aHTMLTmplName, aIncTmplName, err)
+		return nil, nil, fmt.Errorf("Can't parse template %s, %s, %s", aHTMLTmplName, aIncTmplName, err)
 	}
-	aIncTmpl, err = template.ParseFiles(path.Join(templateDir, aIncTmplName))
+	aIncTmpl, err := cait.Template(path.Join(templateDir, aIncTmplName))
 	if err != nil {
-		return fmt.Errorf("Can't parse template %s, %s", aIncTmplName, err)
+		return aHTMLTmpl, nil, fmt.Errorf("Can't parse template %s, %s", aIncTmplName, err)
 	}
-	return nil
+	return aHTMLTmpl, aIncTmpl, nil
 }
 
 func loadSubjects(subjectDir string) error {
@@ -100,10 +95,15 @@ func loadSubjects(subjectDir string) error {
 	return err
 }
 
-func processData(titleIndex map[string]*cait.NavRecord) error {
+func processData(templateDir string, aHTMLTmplName string, aIncTmplName string, titleIndex map[string]*cait.NavRecord) error {
+	log.Printf("Reading templates from %s\n", templateDir)
+	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
 	return filepath.Walk(path.Join(dataDir, "repositories"), func(p string, f os.FileInfo, err error) error {
 		// Process accession records
-		if strings.Contains(p, "accessions") == true && strings.HasSuffix(p, ".json") {
+		if strings.Contains(p, "accessions") == true && strings.HasSuffix(p, ".json") == true {
 			src, err := ioutil.ReadFile(p)
 			if err != nil {
 				return err
@@ -136,7 +136,7 @@ func processData(titleIndex map[string]*cait.NavRecord) error {
 				log.Printf("Writing %s", fname)
 				err = aHTMLTmpl.Execute(fp, view)
 				if err != nil {
-					log.Fatalf("template execute error %s, %s", "accession.html", err)
+					log.Fatalf("template execute error %s, %s", aHTMLTmplName, err)
 					return err
 				}
 				fp.Close()
@@ -150,7 +150,7 @@ func processData(titleIndex map[string]*cait.NavRecord) error {
 				log.Printf("Writing %s", fname)
 				err = aIncTmpl.Execute(fp, view)
 				if err != nil {
-					log.Fatalf("template execute error %s, %s", "accession.include", err)
+					log.Fatalf("template execute error %s, %s", aIncTmplName, err)
 					return err
 				}
 				fp.Close()
@@ -200,13 +200,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
-	log.Printf("Reading templates from %s\n", templateDir)
-	err = loadTemplates(templateDir)
-	if err != nil {
-		log.Fatalf("%s", err)
-	}
 	log.Printf("Processing data in %s\n", dataDir)
-	err = processData(titleIndex)
+	err = processData(templateDir, "accession.html", "accession.include", titleIndex)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
