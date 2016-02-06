@@ -704,6 +704,10 @@ func (api *ArchivesSpaceAPI) CreateDigitalObject(repoID int, obj *DigitalObject)
 						accessionID, _ := strconv.Atoi(parts[4])
 						if accessionID > 0 {
 							accession, err := GetAccession(repoID, accessionID)
+							if err != nil {
+								log.Printf("Could not link %s to /repositories/%d/accessions/%d", obj.URI, repoID, accessionID)
+							}
+							
 						}
 					}
 			}
