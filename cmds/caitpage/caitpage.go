@@ -66,8 +66,6 @@ var (
 	htdocsDir   string
 	dataDir     string
 	templateDir string
-
-	subjects = make(map[string]*cait.Subject)
 )
 
 func usage() {
@@ -89,13 +87,7 @@ func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.T
 	return aHTMLTmpl, aIncTmpl, nil
 }
 
-func loadSubjects(subjectDir string) error {
-	var err error
-	subjects, err = cait.MakeSubjectMap(subjectDir)
-	return err
-}
-
-func processData(templateDir string, aHTMLTmplName string, aIncTmplName string, titleIndex map[string]*cait.NavRecord) error {
+func processData(templateDir string, aHTMLTmplName string, aIncTmplName string, subjects map[string]*cait.Subject, digitalObjects map[string]*cait.DigitalObject) error {
 	log.Printf("Reading templates from %s\n", templateDir)
 	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
 	if err != nil {
@@ -115,8 +107,7 @@ func processData(templateDir string, aHTMLTmplName string, aIncTmplName string, 
 			}
 			if accession.Publish == true && accession.Suppressed == false {
 				// Create a normalized view of the accession to make it easier to work with
-				navRecord, _ := titleIndex[accession.URI]
-				view, err := accession.NormalizeView(subjects, navRecord)
+				view, err := accession.NormalizeView(subjects, digitalObjects)
 				if err != nil {
 					return fmt.Errorf("Could not generate normalized view, %s", err)
 				}
@@ -190,18 +181,29 @@ func main() {
 	if help == true {
 		usage()
 	}
-	titleIndex, err := cait.MakeAccessionTitleIndex(dataDir)
-	if err != nil {
-		log.Fatalf("Can't make a title index %s, %s", dataDir, err)
+
+	digitalObjectDir := ""
+	filepath.Walk(dataDir, func(p string, info os.FileInfo, err error) error {
+		if info.IsDir() == true && strings.HasSuffix(p, "digital_objects") {
+			digitalObjectDir = p
+			return nil
+		}
+		return nil
+	})
+	if digitalObjectDir == "" {
+		log.Fatalf("Can't find the digital object directory in %s", dataDir)
 	}
+	log.Printf("Reading Digital Objects from %s", digitalObjectDir)
+	digitalObjects, err := cait.MakeDigitalObjectMap(digitalObjectDir)
+
 	subjectDir := path.Join(dataDir, "subjects")
 	log.Printf("Reading Subjects from %s", subjectDir)
-	err = loadSubjects(subjectDir)
+	subjects, err := cait.MakeSubjectMap(subjectDir)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
 	log.Printf("Processing data in %s\n", dataDir)
-	err = processData(templateDir, "accession.html", "accession.include", titleIndex)
+	err = processData(templateDir, "accession.html", "accession.include", subjects, digitalObjects)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}

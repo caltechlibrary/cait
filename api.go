@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -131,7 +132,7 @@ func (api *ArchivesSpaceAPI) API(method string, url string, data interface{}) ([
 	if data != nil {
 		payload, err = json.Marshal(data)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("API(%q, %q, data), %s", method, url, err)
 		}
 	}
 	client := &http.Client{}
@@ -144,10 +145,10 @@ func (api *ArchivesSpaceAPI) API(method string, url string, data interface{}) ([
 
 	if method == "POST" {
 		res, err := client.Do(req)
-		defer res.Body.Close()
 		if err != nil {
 			return nil, fmt.Errorf("Request error: %s", err)
 		}
+		defer res.Body.Close()
 		content, err := ioutil.ReadAll(res.Body)
 		if err != nil {
 			return nil, fmt.Errorf("Read body error: %s", err)
@@ -155,10 +156,10 @@ func (api *ArchivesSpaceAPI) API(method string, url string, data interface{}) ([
 		return content, nil
 	}
 	res, err := client.Do(req)
-	defer res.Body.Close()
 	if err != nil {
 		return nil, fmt.Errorf("Request error: %s", err)
 	}
+	defer res.Body.Close()
 	if res.Status != "200 OK" {
 		return nil, fmt.Errorf("ArchiveSpace API error %s", res.Status)
 	}
@@ -201,7 +202,7 @@ func (api *ArchivesSpaceAPI) GetAPI(url string, obj interface{}) error {
 func (api *ArchivesSpaceAPI) UpdateAPI(url string, obj interface{}) (*ResponseMsg, error) {
 	content, err := api.API("POST", url, obj)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("UpdateAPI(%q, obj) %s", url, err)
 	}
 	data := new(ResponseMsg)
 	err = json.Unmarshal(content, data)
@@ -215,7 +216,7 @@ func (api *ArchivesSpaceAPI) UpdateAPI(url string, obj interface{}) (*ResponseMs
 func (api *ArchivesSpaceAPI) DeleteAPI(url string, obj interface{}) (*ResponseMsg, error) {
 	content, err := api.API("DELETE", url, obj)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("DeleteAPI(%q, obj) %s", url, err)
 	}
 
 	data := new(ResponseMsg)
@@ -230,7 +231,7 @@ func (api *ArchivesSpaceAPI) DeleteAPI(url string, obj interface{}) (*ResponseMs
 func (api *ArchivesSpaceAPI) ListAPI(url string) ([]int, error) {
 	content, err := api.API("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ListAPI(%q) %s", url, err)
 	}
 
 	// content should look something like
@@ -238,7 +239,7 @@ func (api *ArchivesSpaceAPI) ListAPI(url string) ([]int, error) {
 	var ids []int
 	err = json.Unmarshal(content, &ids)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ListAPI(%q) %s", url, err)
 	}
 	return ids, nil
 }
@@ -259,7 +260,7 @@ func (api *ArchivesSpaceAPI) GetRepository(id int) (*Repository, error) {
 	repo := new(Repository)
 	err := api.GetAPI(u.String(), repo)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetRepostiory(%d) %s", id, err)
 	}
 	repo.ID = URIToID(repo.URI)
 	return repo, nil
@@ -288,11 +289,11 @@ func (api *ArchivesSpaceAPI) ListRepositoryIDs() ([]int, error) {
 	u.Path = `/repositories`
 	content, err := api.API("GET", u.String(), nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ListRepositoryIDs() %s", err)
 	}
 	err = json.Unmarshal(content, &repos)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ListRepositoryIDs() %s", err)
 	}
 	// Now I need to populate out id list
 	for i := range repos {
@@ -310,7 +311,7 @@ func (api *ArchivesSpaceAPI) ListRepositories() ([]Repository, error) {
 
 	content, err := api.API("GET", u.String(), nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ListRepositories() %s", err)
 	}
 
 	// content should look something like
@@ -318,7 +319,7 @@ func (api *ArchivesSpaceAPI) ListRepositories() ([]Repository, error) {
 	var repos []Repository
 	err = json.Unmarshal(content, &repos)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ListRepositories() %s", err)
 	}
 	// Now I need to populate the repos[?].ID fields
 	for i := range repos {
@@ -331,6 +332,7 @@ func (api *ArchivesSpaceAPI) ListRepositories() ([]Repository, error) {
 func (api *ArchivesSpaceAPI) CreateAgent(aType string, agent *Agent) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/agents/%s", aType)
+	agent.LockVersion = 0
 	return api.CreateAPI(u.String(), agent)
 }
 
@@ -342,7 +344,7 @@ func (api *ArchivesSpaceAPI) GetAgent(agentType string, agentID int) (*Agent, er
 	agent := new(Agent)
 	err := api.GetAPI(u.String(), agent)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetAgent(%q, %d) %s", agentType, agentID, err)
 	}
 	agent.ID = URIToID(agent.URI)
 	return agent, nil
@@ -376,6 +378,7 @@ func (api *ArchivesSpaceAPI) ListAgents(agentType string) ([]int, error) {
 func (api *ArchivesSpaceAPI) CreateAccession(repoID int, accession *Accession) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/repositories/%d/accessions", repoID)
+	accession.LockVersion = 0
 	return api.CreateAPI(u.String(), accession)
 }
 
@@ -387,7 +390,7 @@ func (api *ArchivesSpaceAPI) GetAccession(repoID, accessionID int) (*Accession, 
 	accession := new(Accession)
 	err := api.GetAPI(u.String(), accession)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetAccession(%d, %d) %s", repoID, accessionID, err)
 	}
 	p := strings.Split(accession.URI, "/")
 	accession.ID, err = strconv.Atoi(p[len(p)-1])
@@ -425,6 +428,7 @@ func (api *ArchivesSpaceAPI) ListAccessions(repositoryID int) ([]int, error) {
 func (api *ArchivesSpaceAPI) CreateSubject(subject *Subject) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = "/subjects"
+	subject.LockVersion = 0
 	return api.CreateAPI(u.String(), subject)
 }
 
@@ -473,6 +477,7 @@ func (api *ArchivesSpaceAPI) ListSubjects() ([]int, error) {
 func (api *ArchivesSpaceAPI) CreateVocabulary(vocabulary *Vocabulary) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = "/vocabularies"
+	vocabulary.LockVersion = 0
 	return api.CreateAPI(u.String(), vocabulary)
 }
 
@@ -518,7 +523,7 @@ func (api *ArchivesSpaceAPI) ListVocabularies() ([]int, error) {
 	*/
 	content, err := api.API("GET", u.String(), nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("ListVocabularies() %s", err)
 	}
 	var (
 		ids          []int
@@ -529,7 +534,7 @@ func (api *ArchivesSpaceAPI) ListVocabularies() ([]int, error) {
 		p := strings.Split(val.URI, "/")
 		id, err := strconv.Atoi(p[len(p)-1])
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("ListVocabularies() %s", err)
 		}
 		ids = append(ids, id)
 	}
@@ -540,6 +545,7 @@ func (api *ArchivesSpaceAPI) ListVocabularies() ([]int, error) {
 func (api *ArchivesSpaceAPI) CreateTerm(vocabularyID int, term *Term) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/vocabularies/%d/terms", vocabularyID)
+	term.LockVersion = 0
 	return api.CreateAPI(u.String(), term)
 }
 
@@ -552,7 +558,7 @@ func (api *ArchivesSpaceAPI) GetTerm(vocabularyID, termID int) (*Term, error) {
 	// {"lock_version":121,"title":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T23:16:19Z","user_mtime":"2015-10-19T22:45:07Z","source":"local","jsonmodel_type":"term","external_ids":[],"publish":true,"terms":[{"lock_version":0,"term":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T22:45:07Z","user_mtime":"2015-10-19T22:45:07Z","term_type":"function","jsonmodel_type":"term","uri":"/terms/1","term":"/terms/1"}],"external_documents":[],"uri":"/terms/1","is_linked_to_published_record":true,"term":"/terms/1"}
 	terms, err := api.ListTerms(vocabularyID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetTerm(%d, %d) %s", vocabularyID, termID, err)
 	}
 	for _, term := range terms {
 		term.ID = URIToID(term.URI)
@@ -567,7 +573,6 @@ func (api *ArchivesSpaceAPI) GetTerm(vocabularyID, termID int) (*Term, error) {
 func (api *ArchivesSpaceAPI) UpdateTerm(term *Term) (*ResponseMsg, error) {
 	u := api.URL
 	u.Path = term.URI
-	fmt.Printf("DEBUG term.URI, %s\n", term.URI)
 	return api.UpdateAPI(u.String(), term)
 }
 
@@ -636,6 +641,7 @@ func (api *ArchivesSpaceAPI) ListTerms(vocabularyID int) ([]*Term, error) {
 func (api *ArchivesSpaceAPI) CreateLocation(location *Location) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/locations")
+	location.LockVersion = 0
 	return api.CreateAPI(u.String(), location)
 }
 
@@ -649,7 +655,7 @@ func (api *ArchivesSpaceAPI) GetLocation(ID int) (*Location, error) {
 	location := new(Location)
 	err := api.GetAPI(u.String(), location)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("GetLocation(%d) %s", ID, err)
 	}
 	p := strings.Split(location.URI, "/")
 	location.ID, err = strconv.Atoi(p[len(p)-1])
@@ -683,40 +689,61 @@ func (api *ArchivesSpaceAPI) ListLocations() ([]int, error) {
 	return api.ListAPI(u.String())
 }
 
-// CreateDigitalObject - return a new digital object
-func (api *ArchivesSpaceAPI) CreateDigitalObject(repoID int, obj *DigitalObject) (*ResponseMsg, error) {
-	uriPrefix := fmt.Sprintf("/repositories/%d/digital_objects", repoID)
-	if obj.URI != "" && strings.HasPrefix(obj.URI, uriPrefix+"/") {
-		if obj.DigitalObjectID == "" {
-			obj.DigitalObjectID = obj.URI
-		}
-		responseMsg, err := api.CreateAPI(obj.URI, obj)
-		if err != nil {
-			return responeMsg, err
-		}
-		//FIXME: If we're importing this we may need to attach to an existing accession
-		if len(obj.LinkedInstances) > 0 {
-			for _, instance := obj.LinkedInstances {
-				if val, ok := instance["ref"]
-					uri := fmt.Sprintf("%s", val)
-					parts := strings.Split(val)
-					if len(parts) > 4 {
-						accessionID, _ := strconv.Atoi(parts[4])
-						if accessionID > 0 {
-							accession, err := GetAccession(repoID, accessionID)
-							if err != nil {
-								log.Printf("Could not link %s to /repositories/%d/accessions/%d", obj.URI, repoID, accessionID)
-							}
-							
+func (api *ArchivesSpaceAPI) linkDigitalObjectInstanceToAccessions(repoID int, obj *DigitalObject) error {
+	fmt.Printf("DEBUG we have linked instances: %d\n", len(obj.LinkedInstances))
+	for _, instance := range obj.LinkedInstances {
+		fmt.Printf("DEBUG checking for ref key in instance: %s\n", instance)
+		if val, ok := instance["ref"]; ok == true {
+			uri := fmt.Sprintf("%s", val)
+			parts := strings.Split(uri, "/")
+			if len(parts) > 4 {
+				accessionID, _ := strconv.Atoi(parts[4])
+				if accessionID > 0 {
+					fmt.Printf("DEBUG attempting to attach instance\n")
+					accession, err := api.GetAccession(repoID, accessionID)
+					if err != nil {
+						log.Printf("Could not link %s to /repositories/%d/accessions/%d", obj.URI, repoID, accessionID)
+					} else {
+						fmt.Printf("DEBUG found accession: %s\n", accession.URI)
+						// We should be good to attach the digital object instance to accession
+						attachObject := make(map[string]interface{})
+						attachObject["digital_object"] = map[string]string{"ref": obj.URI}
+						attachObject["created_by"] = api.Username
+						attachObject["instance_Type"] = "digital_object"
+						attachObject["jsmodel_type"] = "instance"
+						accession.Instances = append(accession.Instances, attachObject)
+						// Save accession
+						_, err := api.UpdateAccession(accession)
+						if err != nil {
+							log.Printf("WARNING: UpdateAccess(%s) failed, %s\n", accession, err)
 						}
 					}
+				}
 			}
 		}
-
 	}
+	return nil
+}
+
+// CreateDigitalObject - return a new digital object
+func (api *ArchivesSpaceAPI) CreateDigitalObject(repoID int, obj *DigitalObject) (*ResponseMsg, error) {
+	// NOTE: attempt extract accession ID for the edge of importing a digital object as opposed to a clean create
+	uriPrefix := fmt.Sprintf("/repositories/%d/digital_objects", repoID)
+	obj.JSONModelType = "digital_object"
+	obj.LockVersion = 0
 	u := *api.URL
 	u.Path = uriPrefix
-	return api.CreateAPI(u.String(), obj)
+	// We need to create the object
+	responseMsg, responseErr := api.CreateAPI(u.String(), obj)
+	if responseErr != nil || responseMsg.Status != "created" {
+		return responseMsg, responseErr
+	}
+	// NOTE: In the case we're importing a digital_object from another ArchivesSpace instance.
+	// We need to correct the URI assignment, lock version info and attach to the accession of necessary
+	obj.URI = responseMsg.URI
+	obj.LockVersion = responseMsg.LockVersion
+	api.linkDigitalObjectInstanceToAccessions(repoID, obj)
+	return responseMsg, responseErr
 }
 
 // GetDigitalObject - return a given digital object
@@ -737,7 +764,17 @@ func (api *ArchivesSpaceAPI) GetDigitalObject(repoID, objID int) (*DigitalObject
 func (api *ArchivesSpaceAPI) UpdateDigitalObject(obj *DigitalObject) (*ResponseMsg, error) {
 	u := api.URL
 	u.Path = obj.URI
-	//FIXME: If we're Updating we may need to relink to an existing accession
+	getRepoID := func(uri string) int {
+		parts := strings.Split(uri, "/")
+		if len(parts) > 2 {
+			repoID, _ := strconv.Atoi(parts[2])
+			return repoID
+		}
+		return 0
+	}
+	repoID := getRepoID(obj.URI)
+	// NOTE: If we're Updating we may need to relink to an existing accession
+	api.linkDigitalObjectInstanceToAccessions(repoID, obj)
 	return api.UpdateAPI(u.String(), obj)
 }
 

@@ -184,6 +184,7 @@ function subjectToURI(label, subjects) {
 //
 // Initialization
 //
+var sequenceNo = 0;
 
 login();
 Subjects = getSubjects();
@@ -192,10 +193,9 @@ Titles = getAccessionTitles();
 //
 // Main processing and callback
 //
-function makeDigitalObjectID(url_to_object) {
-    timestamp = (new Date()).toTimeString()
-    return url_to_object + ", imported " + timestamp
-
+function makeDigitalObjectID() {
+    sequenceNo++;
+    return "import sequence no: " + sequenceNo
 }
 
 // callback() is the primary mapping function
@@ -226,7 +226,7 @@ function callback(row) {
     // Digital Objects so we're going to offset our new object IDs
     objectID = parseInt(row[cA], 10) + ObjectIDOffset;
     obj = {
-        //digital_object_id: row[cF],
+        digital_object_id: makeDigitalObjectID(),
         uri: "/repositories/2/digital_objects/" + objectID,
         title: row[cB],
         publish: true,

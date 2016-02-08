@@ -211,7 +211,7 @@ func runRepoCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 			return "", err
 		}
 		if response.Status != "Created" {
-			return "", fmt.Errorf("%s", response)
+			return "", fmt.Errorf("Create repo status %s, %s", repo.URI, response)
 		}
 		src, err := json.Marshal(response)
 		if err != nil {
@@ -296,7 +296,7 @@ func runAgentCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 			return "", err
 		}
 		if response.Status != "Created" {
-			return "", fmt.Errorf("%s", response)
+			return "", fmt.Errorf("Create agent status %s, %s", agent.URI, response)
 		}
 		src, err := json.Marshal(response)
 		if err != nil {
@@ -374,7 +374,7 @@ func runAccessionCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 			return "", err
 		}
 		if response.Status != "Created" {
-			return "", fmt.Errorf("%s", response)
+			return "", fmt.Errorf("Create accession status %s, %s", accession.URI, response)
 		}
 		src, err := json.Marshal(response)
 		if err != nil {
@@ -449,7 +449,7 @@ func runSubjectCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 			return "", err
 		}
 		if response.Status != "Created" {
-			return "", fmt.Errorf("%s", response)
+			return "", fmt.Errorf("Create Subject status %s, %s", subject.URI, response)
 		}
 		src, err := json.Marshal(response)
 		if err != nil {
@@ -524,7 +524,7 @@ func runLocationCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 			return "", err
 		}
 		if response.Status != "Created" {
-			return "", fmt.Errorf("%s", response)
+			return "", fmt.Errorf("Create location status %s, %s", location.URI, response)
 		}
 		src, err := json.Marshal(response)
 		if err != nil {
@@ -599,7 +599,7 @@ func runVocabularyCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) 
 			return "", err
 		}
 		if response.Status != "Created" {
-			return "", fmt.Errorf("%s", response)
+			return "", fmt.Errorf("Create vocabulary status %s, %s", vocabulary.URI, response)
 		}
 		src, err := json.Marshal(response)
 		if err != nil {
@@ -679,7 +679,7 @@ func runTermCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 			return "", err
 		}
 		if response.Status != "Created" {
-			return "", fmt.Errorf("%s", response)
+			return "", fmt.Errorf("Create term status %s, %s", term.URI, response)
 		}
 		src, err := json.Marshal(response)
 		if err != nil {
@@ -758,14 +758,14 @@ func runDigitalObjectCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, erro
 	case "create":
 		response, err := api.CreateDigitalObject(repoID, obj)
 		if err != nil {
-			return "", fmt.Errorf("Create digital_object fialed, %s", err)
+			return "", fmt.Errorf("Create digital_object fialed %s, %s", obj.URI, err)
 		}
 		if response.Status != "Created" {
-			return "", fmt.Errorf("Create digital_object status, %s", response)
+			return "", fmt.Errorf("Create digital_object status %s, %s", obj.URI, response)
 		}
 		src, err := json.Marshal(response)
 		if err != nil {
-			return "", fmt.Errorf("Create digital object response, %s", err)
+			return "", fmt.Errorf("Create digital object response %s, %s", obj.URI, err)
 		}
 		return string(src), nil
 	case "list":

@@ -147,7 +147,7 @@ func MakeSubjectList(dname string) ([]*Subject, error) {
 }
 
 // MakeSubjectMap given a base data directory read in the subject JSON blobs and builds
-// a slice or subject data. Takes the path to the subjects directory as a parameter.
+// a map or subject data. Takes the path to the subjects directory as a parameter.
 func MakeSubjectMap(dname string) (map[string]*Subject, error) {
 	subjects := make(map[string]*Subject)
 
@@ -169,6 +169,32 @@ func MakeSubjectMap(dname string) (map[string]*Subject, error) {
 		subjects[subject.URI] = subject
 	}
 	return subjects, nil
+}
+
+// MakeDigitalObjectMap given a base data directory read in the Digital Object JSON blobs
+// and build a map of object data. Takes the path to the subjects directory as a parameter.
+func MakeDigitalObjectMap(dname string) (map[string]*DigitalObject, error) {
+	digitalObjects := make(map[string]*DigitalObject)
+
+	dir, err := ioutil.ReadDir(dname)
+	if err != nil {
+		return nil, fmt.Errorf("Can't read Digital Objects from %s, %s", dname, err)
+	}
+	for _, finfo := range dir {
+		fname := path.Join(dname, finfo.Name())
+		src, err := ioutil.ReadFile(fname)
+		if err != nil {
+			return nil, fmt.Errorf("Can't read %s, %s", fname, err)
+		}
+		digitalObject := new(DigitalObject)
+		err = json.Unmarshal(src, &digitalObject)
+		if err != nil {
+			return nil, fmt.Errorf("Can't parse subject %s, %s", fname, err)
+		}
+		digitalObjects[digitalObject.URI] = digitalObject
+	}
+	return digitalObjects, nil
+
 }
 
 //
