@@ -57,7 +57,7 @@ func TestViews(t *testing.T) {
 		t.Errorf("SubjectMap should not be empty, length %d", len(SubjectMap))
 	}
 
-	digitalObjectDir :	= path.Join(datasets, "repositories", "2", "digital_objects")
+	digitalObjectDir := path.Join(datasets, "repositories", "2", "digital_objects")
 	digitalObjectMap, err := MakeDigitalObjectMap(digitalObjectDir)
 	if err != nil {
 		t.Errorf("Should be able to make digial object map from %s, %s", datasets, err)
