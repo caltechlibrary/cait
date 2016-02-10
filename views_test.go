@@ -57,9 +57,10 @@ func TestViews(t *testing.T) {
 		t.Errorf("SubjectMap should not be empty, length %d", len(SubjectMap))
 	}
 
-	titleIndex, err := MakeAccessionTitleIndex(datasets)
+	digitalObjectDir :	= path.Join(datasets, "repositories", "2", "digital_objects")
+	digitalObjectMap, err := MakeDigitalObjectMap(digitalObjectDir)
 	if err != nil {
-		t.Errorf("Should be able to make an accessions title index from %s, %s", datasets, err)
+		t.Errorf("Should be able to make digial object map from %s, %s", datasets, err)
 	}
 	filepath.Walk(datasets, func(p string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(p, ".json") && strings.Contains(p, "/accessions/") {
@@ -76,15 +77,10 @@ func TestViews(t *testing.T) {
 				t.Errorf("Can't unmarshal accession %s, %s", src, err)
 				return err
 			}
-			accessionView, err := accession.NormalizeView(SubjectMap, titleIndex[accession.URI])
+			accessionView, err := accession.NormalizeView(SubjectMap, digitalObjectMap)
 			if err != nil {
 				t.Errorf("Can't make a normalized view for %s, %s", p, err)
 				return err
-			}
-			nav := accessionView.Nav
-			if strings.Compare(nav.NextURI, nav.ThisURI) == 0 || strings.Compare(nav.PrevURI, nav.ThisURI) == 0 {
-				t.Errorf("Nav problem for accession %s, %s", p, nav)
-				t.FailNow()
 			}
 			if accessionView.Title != accession.Title {
 				t.Errorf("Title does not match %s, [%s] != [%s]", p, accessionView.Title, accession.Title)
