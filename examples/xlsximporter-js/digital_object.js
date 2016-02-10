@@ -193,9 +193,9 @@ Titles = getAccessionTitles();
 //
 // Main processing and callback
 //
-function makeDigitalObjectID() {
+function makeDigitalObjectID(onlineURL) {
     sequenceNo++;
-    return "import sequence no: " + sequenceNo
+    return onlineURL +"|" + sequenceNo
 }
 
 // callback() is the primary mapping function
@@ -226,7 +226,7 @@ function callback(row) {
     // Digital Objects so we're going to offset our new object IDs
     objectID = parseInt(row[cA], 10) + ObjectIDOffset;
     obj = {
-        digital_object_id: makeDigitalObjectID(),
+        digital_object_id: makeDigitalObjectID(row[cF]),
         uri: "/repositories/2/digital_objects/" + objectID,
         title: row[cB],
         publish: true,

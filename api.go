@@ -24,7 +24,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -314,8 +313,6 @@ func (api *ArchivesSpaceAPI) ListRepositories() ([]Repository, error) {
 		return nil, fmt.Errorf("ListRepositories() %s", err)
 	}
 
-	// content should look something like
-	// {"lock_version":0,"repo_code":"1447893780","name":"This is a test generated from go_test","created_by":"admin","last_modified_by":"admin","create_time":"2015-11-19T00:43:00Z","system_mtime":"2015-11-19T00:43:00Z","user_mtime":"2015-11-19T00:43:00Z","jsonmodel_type":"repository","uri":"/repositories/16","agent_representation":{"ref":"/agents/corporate_entities/15"}}
 	var repos []Repository
 	err = json.Unmarshal(content, &repos)
 	if err != nil {
@@ -437,8 +434,6 @@ func (api *ArchivesSpaceAPI) GetSubject(subjectID int) (*Subject, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/subjects/%d", subjectID)
 
-	// content should look something like
-	// {"lock_version":121,"title":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T23:16:19Z","user_mtime":"2015-10-19T22:45:07Z","source":"local","jsonmodel_type":"subject","external_ids":[],"publish":true,"terms":[{"lock_version":0,"term":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T22:45:07Z","user_mtime":"2015-10-19T22:45:07Z","term_type":"function","jsonmodel_type":"term","uri":"/terms/1","vocabulary":"/vocabularies/1"}],"external_documents":[],"uri":"/subjects/1","is_linked_to_published_record":true,"vocabulary":"/vocabularies/1"}
 	subject := new(Subject)
 	err := api.GetAPI(u.String(), subject)
 	p := strings.Split(subject.URI, "/")
@@ -486,8 +481,6 @@ func (api *ArchivesSpaceAPI) GetVocabulary(vocabularyID int) (*Vocabulary, error
 	u := *api.URL
 	u.Path = fmt.Sprintf("/vocabularies/%d", vocabularyID)
 
-	// content should look something like
-	// {"lock_version":121,"title":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T23:16:19Z","user_mtime":"2015-10-19T22:45:07Z","source":"local","jsonmodel_type":"vocabulary","external_ids":[],"publish":true,"terms":[{"lock_version":0,"term":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T22:45:07Z","user_mtime":"2015-10-19T22:45:07Z","term_type":"function","jsonmodel_type":"term","uri":"/terms/1","vocabulary":"/vocabularies/1"}],"external_documents":[],"uri":"/vocabularys/1","is_linked_to_published_record":true,"vocabulary":"/vocabularies/1"}
 	vocabulary := new(Vocabulary)
 	err := api.GetAPI(u.String(), vocabulary)
 	p := strings.Split(vocabulary.URI, "/")
@@ -554,8 +547,6 @@ func (api *ArchivesSpaceAPI) GetTerm(vocabularyID, termID int) (*Term, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/vocabularies/%d/terms", vocabularyID)
 
-	// content should look something like
-	// {"lock_version":121,"title":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T23:16:19Z","user_mtime":"2015-10-19T22:45:07Z","source":"local","jsonmodel_type":"term","external_ids":[],"publish":true,"terms":[{"lock_version":0,"term":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T22:45:07Z","user_mtime":"2015-10-19T22:45:07Z","term_type":"function","jsonmodel_type":"term","uri":"/terms/1","term":"/terms/1"}],"external_documents":[],"uri":"/terms/1","is_linked_to_published_record":true,"term":"/terms/1"}
 	terms, err := api.ListTerms(vocabularyID)
 	if err != nil {
 		return nil, fmt.Errorf("GetTerm(%d, %d) %s", vocabularyID, termID, err)
@@ -650,8 +641,6 @@ func (api *ArchivesSpaceAPI) GetLocation(ID int) (*Location, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/locations/%d", ID)
 
-	// content should look something like
-	// {"lock_version":121,"title":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T23:16:19Z","user_mtime":"2015-10-19T22:45:07Z","source":"local","jsonmodel_type":"location","external_ids":[],"publish":true,"locations":[{"lock_version":0,"location":"Commencement","created_by":"admin","last_modified_by":"admin","create_time":"2015-10-19T22:45:07Z","system_mtime":"2015-10-19T22:45:07Z","user_mtime":"2015-10-19T22:45:07Z","location_type":"function","jsonmodel_type":"location","uri":"/locations/1","location":"/locations/1"}],"external_documents":[],"uri":"/locations/1","is_linked_to_published_record":true,"location":"/locations/1"}
 	location := new(Location)
 	err := api.GetAPI(u.String(), location)
 	if err != nil {
@@ -689,42 +678,6 @@ func (api *ArchivesSpaceAPI) ListLocations() ([]int, error) {
 	return api.ListAPI(u.String())
 }
 
-func (api *ArchivesSpaceAPI) linkDigitalObjectInstanceToAccessions(repoID int, obj *DigitalObject) error {
-	fmt.Printf("DEBUG we have linked instances: %d\n", len(obj.LinkedInstances))
-	for _, instance := range obj.LinkedInstances {
-		fmt.Printf("DEBUG checking for ref key in instance: %s\n", instance)
-		if val, ok := instance["ref"]; ok == true {
-			uri := fmt.Sprintf("%s", val)
-			parts := strings.Split(uri, "/")
-			if len(parts) > 4 {
-				accessionID, _ := strconv.Atoi(parts[4])
-				if accessionID > 0 {
-					fmt.Printf("DEBUG attempting to attach instance\n")
-					accession, err := api.GetAccession(repoID, accessionID)
-					if err != nil {
-						log.Printf("Could not link %s to /repositories/%d/accessions/%d", obj.URI, repoID, accessionID)
-					} else {
-						fmt.Printf("DEBUG found accession: %s\n", accession.URI)
-						// We should be good to attach the digital object instance to accession
-						attachObject := make(map[string]interface{})
-						attachObject["digital_object"] = map[string]string{"ref": obj.URI}
-						attachObject["created_by"] = api.Username
-						attachObject["instance_Type"] = "digital_object"
-						attachObject["jsmodel_type"] = "instance"
-						accession.Instances = append(accession.Instances, attachObject)
-						// Save accession
-						_, err := api.UpdateAccession(accession)
-						if err != nil {
-							log.Printf("WARNING: UpdateAccess(%s) failed, %s\n", accession, err)
-						}
-					}
-				}
-			}
-		}
-	}
-	return nil
-}
-
 // CreateDigitalObject - return a new digital object
 func (api *ArchivesSpaceAPI) CreateDigitalObject(repoID int, obj *DigitalObject) (*ResponseMsg, error) {
 	// NOTE: attempt extract accession ID for the edge of importing a digital object as opposed to a clean create
@@ -742,7 +695,6 @@ func (api *ArchivesSpaceAPI) CreateDigitalObject(repoID int, obj *DigitalObject)
 	// We need to correct the URI assignment, lock version info and attach to the accession of necessary
 	obj.URI = responseMsg.URI
 	obj.LockVersion = responseMsg.LockVersion
-	api.linkDigitalObjectInstanceToAccessions(repoID, obj)
 	return responseMsg, responseErr
 }
 
@@ -764,17 +716,6 @@ func (api *ArchivesSpaceAPI) GetDigitalObject(repoID, objID int) (*DigitalObject
 func (api *ArchivesSpaceAPI) UpdateDigitalObject(obj *DigitalObject) (*ResponseMsg, error) {
 	u := api.URL
 	u.Path = obj.URI
-	getRepoID := func(uri string) int {
-		parts := strings.Split(uri, "/")
-		if len(parts) > 2 {
-			repoID, _ := strconv.Atoi(parts[2])
-			return repoID
-		}
-		return 0
-	}
-	repoID := getRepoID(obj.URI)
-	// NOTE: If we're Updating we may need to relink to an existing accession
-	api.linkDigitalObjectInstanceToAccessions(repoID, obj)
 	return api.UpdateAPI(u.String(), obj)
 }
 

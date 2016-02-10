@@ -48,6 +48,7 @@ func indexSite(index bleve.Index, batchSize int, dataSet map[string]interface{})
 func main() {
 	log.Println("Building a subject map...")
 	subjectMap, _ := cait.MakeSubjectMap("../data/repositories/2/subjects/")
+
 	log.Println("Setting up index")
 	indexMapping := bleve.NewIndexMapping()
 	// Add Accession as a specific document map
@@ -97,7 +98,7 @@ func main() {
 				err := json.Unmarshal(src, &data)
 				if err == nil {
 					i++
-					m[data.URI], _ = data.NormalizeView(subjectMap)
+					m[data.URI], _ = data.NormalizeView(subjectMap, digitalObjectMap)
 				}
 				return err
 			}

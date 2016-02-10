@@ -80,7 +80,8 @@ var (
 
     PAYLOAD is a JSON expression appropriate to SUBJECT and ACTION.
 
- OPTIONS addition flags based parameters appropriate apply to the SUBJECT, ACTION or PAYLOAD
+    OPTIONS addition flags based parameters appropriate apply to the SUBJECT,
+	        ACTION or PAYLOAD
 
 `
 

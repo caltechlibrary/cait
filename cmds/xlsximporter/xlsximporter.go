@@ -36,7 +36,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/robertkrimen/otto"
+	"github.com/rsdoiel/otto"
 	"github.com/tealeg/xlsx"
 )
 

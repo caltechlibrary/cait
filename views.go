@@ -121,6 +121,12 @@ func (a *Accession) NormalizeView(subjects map[string]*Subject, digitalObjects m
 	return v, nil
 }
 
+// NormalizeObjectView takes instance references in an accession and returns
+// a Digital Object Map compatible with NormalizeView
+func (a *Accession) NormalizeDigitalObjectView() (map[string]*DigitalObject, error) {
+	return nil, fmt.Errorf("NormalizeDigitalObjectView() not implemented.")
+}
+
 // MakeSubjectList given a base data directory read in the subject JSON blobs and builds
 // a slice or subject data. Takes the path to the subjects directory as a parameter.
 func MakeSubjectList(dname string) ([]*Subject, error) {

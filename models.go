@@ -192,21 +192,21 @@ type Accession struct {
 	ID                     int                      `json:"id,omitempty"`
 	URI                    string                   `json:"uri,omitempty"`
 	ExternalIDs            []*ExternalID            `json:"external_ids"`
-	Title                  string                   `json:"title,omitempty"`
-	DisplayString          string                   `json:"display_string,omitempty"`
+	Title                  string                   `json:"title"`
+	DisplayString          string                   `json:"display_string"`
 	ID0                    string                   `json:"id_0,omitempty"`
 	ID1                    string                   `json:"id_1,omitempty"`
 	ID2                    string                   `json:"id_2,omitempty"`
 	ID3                    string                   `json:"id_3,omitempty"`
-	ContentDescription     string                   `json:"content_description,omitempty"`
-	ConditionDescription   string                   `json:"condition_description,omitempty"`
-	Disposition            string                   `json:"disposition,omitempty"`
-	Inventory              string                   `json:"inventory,omitempty"`
-	Provenance             string                   `json:"provenance,omitempty"`
-	RelatedAccessions      []map[string]interface{} `json:"related_accessions,omitempty"`
-	AccessionDate          string                   `json:"accession_date,omitempty"`
+	ContentDescription     string                   `json:"content_description"`
+	ConditionDescription   string                   `json:"condition_description"`
+	Disposition            string                   `json:"disposition"`
+	Inventory              string                   `json:"inventory"`
+	Provenance             string                   `json:"provenance"`
+	RelatedAccessions      []map[string]interface{} `json:"related_accessions"`
+	AccessionDate          string                   `json:"accession_date"`
 	Publish                bool                     `json:"publish"`
-	Classifications        []map[string]interface{} `json:"classifications,omitempty"`
+	Classifications        []map[string]interface{} `json:"classifications"`
 	Subjects               []map[string]interface{} `json:"subjects"`
 	LinkedEvents           []map[string]interface{} `json:"linked_events"`
 	Extents                []*Extent                `json:"extents"`
@@ -228,10 +228,10 @@ type Accession struct {
 	UseRestrictions        bool                     `json:"use_restrictions,omitempty"`
 	UseRestrictionsNote    string                   `json:"use_restrictions_note,omitempty"`
 	LinkedAgents           []map[string]interface{} `json:"linked_agents"`
-	Instances              []map[string]interface{} `json:"instances,omitempty"`
+	Instances              []map[string]interface{} `json:"instances"`
 
 	LockVersion    int               `json:"lock_version"`
-	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
+	JSONModelType  string            `json:"jsonmodel_type"`
 	CreatedBy      string            `json:"created_by,omitempty,omitempty"`
 	LastModifiedBy string            `json:"last_modified_by,omitempty"`
 	UserMTime      string            `json:"user_mtime,omitempty,omitempty"`
