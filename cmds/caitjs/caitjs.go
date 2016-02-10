@@ -80,8 +80,8 @@ func main() {
 	if err != nil {
 		log.Fatalf("Compile error, %s", err)
 	}
-	_, err := vm.Run(script)
+	_, err = vm.Run(script)
 	if err != nil {
-		log.Fatal("Runtime error, %s", err)
+		log.Fatalf("Runtime error, %s", err)
 	}
 }
