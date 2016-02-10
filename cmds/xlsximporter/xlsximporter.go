@@ -31,11 +31,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
-	"net/http"
 	"os"
 	"path"
-	"strings"
 
+	"../../../cait"
 	"github.com/rsdoiel/otto"
 	"github.com/tealeg/xlsx"
 )
@@ -103,17 +102,19 @@ func usage() {
 
  Three functions are available to enhance your import. They are
 
- + Getenv() this get an environment variable as a string.
- + HttpGet() this performs a HTTP GET operation returning content retrieved.
+ + os.Getenv() this get an environment variable as a string.
+ + http.get() this performs a HTTP GET operation returning content retrieved.
+ + http.post() this perform a HTTP POST operation returning content retrieved.
+ + api.*() functions are wrappers for the cait API
 
- GetEnv() takes one argument, a string, matching the environment variable
+ os.getEnv() takes one argument, a string, matching the environment variable
  you will to retreive. E.g. Getenv("CAIT_API_URL")
 
- HttpGet() accepts a URL (including an parameters), optional headers and
+ http.get() accepts a URL (including an parameters), optional headers and
  returns the response body. E.g.
 
 	 // content is the text handed back unaltered from the API call
-     content = HttpGet("http://localhost:8089/repositories?all_ids=true",
+     content = http.get("http://localhost:8089/repositories?all_ids=true",
 		 [{'X-ArchivesSpace-Session':apiToken}]);
 
 
@@ -167,16 +168,8 @@ func processSheet(sheet *xlsx.Sheet, asArray, jsMap bool, vm *otto.Otto) {
 				if err != nil {
 					log.Fatalf("row: %d, Can't run %s, %s", rowNo, *jsFilename, err)
 				}
-				rawData, err := jsValue.Export()
-				if err != nil {
-					log.Fatalf("row: %d, Can't convert JavaScript value %s(%s), %s", rowNo, *jsCallback, src, err)
-				}
-				src, err = json.Marshal(rawData)
-				if err != nil {
-					log.Fatalf("row: %d, src: %s\njs returned %v\nerror: %s", rowNo, js, jsValue, err)
-				}
 				response := new(jsResponse)
-				err = json.Unmarshal(src, &response)
+				err = jsValue.ToStruct(&response)
 				if err != nil {
 					log.Fatalf("row: %d, do not understand response %s, %s", rowNo, src, err)
 				}
@@ -222,7 +215,6 @@ func main() {
 	var (
 		xlFile   *xlsx.File
 		jsSource []byte
-		vm       *otto.Otto
 	)
 	flag.Parse()
 
@@ -243,117 +235,25 @@ func main() {
 	if err != nil {
 		log.Fatalf("Can't open %s, %s", *inputFilename, err)
 	}
+	api := cait.New(os.Getenv("CAIT_URL"), os.Getenv("CAIT_USERNAME"), os.Getenv("CAIT_PASSWORD"))
+	vm := cait.NewJavaScript(api, args)
 	jsMap := false
 	if *jsFilename != "" {
+		jsMap = true
 		fname := fmt.Sprintf("%s", *jsFilename)
 		jsSource, err = ioutil.ReadFile(fname)
 		if err != nil {
 			log.Fatalf("Can't read JavaScript file %s, %s", fname, err)
 		}
-		vm = otto.New()
-		jsMap = true
-		vm.Set("Getenv", func(call otto.FunctionCall) otto.Value {
-			envvar := call.Argument(0).String()
-			result, err := vm.ToValue(os.Getenv(envvar))
-			if err != nil {
-				log.Fatalf("Getenv(%q) error, %s", envvar, err)
-			}
-			return result
-		})
-		vm.Set("HttpGet", func(call otto.FunctionCall) otto.Value {
-			//FIXME: Need to optional argument of an array of headers,
-			// [{"Content-Type":"application/json"},{"X-ArchivesSpaceSession":"..."}]
-			var headers []map[string]string
-
-			uri := call.Argument(0).String()
-			if len(call.ArgumentList) > 1 {
-				rawObjs, err := call.Argument(1).Export()
-				if err != nil {
-					log.Printf("Failed to process headers for %s, %s", uri, err)
-				}
-				src, _ := json.Marshal(rawObjs)
-				err = json.Unmarshal(src, &headers)
-				if err != nil {
-					log.Printf("Failed to translate header for %s, %s", uri, err)
-				}
-			}
-
-			client := &http.Client{}
-			req, err := http.NewRequest("GET", uri, nil)
-			if err != nil {
-				log.Fatalf("Can't create a GET request for %s, %s", uri, err)
-			}
-			for _, header := range headers {
-				for k, v := range header {
-					req.Header.Set(k, v)
-				}
-			}
-			resp, err := client.Do(req)
-			if err != nil {
-				log.Fatalf("Can't connect to %s, %s", uri, err)
-			}
-			defer resp.Body.Close()
-			content, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				log.Fatalf("Can't read response %s, %s", uri, err)
-			}
-			result, err := vm.ToValue(fmt.Sprintf("%s", content))
-			if err != nil {
-				log.Fatalf("HttpGet(%q) error, %s", uri, err)
-			}
-			return result
-		})
-		vm.Set("HttpPost", func(call otto.FunctionCall) otto.Value {
-			var headers []map[string]string
-
-			uri := call.Argument(0).String()
-			mimeType := call.Argument(1).String()
-			payload := call.Argument(2).String()
-			buf := strings.NewReader(payload)
-			// Process any additional headers past to HttpPost()
-			if len(call.ArgumentList) > 2 {
-				rawObjs, err := call.Argument(3).Export()
-				if err != nil {
-					log.Printf("Failed to process headers for %s, %s", uri, err)
-				}
-				src, _ := json.Marshal(rawObjs)
-				err = json.Unmarshal(src, &headers)
-				if err != nil {
-					log.Printf("Failed to translate header for %s, %s", uri, err)
-				}
-			}
-
-			client := &http.Client{}
-			req, err := http.NewRequest("POST", uri, buf)
-			if err != nil {
-				log.Fatalf("Can't create a GET request for %s, %s", uri, err)
-			}
-			req.Header.Set("Content-Type", mimeType)
-			for _, header := range headers {
-				for k, v := range header {
-					req.Header.Set(k, v)
-				}
-			}
-			resp, err := client.Do(req)
-			if err != nil {
-				log.Fatalf("Can't connect to %s, %s", uri, err)
-			}
-			defer resp.Body.Close()
-			content, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				log.Fatalf("Can't read response %s, %s", uri, err)
-			}
-			result, err := vm.ToValue(fmt.Sprintf("%s", content))
-			if err != nil {
-				log.Fatalf("HttpGet(%q) error, %s", uri, err)
-			}
-			return result
-		})
+		script, err := vm.Compile(fname, jsSource)
+		if err != nil {
+			log.Fatalf("JavaScript compile error %s, %s", fname, err)
+		}
 
 		// Define any functions, will evaluate each row with vm.Eval()
-		_, err = vm.Run(jsSource)
+		_, err = vm.Run(script)
 		if err != nil {
-			log.Fatalf("Error %s, %s", *jsFilename, err)
+			log.Fatalf("Error %s", err)
 		}
 	}
 

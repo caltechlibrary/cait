@@ -31,7 +31,11 @@
  *
  * All Publish fields should be true
  */
-var // Spreadsheet description of columns c??
+var // We're working with the repository ID of 2, uri: /repositories/2
+    repoID = 2,
+    sequenceNo = 0,
+    response = {},
+    // Spreadsheet description of columns c??
     cA = "Digital Object ID",
     cB = "Title",
     cC = "Series",
@@ -43,17 +47,13 @@ var // Spreadsheet description of columns c??
     // Convence array to do normalization with
     columnNames = [ cA, cB, cC, cD, cE, cF, cG, cH ],
     // Auth and API vars
-    apiToken = "",
-    apiURI = Getenv("CAIT_API_URL"),
-    apiUsername = Getenv("CAIT_USERNAME"),
-    apiPassword = Getenv("CAIT_PASSWORD")
+    apiUsername = os.getEnv("CAIT_USERNAME"),
     // Local data locations
-    dataDir = Getenv("CAIT_DATASETS"),
+    dataDir = os.getEnv("CAIT_DATASETS"),
     Subjects = {},
-    Titles = [],
-    // You could start with object IDs at 1, but this may need to be changed
+    // You could start with object IDs at 4, but this may need to be changed
     // if you have other Digital Objects already ingested.
-    ObjectIDOffset = 1;
+    ObjectIDOffset = 4;
 
 //
 // Helper functions
@@ -125,22 +125,12 @@ function dateExpression(d) {
 //
 // ArchivesSpace API methods
 //
-
-// Log into the ArchivesSpace API and save the token for re-use.
-function login() {
-    var data = {},
-        src = "";
-    src = HttpPost(apiURI + '/users/' + apiUsername + '/login', 'multipart/form-data', encodeURI('password='+apiPassword));
-    data = JSON.parse(src);
-    apiToken = data.session;
-}
-
 function getSubjects() {
     var topical = {},
         functional = {};
-    subjectIDs = (JSON.parse(HttpGet(apiURI + "/subjects?all_ids=true", [{"X-ArchivesSpace-Session": apiToken}])));
+    subjectIDs = api.listSubjects();
     subjectIDs.forEach(function(id) {
-        subject = JSON.parse(HttpGet(apiURI + "/subjects/" + id, [{"X-ArchivesSpace-Session": apiToken}]));
+        subject = api.getSubject(id);
         if (subject.title !== undefined && subject.uri !== undefined) {
             subject.terms.forEach(function (term) {
                 if (term.term_type === "function") {
@@ -158,21 +148,6 @@ function getSubjects() {
     return {Topical: topical, Functional: functional};
 }
 
-
-function getAccessionTitles() {
-    var titles = [],
-        titleIDs = [];
-    titleIDs = (JSON.parse(HttpGet(apiURI + "/repositories/2/accessions?all_ids=true", [{"X-ArchivesSpace-Session": apiToken}])));
-    titleIDs.forEach(function(id) {
-        accession = JSON.parse(HttpGet(apiURI + "/repositories/2/accessions/" + id, [{"X-ArchivesSpace-Session": apiToken}]));
-        if (accession.title !== undefined && accession.uri !== undefined) {
-            console.log("Collecting accession", accession.title, accession.uri);
-            titles.push({title: accession.title, uri: accession.uri});
-        }
-    });
-    return titles;
-}
-
 function subjectToURI(label, subjects) {
     s = label;
     if (subjects[s] !== undefined) {
@@ -181,24 +156,37 @@ function subjectToURI(label, subjects) {
     return "";
 }
 
-//
-// Initialization
-//
-var sequenceNo = 0;
-
-login();
-Subjects = getSubjects();
-Titles = getAccessionTitles();
-
-//
-// Main processing and callback
-//
 function makeDigitalObjectID(onlineURL) {
     sequenceNo++;
     return onlineURL +"|" + sequenceNo
 }
 
-// callback() is the primary mapping function
+//
+// Initialization
+//
+sequenceNo = 0;
+// Make sure the environment varaibles are all set.
+["CAIT_API_URL", "CAIT_USERNAME", "CAIT_PASSWORD", "CAIT_DATASETS"].forEach(function (envvar) {
+    var s = os.getEnv(envvar);
+    if (s == "") {
+        console.log("Missing", envvar);
+        os.exit(1);
+    }
+});
+console.log("Environment defined, authenticating");
+response = api.login();
+if (response.error !== undefined) {
+    console.log(response.error);
+    os.exit(1);
+}
+console.log("Authenticated");
+console.log("Saving results to", dataDir);
+
+Subjects = getSubjects();
+
+//
+// Main callback function for processing row data
+//
 function callback(row) {
     var timestamp = new Date(),
         keys = Object.keys(row),
@@ -240,15 +228,6 @@ function callback(row) {
                 expression: dateExpression(timestamp),
                 begin: yyyymmdd(timestamp),
                 era: "",
-                /*
-                lock_version: 0,
-                jsonmodel_type: "date",
-                created_by: apiUsername,
-                last_modified_by: apiUsername,
-                user_mtime: iso8601(timestamp),
-                system_mtime: iso8601(timestamp),
-                create_time: iso8601(timestamp),
-                */
             }
         ],
         notes: [],
@@ -257,13 +236,6 @@ function callback(row) {
                 "file_uri": row[cF],
                 "publish": true,
                 "jsonmodel_type": "file_version",
-                /*
-                "created_by": apiUsername,
-                "last_modified_by": apiUsername,
-                "user_mtime": iso8601(timestamp),
-                "system_mtime": iso8601(timestamp),
-                "create_time": iso8601(timestamp)
-                */
             }
         ],
         /*
@@ -307,11 +279,6 @@ function callback(row) {
     if (subject != "") {
         obj.subjects.push({ref: subject});
     }
-    // NOTE: when these Digital Objects are imported they will need to be linked to their accessions
-    Titles.forEach(function (item) {
-        if (item.title === obj.title) {
-            obj.linked_instances.push({ref: item.uri});
-        }
-    });
-    return {path: [dataDir, obj.uri, '.json'].join(""), object: obj, error: ""};
+    s = [dataDir, obj.uri, '.json'].join("");
+    return {path: s, object: obj, error: ""};
 }

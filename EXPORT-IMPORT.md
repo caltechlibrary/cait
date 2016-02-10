@@ -77,6 +77,14 @@ The following environment variables not note used in the import process
 Here's the stops to populate your local development ArchivesSpace. In this example I am assuming you're importing
 into repository id of 2.
 
+If you have any non-default extent_extent_type create them before proceeding
+
+1. login to AS as admin
+2. click on System
+3. click Manage Controlled Value Lists
+4. Select (from List Name) Extent Extent Type (extent_extent_type)
+5. Add you additional values.
+
 
 ```
     export CAIT_API_URL=http://localhost:8089
@@ -84,11 +92,12 @@ into repository id of 2.
     export CAIT_PASSWORD=admin
     export CAIT_DATASETS=data
 
-    ./bin/cait repository create -i data/repositories/2.json
     # If you have non-default extent extent types, create them before proceeding
-    # e.g. Multimedia, ProRes Master file
+    # e.g. Multimedia, ProRes Master file, DVD
+    ./bin/cait repository create -i data/repositories/2.json
     find data/subjects -type f | while read ITEM; do ./bin/cait subject create -i $ITEM; done
     find data/agents/people -type f | while read ITEM; do ./bin/cait agent create -i $ITEM; done
+    find data/agents/corporate_entities -type f | while read ITEM; do ./bin/cait agent create -i $ITEM; done
     find data/repositories/2/accessions -type f | while read ITEM; do ./bin/cait accession create -i $ITEM; done
     find data/repositories/2/digital_objects -type f | while read ITEM; do ./bin/cait digital_object create -i $ITEM; done
 ```

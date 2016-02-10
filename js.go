@@ -79,7 +79,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 		if err != nil {
 			return errorObject(nil, fmt.Sprintf("os.getEnv(%q) %s, %s", call.CallerLocation(), envvar, err))
 		}
-		return responseObject(result)
+		return result
 	})
 
 	httpObj, _ := vm.Object(`http = {}`)
@@ -569,7 +569,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 	})
 
 	// api.listSubjects() list subject ids
-	apiObj.Set("listSubject", func(call otto.FunctionCall) otto.Value {
+	apiObj.Set("listSubjects", func(call otto.FunctionCall) otto.Value {
 		obj, err := vm.Object(`({})`)
 		if len(call.ArgumentList) != 0 {
 			return errorObject(obj, fmt.Sprintf("api.listSubjects(), expects zero argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
