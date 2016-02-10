@@ -180,7 +180,7 @@ func processSheet(sheet *xlsx.Sheet, asArray, jsMap bool, vm *otto.Otto) {
 					log.Fatalf("row: %d, response.object missing, %s", rowNo, src)
 				}
 				// Now re-package response.Object into a JSON blob
-				src, err := json.Marshal(response.Object)
+				src, err = json.Marshal(response.Object)
 				if err != nil {
 					log.Fatalf("row: %d, %s", rowNo, err)
 				}
