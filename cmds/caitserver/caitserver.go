@@ -169,10 +169,10 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
-	q.DetailsBaseURI = "/search/results"
+	q.DetailsBaseURI = "/search/results/"
 
 	// FIXME: Are we requesting a detailed result or a list result?
-	if strings.HasPrefix(r.URL.Path, "/search/results/repositories/") == true {
+	if strings.Contains(r.URL.Path, "/repositories/") == true {
 		// FIXME: Handle carrying the search contents with the detailed page contents
 		repoID, accessionID, err := urlToRepoAccessionIDs(r.URL.Path)
 		if err != nil {
@@ -217,6 +217,8 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		}{}
 		_ = json.Unmarshal(src, &queryTerms)
 
+		t, e := json.Marshal(searchResults)               // DEBUG
+		fmt.Printf("DEBUG searchResults %s, %+v\n", t, e) // DEBUG
 		// q (ciat.SearchQuery) performs double duty as both the structure for query submission as well
 		// as carring the results to support paging and other types of navigation through
 		// the query set. Results are a query with the bleve.SearchReults merged

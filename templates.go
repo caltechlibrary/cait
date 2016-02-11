@@ -21,7 +21,6 @@
 package cait
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"text/template"
@@ -35,10 +34,10 @@ var (
 		"sub": func(a, b int) int {
 			return a - b
 		},
-		"arraylength": func(a []interface{}) int {
+		"arraylength": func(a []string) int {
 			return len(a)
 		},
-		"mapsize": func(m map[string]interface{}) int {
+		"mapsize": func(m map[string]string) int {
 			return len(m)
 		},
 		"prevPage": func(cur, page, pageSize, max int) int {
@@ -55,13 +54,6 @@ var (
 			}
 			page++
 			return page
-		},
-		"toJSON": func(a interface{}) string {
-			src, err := json.Marshal(a)
-			if err != nil {
-				return fmt.Sprintf("toJSON error %s", err)
-			}
-			return string(src)
 		},
 	}
 )

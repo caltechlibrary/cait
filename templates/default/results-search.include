@@ -16,12 +16,11 @@
     {{ end }}
     {{ $baseURI := (printf "%s" .DetailsBaseURI) }}
     {{ $queryParams := (printf "%s" .QueryURLEncoded) }}
+    <hr />
     {{ range .Results.Hits }}
         <div class="search-result">
-            {{ $href := (printf "%s%s.html?%s" $baseURI .ID $queryParams)  }}
-            {{ $subjectCount := (toJSON .Fragments.subjects) }}
+            {{ $href := (printf "%s%shtml?%s" $baseURI .ID $queryParams)  }}
             {{ range .Fragments.title }}<h2><a href="{{ $href }}">{{ . }}</a></h2>{{ end }}
-            {{ range .Fragments.subjects }}<div>{{ if (lt $subjectCount 2) }} Subject:{{ else }}Subjects{{ end }} {{ . }}</div>{{ end }}
         </div>
     {{ end }}
     </section>
