@@ -684,7 +684,14 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 	//
 	// Add Polyfills, FIXME: these need to be implemented in Otto...
 	//
-	vm.Eval(`if (!String.prototype.repeat) {
+	vm.Eval(`
+	if (!Date.prototype.now) {
+		Date.prototype.now = function now() {
+			'use strict';
+		 	return new Date().getTime();
+		};
+	}
+	if (!String.prototype.repeat) {
 	  String.prototype.repeat = function(count) {
 	    'use strict';
 	    if (this == null) {
