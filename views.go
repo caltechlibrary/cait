@@ -104,7 +104,6 @@ func (a *Accession) NormalizeView(subjects map[string]*Subject, digitalObjects m
 	//v.RelatedAccessions = a.RelatedAccessions
 	//v.LinkedAgents = a.LinkedAgents
 	for _, item := range a.Instances {
-		fmt.Printf("DEBUG instance item: %+v\n", item)
 		//FIXME: assign the URL link to v.Instance
 		instanceLinks = append(instanceLinks, fmt.Sprintf("%+v", item))
 	}
@@ -267,7 +266,6 @@ func MakeAccessionTitleIndex(dname string) (map[string]*NavElementView, error) {
 	lastI := len(titlesWithURI) - 1
 	for i, val := range titlesWithURI {
 		uri := extractURI(val)
-		log.Printf("DEBUG val: %s -> uri: %s", val, uri)
 		_, thisOk := titleIndex[uri]
 		if thisOk == true {
 			if i > 0 {
@@ -306,7 +304,7 @@ func (nav *NavElementView) String() string {
 		prev = fmt.Sprintf(`<a class="prev-item" href="%s" title="%s">prev</a>`, nav.PrevURI, nav.PrevLabel)
 	}
 	if nav.ThisURI != "" {
-		this = fmt.Sprintf(`<span class="this-item" data-uri="%s" data-title="%s"></span>`, nav.ThisURI, nav.ThisLabel)
+		this = fmt.Sprintf(`<span class="this-item" data-uri="%s" data-title="%s">%s</span>`, nav.ThisURI, nav.ThisLabel, nav.ThisLabel)
 	}
 	if nav.NextURI != "" {
 		next = fmt.Sprintf(`<a class="next-item" href="%s" title="%s">next</a>`, nav.NextURI, nav.NextLabel)

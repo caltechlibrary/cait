@@ -101,9 +101,7 @@ func urlToRepoAccessionIDs(uri string) (int, int, error) {
 	repoID := 0
 	accessionID := 0
 
-	log.Printf("DEBUG uri in: %s\n", uri)
 	parts := strings.SplitN(uri, "/", 7)
-	log.Printf("DEBUG split path: %+v\n", parts)
 	if len(parts) > 4 {
 		repoID, err = strconv.Atoi(parts[4])
 		if err != nil {
@@ -137,7 +135,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	submission := make(map[string]interface{})
 	// Basic Search results
 	if r.Method == "GET" {
-		fmt.Printf("DEBUG GET submitted: %+v\n", query)
 		for k, v := range query {
 			if k == "all_ids" {
 				b, _ := strconv.ParseBool(strings.Join(v, ""))
@@ -152,7 +149,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// Advanced Search results
 	if r.Method == "POST" {
-		fmt.Printf("DEBUG POST submitted: %+v\n", r.Form)
 		for k, v := range r.Form {
 			if k == "all_ids" {
 				b, _ := strconv.ParseBool(strings.Join(v, ""))
@@ -215,14 +211,11 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 			w.Write([]byte(fmt.Sprintf("%s", err)))
 			return
 		}
-		log.Printf("DEBUG searchResults: %+v\n", searchResults.Request.Query)
 		src, _ := json.Marshal(searchResults.Request.Query)
-		log.Printf("DEBUG src query: %s", src)
 		queryTerms := struct {
 			Match string `json:"match,omitempty"`
 		}{}
 		_ = json.Unmarshal(src, &queryTerms)
-		log.Printf("DEBUG query terms [%s]\n", queryTerms.Match)
 
 		// q (ciat.SearchQuery) performs double duty as both the structure for query submission as well
 		// as carring the results to support paging and other types of navigation through
@@ -305,12 +298,10 @@ func searchRoutes(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Handler are searches and results
 		if strings.HasPrefix(r.URL.Path, "/search/results/") == true {
-			log.Printf("DEBUG results handler: %s", r.URL.Path)
 			resultsHandler(w, r)
 			return
 		}
 		if strings.HasPrefix(r.URL.Path, "/search/") == true {
-			log.Printf("DEBUG search handler: %s", r.URL.Path)
 			searchHandler(w, r)
 			return
 		}

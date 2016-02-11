@@ -1,17 +1,4 @@
     <nav>
-    {{ if (or .Nav.PrevURI .Nav.NextURI) }}
-        Browser
-        {{ if .Nav.NextURI }}
-            <span class="next-title"><a href="{{ .Nav.NextURI }}.html" title="{{ .Nav.NextLabel }}">next</a></span>
-        {{ end }}
-        {{ if .Nav.PrevURI }}
-            {{ if .Nav.NextURI }}
-                or
-            {{ end }}
-            <span class="prev-title"><a href="{{ .Nav.PrevURI }}.html" title="{{ .Nav.PrevLabel }}">previous</a></span>
-        {{ end }}
-        title.
-    {{ end }}
     </nav>
     <section>
     <h1 class="accession-title">{{ .Title }}</h1>
@@ -19,10 +6,7 @@
     </div>
     <div class="accession-extents">
     {{ range .Extents }}
-        {{ with .Portion }} Portion: {{ . }}<br />{{ end }}
-        {{ with .Number }} Number: {{ . }}<br />{{ end }}
-        {{ with .ExtentType }} Extent Type: {{ . }}<br/>{{ end }}
-        {{ with .PhysicalDetails }} Physical Details: {{ . }}<br />{{ end }}
+        {{ . }}<br />
         <hr />
     {{ end }}
     </div>

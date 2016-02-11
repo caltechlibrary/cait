@@ -83,7 +83,6 @@ func (sq *SearchQuery) AttachSearchResults(sr *bleve.SearchResult) {
 	v.Add("q_exact", sq.QExact)
 	v.Add("q_excluded", sq.QExcluded)
 	sq.QueryURLEncoded = v.Encode()
-	fmt.Printf("DEBUG sq.QueryURLEncoded: %+v\n", sq.QueryURLEncoded)
 }
 
 //String return a SearchQuery

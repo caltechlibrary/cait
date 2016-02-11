@@ -509,11 +509,6 @@ func (api *ArchivesSpaceAPI) DeleteVocabulary(vocabulary *Vocabulary) (*Response
 func (api *ArchivesSpaceAPI) ListVocabularies() ([]int, error) {
 	u := *api.URL
 	u.Path = `/vocabularies`
-	/*
-		q := u.Query()
-		q.Set("all_ids", "true")
-		u.RawQuery = q.Encode()
-	*/
 	content, err := api.API("GET", u.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("ListVocabularies() %s", err)
