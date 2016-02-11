@@ -31,7 +31,11 @@
  *
  * All Publish fields should be true
  */
-var // We're working with the repository ID of 2, uri: /repositories/2
+var now = new Date(),
+    // We're working with the repository ID of 2, uri: /repositories/2
+    yr = now.getUTCFullYear(),
+    mn = now.getUTCMonth() + 1,
+    dy = now.getUTCDate(),
     repoID = 2,
     sequenceNo = 0,
     response = {},
@@ -54,6 +58,53 @@ var // We're working with the repository ID of 2, uri: /repositories/2
     // You could start with object IDs at 4, but this may need to be changed
     // if you have other Digital Objects already ingested.
     ObjectIDOffset = 4;
+
+//
+// Polyfills
+//
+if (!String.prototype.repeat) {
+  String.prototype.repeat = function(count) {
+    'use strict';
+    if (this == null) {
+      throw new TypeError('can\'t convert ' + this + ' to object');
+    }
+    var str = '' + this;
+    count = +count;
+    if (count != count) {
+      count = 0;
+    }
+    if (count < 0) {
+      throw new RangeError('repeat count must be non-negative');
+    }
+    if (count == Infinity) {
+      throw new RangeError('repeat count must be less than infinity');
+    }
+    count = Math.floor(count);
+    if (str.length == 0 || count == 0) {
+      return '';
+    }
+    // Ensuring count is a 31-bit integer allows us to heavily optimize the
+    // main part. But anyway, most current (August 2014) browsers can't handle
+    // strings 1 << 28 chars or longer, so:
+    if (str.length * count >= 1 << 28) {
+      throw new RangeError('repeat count must not overflow maximum string size');
+    }
+    var rpt = '';
+    for (;;) {
+      if ((count & 1) == 1) {
+        rpt += str;
+      }
+      count >>>= 1;
+      if (count == 0) {
+        break;
+      }
+      str += str;
+    }
+    // Could we try:
+    // return Array(count + 1).join(this);
+    return rpt;
+  }
+}
 
 //
 // Helper functions
@@ -156,9 +207,16 @@ function subjectToURI(label, subjects) {
     return "";
 }
 
+function lpad(s, size, chr) {
+    if (chr === undefined) {
+        chr = " ";
+    }
+    return [chr.repeat(size), s].join("").substr(-1*size);
+}
+
 function makeDigitalObjectID(onlineURL) {
     sequenceNo++;
-    return onlineURL +"|" + sequenceNo
+    return [yr, lpad(mn, 2, "0"), lpad(dy, 2, "0"), lpad(sequenceNo, 6, "0")].join("-");
 }
 
 //
