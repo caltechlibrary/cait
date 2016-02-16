@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -32,24 +33,27 @@ func indexSite(index bleve.Index, batchSize int, dataSet map[string]interface{})
 				return err
 			}
 			i += batch.Size()
-			log.Printf("Index %d items in %s", i, time.Now().Sub(startT))
+			log.Printf("Index %d accessions", i)
 			batch = index.NewBatch()
 		}
 	}
 	if batch.Size() > 0 {
 		err := index.Batch(batch)
 		i += batch.Size()
-		log.Printf("Index %d items in %s", i, time.Now().Sub(startT))
+		log.Printf("Index %d accessions in %s", i, time.Now().Sub(startT))
 		return err
 	}
 	return nil
 }
 
 func main() {
-	log.Println("Building a subject map...")
-	subjectMap, _ := cait.MakeSubjectMap("../data/repositories/2/subjects/")
+	datasets := os.Getenv("CAIT_DATASETS")
+	log.Println("Building subject map...")
+	subjectMap, _ := cait.MakeSubjectMap(path.Join(datasets, "repositories/2/subjects"))
+	log.Println("Building digital object map...")
+	digitalObjectMap, _ := cait.MakeDigitalObjectMap(path.Join(datasets, "repositories/2/digital_objects"))
 
-	log.Println("Setting up index")
+	log.Println("Setting up index...")
 	indexMapping := bleve.NewIndexMapping()
 	// Add Accession as a specific document map
 	accessionMapping := bleve.NewDocumentMapping()
@@ -87,12 +91,14 @@ func main() {
 	index, _ := openIndex("test.bleve", indexMapping)
 	log.Println("Start indexing...")
 	startT := time.Now()
-	indexSite(index, 100, (func() map[string]interface{} {
+	indexSite(index, 50, (func() map[string]interface{} {
 		i := 0
 		m := make(map[string]interface{})
-		filepath.Walk("../data/repositories/2/accessions/", func(p string, _ os.FileInfo, _ error) error {
+		filepath.Walk(path.Join(datasets, "repositories/2/accessions"), func(p string, _ os.FileInfo, _ error) error {
 			if strings.HasSuffix(p, ".json") {
-				log.Printf("Reading %s\n", p)
+				if (i % 100) == 0 {
+					log.Printf("Read %d accessions", i)
+				}
 				src, _ := ioutil.ReadFile(p)
 				data := new(cait.Accession)
 				err := json.Unmarshal(src, &data)
@@ -104,8 +110,8 @@ func main() {
 			}
 			return nil
 		})
-		log.Printf("Read %d items in %s", i, time.Now().Sub(startT))
+		log.Printf("Read %d accessions in %s", i, time.Now().Sub(startT))
 		return m
 	})())
-	log.Println("Done! %s", time.Now().Sub(startT))
+	log.Printf("Done! %s", time.Now().Sub(startT))
 }
