@@ -69,7 +69,7 @@ func AssembleTemplate(htmlFilename, includeFilename string) (*template.Template,
 	if err != nil {
 		return nil, fmt.Errorf("Can't read included template %s, %s", includeFilename, err)
 	}
-	return template.New("results-search").Funcs(tmplFuncs).Parse(fmt.Sprintf(`{{ define "content" }}%s{{ end }}%s`, htmlTmpl, includeTmpl))
+	return template.New(includeFilename).Funcs(tmplFuncs).Parse(fmt.Sprintf(`{{ define "content" }}%s{{ end }}%s`, htmlTmpl, includeTmpl))
 }
 
 // Template generate a template struct with functions attach.

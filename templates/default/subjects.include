@@ -2,25 +2,11 @@
 <a href="/search/basic/">New Search</a>
 </section>
 <nav>
-    {{ .Request.From }} of {{ .Total }}<br />
-    {{ if (gt .Page 0) }}
-        <a href="?page={{ (prevPage .Request.From .Page .PageSize .Total) }}&page_size={{ .PageSize }}&q={{ .Q }}&q_required={{ .QRequired }}&q_exact={{ .QExact }}&q_excluded={{ .QExcluded }}">Prev Page</a>
-    {{ end }}
-    {{ if (lt .Request.From .Total) }}
-        <a href="?page={{ (nextPage .Request.From .Page .PageSize .Total) }}&page_size={{ .PageSize }}&q={{ .Q }}&q_required={{ .QRequired }}&q_exact={{ .QExact }}&q_excluded={{ .QExcluded }}">Next Page</a>
-    {{ end }}
 </nav>
 <section>
-{{ if (eq .Total 0) }}
-No items found for {{ with .Request.Query.Match }} {{ . }} {{ else }} [] {{ end }}
-{{ end }}
-{{ $baseURI := (printf "%s" .DetailsBaseURI) }}
-{{ $queryParams := (printf "%s" .QueryURLEncoded) }}
-<hr />
-{{ range .Results.Hits }}
-    <div class="search-result">
-        {{ $href := (printf "%s%shtml?%s" $baseURI .ID $queryParams)  }}
-        {{ range .Fragments.title }}<h2><a href="{{ $href }}">{{ . }}</a></h2>{{ end }}
-    </div>
+{{ range . }}
+  <pre>
+  {{ . }}
+  </pre>
 {{ end }}
 </section>

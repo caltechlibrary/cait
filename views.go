@@ -138,6 +138,31 @@ func (o *DigitalObject) NormalizeView() *NormalizedDigitalObjectView {
 	return result
 }
 
+// MakeAgentList given a base data directory read in the subject JSON blobs and builds
+// a slice or subject data. Takes the path to the subjects directory as a parameter.
+func MakeAgentList(dname string) ([]*Agent, error) {
+	var agents []*Agent
+
+	dir, err := ioutil.ReadDir(dname)
+	if err != nil {
+		return nil, fmt.Errorf("Can't read subjects from %s, %s", dname, err)
+	}
+	for _, finfo := range dir {
+		fname := path.Join(dname, finfo.Name())
+		src, err := ioutil.ReadFile(fname)
+		if err != nil {
+			return nil, fmt.Errorf("Can't read %s, %s", fname, err)
+		}
+		agent := new(Agent)
+		err = json.Unmarshal(src, &agent)
+		if err != nil {
+			return nil, fmt.Errorf("Can't parse agent %s, %s", fname, err)
+		}
+		agents = append(agents, agent)
+	}
+	return agents, nil
+}
+
 // MakeSubjectList given a base data directory read in the subject JSON blobs and builds
 // a slice or subject data. Takes the path to the subjects directory as a parameter.
 func MakeSubjectList(dname string) ([]*Subject, error) {

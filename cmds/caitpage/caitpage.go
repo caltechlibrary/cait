@@ -87,12 +87,109 @@ func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.T
 	return aHTMLTmpl, aIncTmpl, nil
 }
 
-func processData(templateDir string, aHTMLTmplName string, aIncTmplName string, subjects map[string]*cait.Subject, digitalObjects map[string]*cait.DigitalObject) error {
+func processAgents(templateDir string, aHTMLTmplName string, aIncTmplName string, agents []*cait.Agent) error {
 	log.Printf("Reading templates from %s\n", templateDir)
 	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
+	check(err)
+
+	// Process HTML file
+	fname := path.Join(htdocsDir, "agents.html")
+	fp, err := os.Create(fname)
 	if err != nil {
-		log.Fatalf("%s", err)
+		return fmt.Errorf("Problem creating %s, %s", fname, err)
 	}
+	log.Printf("Writing %s", fname)
+	err = aHTMLTmpl.Execute(fp, agents)
+	if err != nil {
+		log.Fatalf("template execute error %s, %s", aHTMLTmplName, err)
+		return err
+	}
+	fp.Close()
+
+	// Process Include file (just the HTML content)
+	fname = path.Join(htdocsDir, "agents.include")
+	fp, err = os.Create(fname)
+	if err != nil {
+		return fmt.Errorf("Problem creating %s, %s", fname, err)
+	}
+	log.Printf("Writing %s", fname)
+	err = aIncTmpl.Execute(fp, agents)
+	if err != nil {
+		log.Fatalf("template execute error %s, %s", aIncTmplName, err)
+		return err
+	}
+	fp.Close()
+
+	// Process JSON file (an abridged version of the JSON output in data)
+	fname = path.Join(htdocsDir, "agents.json")
+	src, err := json.Marshal(agents)
+	if err != nil {
+		return fmt.Errorf("Could not JSON encode %s, %s", fname, err)
+	}
+	log.Printf("Writing %s", fname)
+	err = ioutil.WriteFile(fname, src, 0664)
+	if err != nil {
+		log.Fatalf("could not write JSON view %s, %s", fname, err)
+		return err
+	}
+	fp.Close()
+	return nil
+}
+
+func processSubjects(templateDir string, aHTMLTmplName string, aIncTmplName string, subjects []*cait.Subject) error {
+	log.Printf("Reading templates from %s\n", templateDir)
+	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
+	check(err)
+
+	// Process HTML file
+	fname := path.Join(htdocsDir, "subjects.html")
+	fp, err := os.Create(fname)
+	if err != nil {
+		return fmt.Errorf("Problem creating %s, %s", fname, err)
+	}
+	log.Printf("Writing %s", fname)
+	err = aHTMLTmpl.Execute(fp, subjects)
+	if err != nil {
+		log.Fatalf("template execute error %s, %s", aHTMLTmplName, err)
+		return err
+	}
+	fp.Close()
+
+	// Process Include file (just the HTML content)
+	fname = path.Join(htdocsDir, "subjects.include")
+	fp, err = os.Create(fname)
+	if err != nil {
+		return fmt.Errorf("Problem creating %s, %s", fname, err)
+	}
+	log.Printf("Writing %s", fname)
+	err = aIncTmpl.Execute(fp, subjects)
+	if err != nil {
+		log.Fatalf("template execute error %s, %s", aIncTmplName, err)
+		return err
+	}
+	fp.Close()
+
+	// Process JSON file (an abridged version of the JSON output in data)
+	fname = path.Join(htdocsDir, "subjects.json")
+	src, err := json.Marshal(subjects)
+	if err != nil {
+		return fmt.Errorf("Could not JSON encode %s, %s", fname, err)
+	}
+	log.Printf("Writing %s", fname)
+	err = ioutil.WriteFile(fname, src, 0664)
+	if err != nil {
+		log.Fatalf("could not write JSON view %s, %s", fname, err)
+		return err
+	}
+	fp.Close()
+	return nil
+}
+
+func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName string, subjects map[string]*cait.Subject, digitalObjects map[string]*cait.DigitalObject) error {
+	log.Printf("Reading templates from %s\n", templateDir)
+	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
+	check(err)
+
 	return filepath.Walk(path.Join(dataDir, "repositories"), func(p string, f os.FileInfo, err error) error {
 		// Process accession records
 		if strings.Contains(p, "accessions") == true && strings.HasSuffix(p, ".json") == true {
@@ -165,6 +262,12 @@ func processData(templateDir string, aHTMLTmplName string, aIncTmplName string, 
 	})
 }
 
+func check(err error) {
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func init() {
 	dataDir = os.Getenv("CAIT_DATASET")
 	templateDir = os.Getenv("CAIT_TEMPLATES")
@@ -182,6 +285,9 @@ func main() {
 		usage()
 	}
 
+	//
+	// Setup directories relationships
+	//
 	digitalObjectDir := ""
 	filepath.Walk(dataDir, func(p string, info os.FileInfo, err error) error {
 		if info.IsDir() == true && strings.HasSuffix(p, "digital_objects") {
@@ -191,20 +297,49 @@ func main() {
 		return nil
 	})
 	if digitalObjectDir == "" {
-		log.Fatalf("Can't find the digital object directory in %s", dataDir)
+		check(fmt.Errorf("Can't find the digital object directory in %s", dataDir))
 	}
-	log.Printf("Reading Digital Objects from %s", digitalObjectDir)
-	digitalObjects, err := cait.MakeDigitalObjectMap(digitalObjectDir)
-
 	subjectDir := path.Join(dataDir, "subjects")
+
+	//
+	// Setup and Process Lists
+	//
+	subjectList, err := cait.MakeSubjectList(subjectDir)
+	check(err)
+	log.Printf("Processing subjects in %s\n", subjectDir)
+	err = processSubjects(templateDir, "subjects.html", "subjects.include", subjectList)
+	check(err)
+
+	var (
+		agentList []*cait.Agent
+		agentDir  string
+	)
+
+	for _, agentType := range []string{"people", "corporate_entities", "software"} {
+		agentDir = path.Join(dataDir, "agents", agentType)
+		log.Printf("Reading Agents from %s", agentDir)
+		aList, err := cait.MakeAgentList(agentDir)
+		check(err)
+		for _, item := range aList {
+			agentList = append(agentList, item)
+		}
+	}
+	log.Printf("Processing agents in %s\n", agentDir)
+	err = processAgents(templateDir, "agents.html", "agents.include", agentList)
+	check(err)
+
+	//
+	// Setup Maps
+	//
 	log.Printf("Reading Subjects from %s", subjectDir)
-	subjects, err := cait.MakeSubjectMap(subjectDir)
-	if err != nil {
-		log.Fatalf("%s", err)
-	}
-	log.Printf("Processing data in %s\n", dataDir)
-	err = processData(templateDir, "accession.html", "accession.include", subjects, digitalObjects)
-	if err != nil {
-		log.Fatalf("%s", err)
-	}
+	subjectsMap, err := cait.MakeSubjectMap(subjectDir)
+	check(err)
+
+	log.Printf("Reading Digital Objects from %s", digitalObjectDir)
+	digitalObjectsMap, err := cait.MakeDigitalObjectMap(digitalObjectDir)
+	check(err)
+
+	log.Printf("Processing accessions in %s\n", dataDir)
+	err = processAccessions(templateDir, "accession.html", "accession.include", subjectsMap, digitalObjectsMap)
+	check(err)
 }
