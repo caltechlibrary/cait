@@ -1,53 +1,57 @@
     <nav>
+    <ul>
+        <li><a href="/subjects/">Subjects</a></li>
+        <li> <a href="/creators/">Creators</a></li>
+        <li><a href="/search/basic/">Basic Search</a></li>
+        <li><a href="/search/advanced/">Advanced Search</a></li>
+    </ul>
     </nav>
     <section>
     <h1 class="accession-title">{{ .Title }}</h1>
-    <div>URI: {{ .URI }} {{ .CreatedBy }} {{ .Created }}</div>
-    </div>
-    <div class="accession-extents">
-    {{ range .Extents }}
-        {{ . }}<br />
-        <hr />
+    <!-- URI: {{ .URI }} {{ .CreatedBy }} {{ .Created }} -->
+    {{ with .ContentDescription }}<p>{{ . }}</p>{{ end }}
+    {{ with .ConditionDescription }}<p>{{ . }}</p>{{ end }}
+    {{ if .Extents }}
+        <div class="accession-extents">
+        {{ range .Extents }}
+            {{ . }}<br />
+        {{ end }}
+        </div>
     {{ end }}
-    </div>
-    <div class="accession-instances">
-    {{ range .Instances}}
-    <pre>
-        {{ . }}
-    </pre>
-    <hr />
+    {{ if .DigitalObjects }}
+        <p class="accession-digital-objects">
+        {{ range .DigitalObjects}}
+            {{ range .FileURIs }}<a href="{{ . }}">read online</a>{{ end }}
+        {{ end }}
+        </p>
     {{ end }}
-    </div>
-    <div>{{ .ContentDescription }}</div>
-    <div>{{ .ConditionDescription }}</div>
-    <div>
-        {{ if .Subjects }}
-            <span>Related Subjects</span>
+    {{ if .Subjects }}
+    <p>
+            <div>Related Subjects</div>
             <ul>
             {{ range .Subjects}}
-            <li>{{ . }}</li>
+                <li><a href="/search/subjects/?q={{ . }}">{{ . }}</a></li>
             {{ end }}
             </ul>
-        {{ end }}
-    </div>
-    <div>
-        {{ if .RelatedResources }}
+    </p>
+    {{ end }}
+    {{ if .RelatedResources }}
+    <p>
+            <ul>
             {{ range .RelatedResources }}
-            <pre>
-                {{ . }}
-            </pre>
-            <hr />
+                <li><a href="/search/resources/?q={{ . }}">{{ . }}</a></li>
             {{ end }}
-        {{ end }}
-    </div>
-    <div>
-        {{ if .LinkedAgents }}
+            </ul>
+    </p>
+    {{ end }}
+    {{ if .LinkedAgents }}
+    <p>
             <span>Linked Agents</span>
             <ul>
             {{ range .LinkedAgents }}
-                <li>{{ . }}</li>
+                <li><a href="/search/agents/?q={{ . }}">{{ . }}</a></li>
             {{ end }}
             </ul>
-        {{ end }}
-    </div>
+    </p>
+    {{ end }}
     </section>
