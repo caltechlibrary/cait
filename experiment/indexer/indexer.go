@@ -97,7 +97,7 @@ func main() {
 	index, _ := openIndex(indexName, indexMapping)
 	log.Println("Start indexing...")
 	startT := time.Now()
-	indexSite(index, 50, (func() map[string]interface{} {
+	indexSite(index, 1000, (func() map[string]interface{} {
 		i := 0
 		m := make(map[string]interface{})
 		filepath.Walk(path.Join(datasets, "repositories/2/accessions"), func(p string, _ os.FileInfo, _ error) error {
