@@ -40,23 +40,25 @@ func main() {
 	}
 	terms := strings.Join(args, " ")
 	query := bleve.NewQueryStringQuery(terms)
-	if from < 1 {
-		from = 1
+	if from < 0 {
+		from = 0
 	}
-	if size < 1 {
+	if size < 0 {
 		size = 10
 	}
-	search := bleve.NewSearchRequestOptions(query, size, from-1, explain)
-	subjectFacet := bleve.NewFacetRequest("subjects", 5)
-	search.AddFacet("subjects", subjectFacet)
+	search := bleve.NewSearchRequestOptions(query, size, from, explain)
 
 	search.Highlight = bleve.NewHighlight()
 	//search.Highlight = bleve.NewHighlightWithStyle("ansi")
 	search.Highlight.AddField("title")
 	search.Highlight.AddField("content_description")
+	search.Highlight.AddField("subjects")
 	search.Highlight.AddField("extents")
 	search.Highlight.AddField("digital_objects.title")
 	search.Highlight.AddField("digital_objects.files_uris")
+
+	subjectFacet := bleve.NewFacetRequest("subjects", 3)
+	search.AddFacet("subjects", subjectFacet)
 
 	results, err := index.Search(search)
 	if err != nil {

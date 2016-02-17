@@ -71,11 +71,11 @@ type NormalizedAccessionView struct {
 	Title                string                         `json:"title"`
 	ContentDescription   string                         `json:"content_description"`
 	ConditionDescription string                         `json:"condition_description"`
-	Subjects             []string                       `json:"subjects,omitempty"`
-	Extents              []string                       `json:"extents,omitempty"`
+	Subjects             []string                       `json:"subjects"`
+	Extents              []string                       `json:"extents"`
 	RelatedResources     []string                       `json:"related_resources,omitempty"`
 	RelatedAccessions    []string                       `json:"related_accessions,omitempty"`
-	DigitalObjects       []*NormalizedDigitalObjectView `json:"digital_objects,omitempty"`
+	DigitalObjects       []*NormalizedDigitalObjectView `json:"digital_objects"`
 	LinkedAgents         []string                       `json:"linked_agents,omitempty"`
 	AccessionDate        string                         `json:"accession_date"`
 	CreatedBy            string                         `json:"created_by"`
@@ -114,8 +114,7 @@ func (a *Accession) NormalizeView(subjects map[string]*Subject, digitalObjects m
 		}
 	}
 	for _, item := range a.Subjects {
-		ref, ok := item["ref"]
-		if ok == true {
+		if ref, ok := item["ref"]; ok == true {
 			rec := subjects[fmt.Sprintf("%s", ref)]
 			if rec != nil {
 				v.Subjects = append(v.Subjects, rec.Title)

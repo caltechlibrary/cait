@@ -64,31 +64,37 @@ func main() {
 	titleMapping := bleve.NewTextFieldMapping()
 	titleMapping.Analyzer = "en"
 	titleMapping.Store = true
+	titleMapping.Index = true
 	accessionMapping.AddFieldMappingsAt("title", titleMapping)
 
 	descriptionMapping := bleve.NewTextFieldMapping()
 	descriptionMapping.Analyzer = "en"
 	descriptionMapping.Store = true
+	descriptionMapping.Index = true
 	accessionMapping.AddFieldMappingsAt("content_description", descriptionMapping)
 
 	objectsMapping := bleve.NewTextFieldMapping()
 	objectsMapping.Analyzer = "en"
 	objectsMapping.Store = true
+	objectsMapping.Index = true
 	accessionMapping.AddFieldMappingsAt("digital_objects.title", objectsMapping)
 
 	extentsMapping := bleve.NewTextFieldMapping()
 	extentsMapping.Analyzer = "en"
 	extentsMapping.Store = true
+	extentsMapping.Index = true
 	accessionMapping.AddFieldMappingsAt("extents", extentsMapping)
 
 	//FIXME: seems like this could benefit from a better analyzer, e.g. pulling out the terms
+	// Do I need to iterate over each item in the subject? Do I need a custom analyzer?
 	subjectsMapping := bleve.NewTextFieldMapping()
 	subjectsMapping.Analyzer = "en"
 	subjectsMapping.Store = true
+	subjectsMapping.Index = true
+	subjectsMapping.IncludeTermVectors = true
 	accessionMapping.AddFieldMappingsAt("subjects", subjectsMapping)
 
 	createdMapping := bleve.NewDateTimeFieldMapping()
-	createdMapping.Store = false
 	accessionMapping.AddFieldMappingsAt("created", createdMapping)
 
 	// Finally add this mapping to the main index mapping
