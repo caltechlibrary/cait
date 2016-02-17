@@ -214,7 +214,7 @@ func (api *ArchivesSpaceAPI) ExportDigitalObjects(repoID int) error {
 		fname := fmt.Sprintf("%d.json", id)
 		err = WriteJSON(&data, dir, fname)
 		if err != nil {
-			return fmt.Errorf("Can't write %d/%d.json, %s", dir, id, err)
+			return fmt.Errorf("Can't write %s/%d.json, %s", dir, id, err)
 		}
 	}
 	return nil

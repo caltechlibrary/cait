@@ -56,33 +56,37 @@ type NavElementView struct {
 // NavView is an array of NavelementViews
 type NavView []*NavElementView
 
+// NormalizedDigitalObjectView returns a structure suitable for templating public web content.
+type NormalizedDigitalObjectView struct {
+	//FIXME: Need to have a sane strategy for generating an indexable, useful structure
+	URI      string   `json:"uri"`
+	Title    string   `json:"title"`
+	Publish  bool     `json:"publish"`
+	FileURIs []string `json:"file_uris"`
+}
+
 // NormalizedAccessionView returns a structure suitable for templating public web content.
 type NormalizedAccessionView struct {
-	URI                  string                   `json:"uri"`
-	Title                string                   `json:"title"`
-	ContentDescription   string                   `json:"content_description"`
-	ConditionDescription string                   `json:"condition_description"`
-	Subjects             []string                 `json:"subjects,omitempty"`
-	Extents              []string                 `json:"extents,omitempty"`
-	RelatedResources     []string                 `json:"related_resources,omitempty"`
-	RelatedAccessions    []string                 `json:"related_accessions,omitempty"`
-	Instances            []map[string]interface{} `json:"instances,omitempty"`
-	LinkedAgents         []string                 `json:"linked_agents,omitempty"`
-	AccessionDate        string                   `json:"accession_date"`
-	CreatedBy            string                   `json:"created_by"`
-	Created              string                   `json:"created"`
-	LastModifiedBy       string                   `json:"last_modified_by,omitempty"`
-	LastModified         string                   `json:"last_modified"`
+	URI                  string                         `json:"uri"`
+	Title                string                         `json:"title"`
+	ContentDescription   string                         `json:"content_description"`
+	ConditionDescription string                         `json:"condition_description"`
+	Subjects             []string                       `json:"subjects,omitempty"`
+	Extents              []string                       `json:"extents,omitempty"`
+	RelatedResources     []string                       `json:"related_resources,omitempty"`
+	RelatedAccessions    []string                       `json:"related_accessions,omitempty"`
+	DigitalObjects       []*NormalizedDigitalObjectView `json:"digital_objects,omitempty"`
+	LinkedAgents         []string                       `json:"linked_agents,omitempty"`
+	AccessionDate        string                         `json:"accession_date"`
+	CreatedBy            string                         `json:"created_by"`
+	Created              string                         `json:"created"`
+	LastModifiedBy       string                         `json:"last_modified_by,omitempty"`
+	LastModified         string                         `json:"last_modified"`
 }
 
 // NormalizeView returns a normalized view from an Accession structure and
 // an array of subject structures.
 func (a *Accession) NormalizeView(subjects map[string]*Subject, digitalObjects map[string]*DigitalObject) (*NormalizedAccessionView, error) {
-	var (
-		subjectLabels []string
-		instanceLinks []string
-	)
-
 	v := new(NormalizedAccessionView)
 	v.Title = a.Title
 	v.URI = a.URI
@@ -96,34 +100,43 @@ func (a *Accession) NormalizeView(subjects map[string]*Subject, digitalObjects m
 	for _, extent := range a.Extents {
 		v.Extents = append(v.Extents, extent.PhysicalDetails)
 	}
-	for _, kv := range a.Instances {
-		v.Instances = append(v.Instances, kv)
-	}
-	//FIXME: need to figure out how to handle these...
-	//v.RelatedResources = a.RelatedResources
-	//v.RelatedAccessions = a.RelatedAccessions
-	//v.LinkedAgents = a.LinkedAgents
 	for _, item := range a.Instances {
 		//FIXME: assign the URL link to v.Instance
-		instanceLinks = append(instanceLinks, fmt.Sprintf("%+v", item))
+		if m, ok := item["digital_object"]; ok == true {
+			kv := map[string]string{}
+			src, _ := json.Marshal(m)
+			json.Unmarshal(src, &kv)
+			if ref, ok := kv["ref"]; ok == true {
+				if obj, ok := digitalObjects[ref]; ok == true {
+					v.DigitalObjects = append(v.DigitalObjects, obj.NormalizeView())
+				}
+			}
+		}
 	}
 	for _, item := range a.Subjects {
 		ref, ok := item["ref"]
 		if ok == true {
 			rec := subjects[fmt.Sprintf("%s", ref)]
 			if rec != nil {
-				subjectLabels = append(subjectLabels, rec.Title)
+				v.Subjects = append(v.Subjects, rec.Title)
 			}
 		}
 	}
-	v.Subjects = subjectLabels
 	return v, nil
 }
 
-// NormalizeObjectView takes instance references in an accession and returns
-// a Digital Object Map compatible with NormalizeView
-func (a *Accession) NormalizeDigitalObjectView() (map[string]*DigitalObject, error) {
-	return nil, fmt.Errorf("NormalizeDigitalObjectView() not implemented.")
+// NormalizeView takes a digital object and returns a normalized view
+func (o *DigitalObject) NormalizeView() *NormalizedDigitalObjectView {
+	result := new(NormalizedDigitalObjectView)
+	result.URI = o.URI
+	result.Title = o.Title
+	result.Publish = o.Publish
+	for _, fv := range o.FileVersions {
+		if fv.FileURI != "" {
+			result.FileURIs = append(result.FileURIs, fv.FileURI)
+		}
+	}
+	return result
 }
 
 // MakeSubjectList given a base data directory read in the subject JSON blobs and builds

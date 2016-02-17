@@ -39,23 +39,30 @@ func main() {
 		log.Fatal(err)
 	}
 	terms := strings.Join(args, " ")
-	query := bleve.NewMatchQuery(terms)
+	query := bleve.NewQueryStringQuery(terms)
 	if from < 1 {
 		from = 1
 	}
-	if size < 0 {
+	if size < 1 {
 		size = 10
 	}
 	search := bleve.NewSearchRequestOptions(query, size, from-1, explain)
+	subjectFacet := bleve.NewFacetRequest("subjects", 5)
+	search.AddFacet("subjects", subjectFacet)
+
 	search.Highlight = bleve.NewHighlight()
+	//search.Highlight = bleve.NewHighlightWithStyle("ansi")
 	search.Highlight.AddField("title")
 	search.Highlight.AddField("content_description")
-	search.Highlight.AddField("condition_description")
 	search.Highlight.AddField("extents")
+	search.Highlight.AddField("digital_objects.title")
+	search.Highlight.AddField("digital_objects.files_uris")
 
 	results, err := index.Search(search)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println(results)
+	fields, _ := index.Fields()
+	fmt.Printf("DEBUG fields: %s\n", strings.Join(fields, "|"))
 }
