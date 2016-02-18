@@ -136,7 +136,7 @@ func processAgents(templateDir string, aHTMLTmplName string, aIncTmplName string
 	return nil
 }
 
-func processSubjects(templateDir string, aHTMLTmplName string, aIncTmplName string, subjects []*cait.Subject) error {
+func processSubjects(templateDir string, aHTMLTmplName string, aIncTmplName string, subjects []string) error {
 	log.Printf("Reading templates from %s\n", templateDir)
 	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
 	check(err)

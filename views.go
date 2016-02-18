@@ -165,8 +165,8 @@ func MakeAgentList(dname string) ([]*Agent, error) {
 
 // MakeSubjectList given a base data directory read in the subject JSON blobs and builds
 // a slice or subject data. Takes the path to the subjects directory as a parameter.
-func MakeSubjectList(dname string) ([]*Subject, error) {
-	var subjects []*Subject
+func MakeSubjectList(dname string) ([]string, error) {
+	var subjects []string
 
 	dir, err := ioutil.ReadDir(dname)
 	if err != nil {
@@ -183,8 +183,14 @@ func MakeSubjectList(dname string) ([]*Subject, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Can't parse subject %s, %s", fname, err)
 		}
-		subjects = append(subjects, subject)
+		for _, term := range subject.Terms {
+			if val, ok := term["term"]; ok == true {
+				// FIXME: Only insert if the term is unique
+				subjects = append(subjects, fmt.Sprintf("%s", val))
+			}
+		}
 	}
+	// FIXME: Sort the list
 	return subjects, nil
 }
 
