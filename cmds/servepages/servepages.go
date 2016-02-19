@@ -192,13 +192,13 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	if q.Q != "" {
 		conQry = append(conQry, bleve.NewQueryStringQuery(q.Q))
 	}
-	if q.QRequired != "" {
-		for _, s := range strings.Fields(q.QRequired) {
-			conQry = append(conQry, bleve.NewTermQuery(s))
-		}
-	}
 	if q.QExact != "" {
 		conQry = append(conQry, bleve.NewMatchPhraseQuery(q.QExact))
+	}
+	if q.QRequired != "" {
+		for _, s := range strings.Fields(q.QRequired) {
+			conQry = append(conQry, bleve.NewQueryStringQuery(fmt.Sprintf("+%s", s)))
+		}
 	}
 	if q.QExcluded != "" {
 		for _, s := range strings.Fields(q.QExcluded) {

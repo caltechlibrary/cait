@@ -118,13 +118,13 @@ func main() {
 	if q != "" {
 		conQry = append(conQry, bleve.NewQueryStringQuery(q))
 	}
-	if qRequired != "" {
-		for _, s := range strings.Fields(qRequired) {
-			conQry = append(conQry, bleve.NewTermQuery(s))
-		}
-	}
 	if qExact != "" {
 		conQry = append(conQry, bleve.NewMatchPhraseQuery(qExact))
+	}
+	if qRequired != "" {
+		for _, s := range strings.Fields(qRequired) {
+			conQry = append(conQry, bleve.NewQueryStringQuery(fmt.Sprintf("+%s", s)))
+		}
 	}
 	if qExcluded != "" {
 		for _, s := range strings.Fields(qExcluded) {
