@@ -163,10 +163,33 @@ func MakeAgentList(dname string) ([]*Agent, error) {
 	return agents, nil
 }
 
+type subjectList []string
+
+func (s subjectList) Len() int {
+	return len(s)
+}
+
+func (s subjectList) Swap(i, j int) {
+	s[i], s[j] = s[j], s[i]
+}
+
+func (s subjectList) Less(i, j int) bool {
+	return (strings.Compare(s[i], s[j]) == -1)
+}
+
+func (s subjectList) HasSubject(a string) bool {
+	for _, b := range s {
+		if strings.Compare(a, b) == 0 {
+			return true
+		}
+	}
+	return false
+}
+
 // MakeSubjectList given a base data directory read in the subject JSON blobs and builds
 // a slice or subject data. Takes the path to the subjects directory as a parameter.
 func MakeSubjectList(dname string) ([]string, error) {
-	var subjects []string
+	var subjects subjectList
 
 	dir, err := ioutil.ReadDir(dname)
 	if err != nil {
@@ -183,14 +206,19 @@ func MakeSubjectList(dname string) ([]string, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Can't parse subject %s, %s", fname, err)
 		}
-		for _, term := range subject.Terms {
-			if val, ok := term["term"]; ok == true {
-				// FIXME: Only insert if the term is unique
-				subjects = append(subjects, fmt.Sprintf("%s", val))
+		if subject.Publish == true {
+			for _, term := range subject.Terms {
+				if val, ok := term["term"]; ok == true {
+					sval := fmt.Sprintf("%s", val)
+					if subjects.HasSubject(sval) == false {
+						subjects = append(subjects, sval)
+					}
+				}
 			}
 		}
 	}
-	// FIXME: Sort the list
+
+	sort.Sort(subjects)
 	return subjects, nil
 }
 
@@ -251,7 +279,7 @@ func MakeDigitalObjectMap(dname string) (map[string]*DigitalObject, error) {
 
 // MakeAccessionTitleIndex crawls the path for accession records and generates
 // a map of navigation links that can be used in search results or browsing views.
-// The parameter dname usually is set to the value of $CAIT_DATASETS
+// The parameter dname usually is set to the value of $CAIT_DATASET
 // Output is a map of URI pointing at NavElementView for that URI.
 func MakeAccessionTitleIndex(dname string) (map[string]*NavElementView, error) {
 	// Title index keyed by URI

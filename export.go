@@ -61,7 +61,7 @@ func (api *ArchivesSpaceAPI) ExportRepositories() error {
 		return fmt.Errorf("Can't get list of repository ids, %s", err)
 	}
 	for _, id := range ids {
-		dir := path.Join(api.DataSet, "repositories")
+		dir := path.Join(api.Dataset, "repositories")
 		fname := fmt.Sprintf("%d.json", id)
 		err = api.ExportRepository(id, dir, fname)
 		if err != nil {
@@ -82,7 +82,7 @@ func (api *ArchivesSpaceAPI) ExportAgents(agentType string) error {
 		if err != nil {
 			return fmt.Errorf("Can't get agents/%s/%d, %s", agentType, id, err)
 		}
-		dir := path.Join(api.DataSet, "agents", agentType)
+		dir := path.Join(api.Dataset, "agents", agentType)
 		fname := fmt.Sprintf("%d.json", id)
 		err = WriteJSON(&data, dir, fname)
 		if err != nil {
@@ -103,7 +103,7 @@ func (api *ArchivesSpaceAPI) ExportAccessions(repoID int) error {
 		if err != nil {
 			return fmt.Errorf("Can't get repositories/%d/accession/%d, %s", repoID, id, err)
 		}
-		dir := path.Join(api.DataSet, "repositories", fmt.Sprintf("%d", repoID), "accessions")
+		dir := path.Join(api.Dataset, "repositories", fmt.Sprintf("%d", repoID), "accessions")
 		fname := fmt.Sprintf("%d.json", id)
 		err = WriteJSON(&data, dir, fname)
 		if err != nil {
@@ -124,7 +124,7 @@ func (api *ArchivesSpaceAPI) ExportSubjects() error {
 		if err != nil {
 			return fmt.Errorf("Can't get subjects/%d, %s", id, err)
 		}
-		dir := path.Join(api.DataSet, "subjects")
+		dir := path.Join(api.Dataset, "subjects")
 		fname := fmt.Sprintf("%d.json", id)
 		err = WriteJSON(&data, dir, fname)
 		if err != nil {
@@ -145,7 +145,7 @@ func (api *ArchivesSpaceAPI) ExportVocabularies() error {
 		if err != nil {
 			return fmt.Errorf("Can't get vocabularies/%d, %s", id, err)
 		}
-		dir := path.Join(api.DataSet, "vocabularies")
+		dir := path.Join(api.Dataset, "vocabularies")
 		fname := fmt.Sprintf("%d.json", id)
 		err = WriteJSON(&data, dir, fname)
 		if err != nil {
@@ -167,7 +167,7 @@ func (api *ArchivesSpaceAPI) ExportTerms() error {
 			return fmt.Errorf("Can't list term ids for vocabularies/%d, %s", vocID, err)
 		}
 		for _, term := range terms {
-			dir := path.Join(api.DataSet, "vocabularies", fmt.Sprintf("%d", vocID), "terms")
+			dir := path.Join(api.Dataset, "vocabularies", fmt.Sprintf("%d", vocID), "terms")
 			fname := fmt.Sprintf("%d.json", term.ID)
 			err = WriteJSON(&term, dir, fname)
 			if err != nil {
@@ -189,7 +189,7 @@ func (api *ArchivesSpaceAPI) ExportLocations() error {
 		if err != nil {
 			return fmt.Errorf("Can't get locations/%d, %s", id, err)
 		}
-		dir := path.Join(api.DataSet, "locations")
+		dir := path.Join(api.Dataset, "locations")
 		fname := fmt.Sprintf("%d.json", id)
 		err = WriteJSON(&data, dir, fname)
 		if err != nil {
@@ -210,7 +210,7 @@ func (api *ArchivesSpaceAPI) ExportDigitalObjects(repoID int) error {
 		if err != nil {
 			return fmt.Errorf("Can't get /repositories/%d/digial_object/%d, %s", repoID, id, err)
 		}
-		dir := path.Join(api.DataSet, "repositories", fmt.Sprintf("%d", repoID), "digital_objects")
+		dir := path.Join(api.Dataset, "repositories", fmt.Sprintf("%d", repoID), "digital_objects")
 		fname := fmt.Sprintf("%d.json", id)
 		err = WriteJSON(&data, dir, fname)
 		if err != nil {

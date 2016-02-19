@@ -40,20 +40,19 @@ var (
 		"mapsize": func(m map[string]string) int {
 			return len(m)
 		},
-		"prevPage": func(cur, page, pageSize, max int) int {
-			page--
-			if page < 0 {
-				return 1
+		"prevPage": func(from, size, max int) int {
+			next := from - size
+			if next < 0 {
+				return 0
 			}
-			return page
+			return next
 		},
-		"nextPage": func(cur, page, pageSize, max int) int {
-			next := cur + pageSize
+		"nextPage": func(from, size, max int) int {
+			next := from + size
 			if next > max {
-				return page
+				return from
 			}
-			page++
-			return page
+			return next
 		},
 	}
 )

@@ -61,8 +61,8 @@ var (
                         This is generally populated with the caitpage command.
 						Defaults to ./htdocs.
 
-    CAIT_BLEVE_INDEX	This is the directory that will contain all the Bleve
-                        indexes. Defaults to ./index.bleve
+    CAIT_HTDOCS_INDEX	This is the directory that will contain all the Bleve
+                        indexes. Defaults to ./htdocs.bleve
 
 `
 	help      bool
@@ -81,11 +81,11 @@ func usage() {
 
 func init() {
 	htdocsDir = "htdocs"
-	indexName = "index.bleve"
+	indexName = "htdocs.bleve"
 	htdocsDir = os.Getenv("CAIT_HTDOCS")
-	indexName = os.Getenv("CAIT_BLEVE_INDEX")
+	indexName = os.Getenv("CAIT_HTDOCS_INDEX")
 	flag.StringVar(&htdocsDir, "htdocs", "htdocs", "The document root for the website")
-	flag.StringVar(&indexName, "index", "index.bleve", "The name of the Bleve index")
+	flag.StringVar(&indexName, "index", "htdocs.bleve", "The name of the Bleve index")
 	flag.BoolVar(&help, "h", false, "this help message")
 	flag.BoolVar(&help, "help", false, "this help message")
 }
@@ -93,10 +93,57 @@ func init() {
 func getIndex(indexName string) (bleve.Index, error) {
 	if _, err := os.Stat(indexName); os.IsNotExist(err) {
 		log.Printf("Creating Bleve index at %s\n", indexName)
-		mapping := bleve.NewIndexMapping()
-		mapping.DefaultAnalyzer = "en"
-		//FIXME: Figure out what additional mappings I need
-		index, err := bleve.New(indexName, mapping)
+
+		log.Println("Setting up index...")
+		indexMapping := bleve.NewIndexMapping()
+		// Add Accession as a specific document map
+		accessionMapping := bleve.NewDocumentMapping()
+
+		// Now add specific accession fields
+		titleMapping := bleve.NewTextFieldMapping()
+		titleMapping.Analyzer = "en"
+		titleMapping.Store = true
+		titleMapping.Index = true
+		accessionMapping.AddFieldMappingsAt("title", titleMapping)
+
+		descriptionMapping := bleve.NewTextFieldMapping()
+		descriptionMapping.Analyzer = "en"
+		descriptionMapping.Store = true
+		descriptionMapping.Index = true
+		accessionMapping.AddFieldMappingsAt("content_description", descriptionMapping)
+
+		subjectsMapping := bleve.NewTextFieldMapping()
+		subjectsMapping.Analyzer = "en"
+		subjectsMapping.Store = true
+		subjectsMapping.Index = true
+		subjectsMapping.IncludeTermVectors = true
+		accessionMapping.AddFieldMappingsAt("subjects", subjectsMapping)
+
+		objectTitleMapping := bleve.NewTextFieldMapping()
+		objectTitleMapping.Analyzer = "en"
+		objectTitleMapping.Store = true
+		objectTitleMapping.Index = true
+		accessionMapping.AddFieldMappingsAt("digital_objects.title", objectTitleMapping)
+
+		objectFileURIMapping := bleve.NewTextFieldMapping()
+		objectFileURIMapping.Analyzer = ""
+		objectFileURIMapping.Store = true
+		objectFileURIMapping.Index = true
+		accessionMapping.AddFieldMappingsAt("digital_objects.file_uris", objectFileURIMapping)
+
+		extentsMapping := bleve.NewTextFieldMapping()
+		extentsMapping.Analyzer = "en"
+		extentsMapping.Store = true
+		extentsMapping.Index = true
+		accessionMapping.AddFieldMappingsAt("extents", extentsMapping)
+
+		createdMapping := bleve.NewDateTimeFieldMapping()
+		accessionMapping.AddFieldMappingsAt("created", createdMapping)
+
+		// Finally add this mapping to the main index mapping
+		indexMapping.AddDocumentMapping("accession", accessionMapping)
+
+		index, err := bleve.New(indexName, indexMapping)
 		if err != nil {
 			return nil, fmt.Errorf("Can't create new bleve index %s, %s", indexName, err)
 		}
@@ -114,7 +161,6 @@ func indexSite(index bleve.Index, batchSize int) error {
 	startT := time.Now()
 	count := 0
 	batch := index.NewBatch()
-	//FIXME: Need to switch this for indexing on batch.
 	err := filepath.Walk(path.Join(htdocsDir, "repositories"), func(p string, f os.FileInfo, err error) error {
 		if strings.Contains(p, "/accessions/") == true && strings.HasSuffix(p, ".json") == true {
 			src, err := ioutil.ReadFile(p)
@@ -175,6 +221,6 @@ func main() {
 
 	// Walk our data import tree and index things
 	log.Printf("Start indexing of %s in %s\n", htdocsDir, indexName)
-	indexSite(index, 500)
+	indexSite(index, 1000)
 	log.Printf("Finished")
 }

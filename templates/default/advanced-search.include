@@ -7,8 +7,8 @@
 </section>
     <section>
         <form method="get" action="{{ .URI }}">
-            <input type="hidden" name="page" value="{{ .Page }}">
-            <input type="hidden" name="page_size" value="{{ .PageSize }}">
+            <input type="hidden" name="from" value="{{ .From }}">
+            <input type="hidden" name="size" value="{{ .Size }}">
             <p>Find catalog entries that have...</p>
             <div><label>all of these words</label> <input type="text" name="q_required"></div>
             <div><label>this exact wording or phrase</label> <input type="text" name="q_exact"> </div>

@@ -118,13 +118,14 @@ var (
   Other SUBJECTS and ACTIONS work in a similar fashion.
 
 `
-	caitAPIURL     = `http://localhost:8089`
-	caitUsername   = ``
-	caitPassword   = ``
-	caitDataSet    = `data`
-	caitHtdocs     = `htdocs`
-	caitTemplates  = `templates`
-	caitBleveIndex = `index.bleve`
+	caitAPIURL       = `http://localhost:8089`
+	caitUsername     = ``
+	caitPassword     = ``
+	caitDataset      = `dataset`
+	caitDatasetIndex = `dataset.bleve`
+	caitHtdocs       = `htdocs`
+	caitHtdocsIndex  = `htdocs.bleve`
+	caitTemplates    = `templates`
 )
 
 func usage() {
@@ -261,7 +262,7 @@ func runRepoCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	case "export":
 		err := api.ExportRepository(
 			repoID,
-			path.Join(api.DataSet, "repositories"),
+			path.Join(api.Dataset, "repositories"),
 			fmt.Sprintf("%d.json", repoID),
 		)
 		if err != nil {
@@ -858,10 +859,11 @@ func main() {
 	caitAPIURL = cait.MergeEnv("CAIT_API_URL", caitAPIURL)
 	caitUsername = cait.MergeEnv("CAIT_USERNAME", caitUsername)
 	caitPassword = cait.MergeEnv("CAIT_PASSWORD", caitPassword)
-	caitDataSet = cait.MergeEnv("CAIT_DATASET", caitDataSet)
+	caitDataset = cait.MergeEnv("CAIT_DATASET", caitDataset)
+	caitDatasetIndex = cait.MergeEnv("CAIT_DATASET_INDEX", caitDatasetIndex)
 	caitHtdocs = cait.MergeEnv("CAIT_HTDOCS", caitHtdocs)
+	caitHtdocsIndex = cait.MergeEnv("CAIT_HTDOCS_INDEX", caitHtdocsIndex)
 	caitTemplates = cait.MergeEnv("CAIT_TEMPLATES", caitTemplates)
-	caitBleveIndex = cait.MergeEnv("CAIT_BLEVE_INDEX", caitBleveIndex)
 
 	api := cait.New(caitAPIURL, caitUsername, caitPassword)
 

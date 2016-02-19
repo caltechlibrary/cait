@@ -33,7 +33,7 @@ func main() {
 		flag.PrintDefaults()
 		os.Exit(1)
 	}
-	indexName := os.Getenv("CAIT_BLEVE_INDEX")
+	indexName := os.Getenv("CAIT_HTDOCS_INDEX")
 	index, err := bleve.Open(indexName)
 	if err != nil {
 		log.Fatal(err)
@@ -54,11 +54,13 @@ func main() {
 	search.Highlight.AddField("content_description")
 	search.Highlight.AddField("subjects")
 	search.Highlight.AddField("extents")
-	search.Highlight.AddField("digital_objects.title")
-	search.Highlight.AddField("digital_objects.files_uris")
+	//	search.Highlight.AddField("digital_objects.title")
+	//	search.Highlight.AddField("digital_objects.files_uris")
 
 	subjectFacet := bleve.NewFacetRequest("subjects", 3)
 	search.AddFacet("subjects", subjectFacet)
+	// Return all fields for each result.
+	search.Fields = []string{"*"}
 
 	results, err := index.Search(search)
 	if err != nil {

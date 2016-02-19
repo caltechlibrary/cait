@@ -37,11 +37,12 @@ type SearchQuery struct {
 	Type       string            `json:"type,omitempty"`
 
 	// Unified search form properties, works for both Basic and Advanced search
-	Method   string `json:"method"`
-	Action   string `json:"action"`
-	AllIDs   bool   `json:"all_ids"`
-	PageSize int    `json:"page_size"`
-	Page     int    `json:"page"`
+	Method string `json:"method"`
+	Action string `json:"action"`
+	AllIDs bool   `json:"all_ids"`
+	Size   int    `json:"size"`
+	From   int    `json:"from"`
+
 	// Simple Search
 	Q string `json:"q,omitempty"`
 	// Advanced Search
@@ -75,8 +76,8 @@ func (sq *SearchQuery) AttachSearchResults(sr *bleve.SearchResult) {
 	if sq.AllIDs == true {
 		v.Add("all_ids", "true")
 	}
-	v.Add("page_size", fmt.Sprintf("%d", sq.PageSize))
-	v.Add("page", fmt.Sprintf("%d", sq.Page))
+	v.Add("size", fmt.Sprintf("%d", sq.Size))
+	v.Add("from", fmt.Sprintf("%d", sq.From))
 	v.Add("total", fmt.Sprintf("%d", sq.Total))
 	v.Add("q", sq.Q)
 	v.Add("q_required", sq.QRequired)

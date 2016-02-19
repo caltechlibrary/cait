@@ -34,10 +34,10 @@ func main() {
 		flag.PrintDefaults()
 		os.Exit(0)
 	}
-	datasets := os.Getenv("CAIT_DATASETS")
-	subjectMap, err := cait.MakeSubjectMap(path.Join(datasets, "subjects"))
+	dataset := os.Getenv("CAIT_DATASET")
+	subjectMap, err := cait.MakeSubjectMap(path.Join(dataset, "subjects"))
 	check(err)
-	digitalObjectMap, err := cait.MakeDigitalObjectMap(path.Join(datasets, "repositories/2/digital_objects"))
+	digitalObjectMap, err := cait.MakeDigitalObjectMap(path.Join(dataset, "repositories/2/digital_objects"))
 	check(err)
 	for _, arg := range args {
 		src, err := ioutil.ReadFile(arg)

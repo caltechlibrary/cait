@@ -14,15 +14,15 @@ import (
 )
 
 func TestViews(t *testing.T) {
-	datasets := os.Getenv("CAIT_DATASETS")
+	dataset := os.Getenv("CAIT_DATASET")
 	apiURL := os.Getenv("CAIT_API_URL")
 	username := os.Getenv("CAIT_USERNAME")
 	password := os.Getenv("CAIT_PASSWORD")
-	if datasets == "" {
-		log.Println("$CAIT_DATASETS not set, skipping TestViews()")
+	if dataset == "" {
+		log.Println("$CAIT_DATASET not set, skipping TestViews()")
 		t.SkipNow()
 	}
-	_, err := os.Stat(datasets)
+	_, err := os.Stat(dataset)
 	if os.IsNotExist(err) == true {
 		if apiURL == "" {
 			log.Println("$CAIT_API_URL not set, skipping TestViews()")
@@ -41,7 +41,7 @@ func TestViews(t *testing.T) {
 		}
 	}
 
-	subjectDir := path.Join(datasets, "subjects")
+	subjectDir := path.Join(dataset, "subjects")
 	SubjectList, err := MakeSubjectList(subjectDir)
 	if err != nil {
 		t.Errorf("Failed to make subject list from %s, %s", subjectDir, err)
@@ -57,12 +57,12 @@ func TestViews(t *testing.T) {
 		t.Errorf("SubjectMap should not be empty, length %d", len(SubjectMap))
 	}
 
-	digitalObjectDir := path.Join(datasets, "repositories", "2", "digital_objects")
+	digitalObjectDir := path.Join(dataset, "repositories", "2", "digital_objects")
 	digitalObjectMap, err := MakeDigitalObjectMap(digitalObjectDir)
 	if err != nil {
-		t.Errorf("Should be able to make digial object map from %s, %s", datasets, err)
+		t.Errorf("Should be able to make digial object map from %s, %s", dataset, err)
 	}
-	filepath.Walk(datasets, func(p string, info os.FileInfo, err error) error {
+	filepath.Walk(dataset, func(p string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(p, ".json") && strings.Contains(p, "/accessions/") {
 			log.Printf("Testing %s\n", p)
 			//FIXME: test normalized view here...

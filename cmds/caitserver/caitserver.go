@@ -46,7 +46,7 @@ var (
 
 	caitserver provides search services defined by CAIT_SITE_URL for the
 	website content defined by CAIT_HTDOCS using the index defined
-	by CAIT_BLEVE_INDEX.
+	by CAIT_HTDOCS_INDEX.
 
  OPTIONS
 `
@@ -58,7 +58,7 @@ var (
 
    CAIT_SITE_URL
 
-   CAIT_BLEVE_INDEX
+   CAIT_HTDOCS_INDEX
 
    CAIT_TEMPLATES
 
@@ -139,7 +139,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 			if k == "all_ids" {
 				b, _ := strconv.ParseBool(strings.Join(v, ""))
 				submission[k] = b
-			} else if k == "page" || k == "page_size" || k == "total" {
+			} else if k == "from" || k == "size" || k == "total" {
 				i, _ := strconv.Atoi(strings.Join(v, ""))
 				submission[k] = i
 			} else {
@@ -153,7 +153,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 			if k == "all_ids" {
 				b, _ := strconv.ParseBool(strings.Join(v, ""))
 				submission[k] = b
-			} else if k == "page" || k == "page_size" || k == "total" {
+			} else if k == "from" || k == "size" || k == "total" {
 				i, _ := strconv.Atoi(strings.Join(v, ""))
 				submission[k] = i
 			} else {
@@ -194,15 +194,28 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		pageInclude = "details-search.include"
 	} else {
 		// FIXME: Add logic to handle basic and advanced search...
-
+		//
 		// q match
 		// q_required match all
 		// q_exact match phrase
 		// q_excluded disjunct with match
-
 		qry := bleve.NewMatchQuery(q.Q)
-		search := bleve.NewSearchRequest(qry)
+		//search := bleve.NewSearchRequest(qry)
+		search := bleve.NewSearchRequestOptions(qry, q.Size, q.From, q.Explain)
 		search.Highlight = bleve.NewHighlightWithStyle("html")
+
+		search.Highlight.AddField("title")
+		search.Highlight.AddField("content_description")
+		search.Highlight.AddField("subjects")
+		search.Highlight.AddField("extents")
+		search.Highlight.AddField("digital_objects.title")
+		search.Highlight.AddField("digital_objects.file_uris")
+
+		subjectFacet := bleve.NewFacetRequest("subjects", 3)
+		search.AddFacet("subjects", subjectFacet)
+
+		// Return all fields
+		search.Fields = []string{"*"}
 
 		searchResults, err := index.Search(search)
 		if err != nil {
@@ -316,11 +329,11 @@ func init() {
 	var err error
 
 	uri := os.Getenv("CAIT_SITE_URL")
-	indexName = os.Getenv("CAIT_BLEVE_INDEX")
 	htdocsDir = os.Getenv("CAIT_HTDOCS")
+	indexName = os.Getenv("CAIT_HTDOCS_INDEX")
 	templatesDir = os.Getenv("CAIT_TEMPLATES")
 	flag.StringVar(&uri, "search", "http://localhost:8501", "The URL to listen on for search requests")
-	flag.StringVar(&indexName, "index", "index.bleve", "specify the Bleve index to use")
+	flag.StringVar(&indexName, "index", "htdocs.bleve", "specify the Bleve index to use")
 	flag.StringVar(&htdocsDir, "htdocs", "htdocs", "specify where to write the HTML files to")
 	flag.StringVar(&templatesDir, "templates", "templates/default", "The directory path for templates")
 	flag.BoolVar(&help, "h", false, "display this help message")

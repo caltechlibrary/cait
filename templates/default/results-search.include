@@ -2,12 +2,12 @@
     <a href="/search/basic/">New Search</a>
     </section>
     <nav>
-        {{ .Request.From }} of {{ .Total }}<br />
-        {{ if (gt .Page 0) }}
-            <a href="?page={{ (prevPage .Request.From .Page .PageSize .Total) }}&page_size={{ .PageSize }}&q={{ .Q }}&q_required={{ .QRequired }}&q_exact={{ .QExact }}&q_excluded={{ .QExcluded }}">Prev Page</a>
+        {{ (add .Request.From 1) }} of {{ .Total }}<br />
+        {{ if (gt .From 0) }}
+            <a href="?from={{ (prevPage .From .Size .Total) }}&size={{ .Size }}&q={{ .Q }}&q_required={{ .QRequired }}&q_exact={{ .QExact }}&q_excluded={{ .QExcluded }}">Prev Page</a>
         {{ end }}
-        {{ if (lt .Request.From .Total) }}
-            <a href="?page={{ (nextPage .Request.From .Page .PageSize .Total) }}&page_size={{ .PageSize }}&q={{ .Q }}&q_required={{ .QRequired }}&q_exact={{ .QExact }}&q_excluded={{ .QExcluded }}">Next Page</a>
+        {{ if (lt .Request.From (sub .Total .Size)) }}
+            <a href="?from={{ (nextPage .From .Size .Total) }}&size={{ .Size }}&q={{ .Q }}&q_required={{ .QRequired }}&q_exact={{ .QExact }}&q_excluded={{ .QExcluded }}">Next Page</a>
         {{ end }}
     </nav>
     <section>
@@ -19,8 +19,21 @@
     <hr />
     {{ range .Results.Hits }}
         <div class="search-result">
-            {{ $href := (printf "%s%shtml?%s" $baseURI .ID $queryParams)  }}
-            {{ range .Fragments.title }}<h2><a href="{{ $href }}">{{ . }}</a></h2>{{ end }}
+            {{ $href := (printf "%shtml?%s" .ID $queryParams)  }}
+            {{ range $key, $value := .Fragments }}
+                {{ if (eq $key "title") }}
+                <h2><a href="{{ $href }}">{{ index $value 0 }}</a></h2>
+                {{ end }}
+                {{ if (eq $key "content_description")}}
+                <div>{{ index $value 0 }}</div>
+                {{ end }}
+                {{ if (eq $key "digital_object.title")}}
+                <div>{{ index $value 0 }}</div>
+                {{ end }}
+                {{ if (eq $key "digital_object.file_uris")}}
+                <div>{{ index $value 0 }}</div>
+                {{ end }}
+            {{ end }}
         </div>
     {{ end }}
     </section>

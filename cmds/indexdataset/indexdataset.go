@@ -47,13 +47,13 @@ func indexSite(index bleve.Index, batchSize int, dataSet map[string]interface{})
 }
 
 func main() {
-	datasets := os.Getenv("CAIT_DATASETS")
-	indexName := os.Getenv("CAIT_BLEVE_INDEX")
+	dataset := os.Getenv("CAIT_DATASET")
+	indexName := os.Getenv("CAIT_DATASET_INDEX")
 
 	log.Println("Building subject map...")
-	subjectMap, _ := cait.MakeSubjectMap(path.Join(datasets, "repositories/2/subjects"))
+	subjectMap, _ := cait.MakeSubjectMap(path.Join(dataset, "subjects"))
 	log.Println("Building digital object map...")
-	digitalObjectMap, _ := cait.MakeDigitalObjectMap(path.Join(datasets, "repositories/2/digital_objects"))
+	digitalObjectMap, _ := cait.MakeDigitalObjectMap(path.Join(dataset, "repositories/2/digital_objects"))
 
 	log.Println("Setting up index...")
 	indexMapping := bleve.NewIndexMapping()
@@ -73,20 +73,6 @@ func main() {
 	descriptionMapping.Index = true
 	accessionMapping.AddFieldMappingsAt("content_description", descriptionMapping)
 
-	objectsMapping := bleve.NewTextFieldMapping()
-	objectsMapping.Analyzer = "en"
-	objectsMapping.Store = true
-	objectsMapping.Index = true
-	accessionMapping.AddFieldMappingsAt("digital_objects.title", objectsMapping)
-
-	extentsMapping := bleve.NewTextFieldMapping()
-	extentsMapping.Analyzer = "en"
-	extentsMapping.Store = true
-	extentsMapping.Index = true
-	accessionMapping.AddFieldMappingsAt("extents", extentsMapping)
-
-	//FIXME: seems like this could benefit from a better analyzer, e.g. pulling out the terms
-	// Do I need to iterate over each item in the subject? Do I need a custom analyzer?
 	subjectsMapping := bleve.NewTextFieldMapping()
 	subjectsMapping.Analyzer = "en"
 	subjectsMapping.Store = true
@@ -94,8 +80,30 @@ func main() {
 	subjectsMapping.IncludeTermVectors = true
 	accessionMapping.AddFieldMappingsAt("subjects", subjectsMapping)
 
-	createdMapping := bleve.NewDateTimeFieldMapping()
-	accessionMapping.AddFieldMappingsAt("created", createdMapping)
+	// objectTitleMapping := bleve.NewTextFieldMapping()
+	// // objectTitleMapping.Analyzer = "en"
+	// objectTitleMapping.Store = true
+	// objectTitleMapping.Index = false
+	// objectTitleMapping.IncludeInAll = false
+	// objectTitleMapping.IncludeTermVectors = false
+	// accessionMapping.AddFieldMappingsAt("digital_objects.title", objectTitleMapping)
+	//
+	// objectFileURIMapping := bleve.NewTextFieldMapping()
+	// //objectFileURIMapping.Analyzer = "Simple"
+	// objectFileURIMapping.Store = true
+	// objectFileURIMapping.Index = false
+	// objectFileURIMapping.IncludeInAll = false
+	// objectFileURIMapping.IncludeTermVectors = false
+	// accessionMapping.AddFieldMappingsAt("digital_objects.file_uris", objectFileURIMapping)
+	//
+	// extentsMapping := bleve.NewTextFieldMapping()
+	// extentsMapping.Analyzer = "en"
+	// extentsMapping.Store = true
+	// extentsMapping.Index = true
+	// accessionMapping.AddFieldMappingsAt("extents", extentsMapping)
+	//
+	// createdMapping := bleve.NewDateTimeFieldMapping()
+	// accessionMapping.AddFieldMappingsAt("created", createdMapping)
 
 	// Finally add this mapping to the main index mapping
 	indexMapping.AddDocumentMapping("accession", accessionMapping)
@@ -106,7 +114,7 @@ func main() {
 	indexSite(index, 1000, (func() map[string]interface{} {
 		i := 0
 		m := make(map[string]interface{})
-		filepath.Walk(path.Join(datasets, "repositories/2/accessions"), func(p string, _ os.FileInfo, _ error) error {
+		filepath.Walk(path.Join(dataset, "repositories/2/accessions"), func(p string, _ os.FileInfo, _ error) error {
 			if strings.HasSuffix(p, ".json") {
 				if (i % 100) == 0 {
 					log.Printf("Read %d accessions", i)
