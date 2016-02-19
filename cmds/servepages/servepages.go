@@ -93,6 +93,13 @@ func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Can't unmarshal %s, %s", src, err)
 	}
+	//Note: if q.Size is not set by the query request pick a nice default value
+	if q.Size == 0 {
+		q.Size = 10
+	}
+	if q.From < 0 {
+		q.From = 0
+	}
 	return q, nil
 }
 

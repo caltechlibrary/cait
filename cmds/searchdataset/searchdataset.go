@@ -72,8 +72,8 @@ func main() {
 	search.Highlight.AddField("content_description")
 	search.Highlight.AddField("subjects")
 	search.Highlight.AddField("extents")
-	//	search.Highlight.AddField("digital_objects.title")
-	//	search.Highlight.AddField("digital_objects.files_uris")
+	search.Highlight.AddField("digital_objects.title")
+	search.Highlight.AddField("digital_objects.files_uris")
 
 	subjectFacet := bleve.NewFacetRequest("subjects", 3)
 	search.AddFacet("subjects", subjectFacet)
@@ -86,5 +86,5 @@ func main() {
 	}
 	fmt.Println(results)
 	fields, _ := index.Fields()
-	fmt.Printf("DEBUG fields: %s\n", strings.Join(fields, "|"))
+	fmt.Printf("Available fields: %s\n", strings.Join(fields, "|"))
 }

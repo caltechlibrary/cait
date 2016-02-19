@@ -32,7 +32,7 @@ import (
 // SearchQuery represents the query options supported by search
 type SearchQuery struct {
 	// Bleve specific properties
-	Explain    bool              `json:"explain,omitempty"`
+	Explain    bool              `json:"explain"`
 	FilterTerm map[string]string `json:"filter_term,omitempty"`
 	Type       string            `json:"type,omitempty"`
 
