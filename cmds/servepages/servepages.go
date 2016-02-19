@@ -208,15 +208,18 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		// q_excluded disjunct with match
 		qry := bleve.NewMatchQuery(q.Q)
 		//search := bleve.NewSearchRequest(qry)
+		if q.Size == 0 {
+			q.Size = 10
+		}
 		search := bleve.NewSearchRequestOptions(qry, q.Size, q.From, q.Explain)
 		search.Highlight = bleve.NewHighlightWithStyle("html")
 
-		search.Highlight.AddField("title")
-		search.Highlight.AddField("content_description")
-		search.Highlight.AddField("subjects")
-		search.Highlight.AddField("extents")
-		search.Highlight.AddField("digital_objects.title")
-		search.Highlight.AddField("digital_objects.file_uris")
+		// search.Highlight.AddField("title")
+		// search.Highlight.AddField("content_description")
+		// search.Highlight.AddField("subjects")
+		// search.Highlight.AddField("extents")
+		// search.Highlight.AddField("digital_objects.title")
+		// search.Highlight.AddField("digital_objects.file_uris")
 
 		subjectFacet := bleve.NewFacetRequest("subjects", 3)
 		search.AddFacet("subjects", subjectFacet)

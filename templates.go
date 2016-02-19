@@ -23,6 +23,7 @@ package cait
 import (
 	"fmt"
 	"io/ioutil"
+	"strings"
 	"text/template"
 )
 
@@ -53,6 +54,13 @@ var (
 				return from
 			}
 			return next
+		},
+		"asList": func(li []interface{}, sep string) string {
+			var l []string
+			for _, item := range li {
+				l = append(l, fmt.Sprintf("%s", item))
+			}
+			return strings.Join(l, sep)
 		},
 	}
 )

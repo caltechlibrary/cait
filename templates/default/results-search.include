@@ -20,13 +20,20 @@
     {{ range .Results.Hits }}
         <div class="search-result">
             {{ $href := (printf "%shtml?%s" .ID $queryParams)  }}
+            {{ range $key, $value := .Fields }}
+                {{ if (eq $key "title") }}<h2><a href="{{ $href }}">{{ $value }}</a></h2>{{ end }}
+            {{ end }}
             {{ range $key, $value := .Fragments }}
-                {{ if (eq $key "title") }}
-                <h2><a href="{{ $href }}">{{ index $value 0 }}</a></h2>
+                {{  if (or (eq $key "title") (eq $key "content_description"))}}
+                    <div>{{ index $value 0 }}</div>
                 {{ end }}
-                {{ if (eq $key "content_description")}}
-                <div>{{ index $value 0 }}</div>
-                {{ end }}
+            {{ end }}
+            <p>
+            {{ range $key, $value := .Fields }}
+                {{ if (eq $key "extents") }}<div>{{ $value }}</div>{{ end }}
+                <!-- FIXME: Need to figure out if $value is a string or []interface{}, if an array use asList function -->
+                {{ if (eq $key "subjects") }}<div>Subjects: {{ $value }}</div>{{ end }}
+                {{ if (eq $key "accession_date")}}<div>Accession Date: {{ $value }}</div>{{ end }}
                 {{ if (eq $key "digital_object.title")}}
                 <div>{{ index $value 0 }}</div>
                 {{ end }}
@@ -34,6 +41,8 @@
                 <div>{{ index $value 0 }}</div>
                 {{ end }}
             {{ end }}
+            </p>
+            <hr />
         </div>
     {{ end }}
     </section>
