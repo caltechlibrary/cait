@@ -29,45 +29,77 @@ import (
 )
 
 var (
-	help    bool
-	explain bool
-	size    int
-	from    int
+	description = `
+ USAGE: searchdataset [OPTIONS]
+
+ SYNOPSIS
+
+ searchdataset is a command line utility to search the dataset directory.
+ It produces a Bleve search index used by servepages web service.
+ Configuration is done through environmental variables.
+
+ OPTIONS
+`
+
+	configuration = `
+
+ CONFIGURATION
+
+ searchdataset relies on the following environment variables for
+ configuration when overriding the defaults:
+
+    CAIT_DATASET_INDEX	This is the directory that will contain all the Bleve
+                        indexes.
+
+`
+	help      bool
+	explain   bool
+	size      int
+	from      int
+	indexName string
 )
 
+func usage() {
+	fmt.Println(description)
+	flag.PrintDefaults()
+	fmt.Println(configuration)
+	os.Exit(0)
+}
+
 func init() {
+	from = 0
+	indexName = "dataset.bleve"
 	size = 10
-	flag.BoolVar(&help, "h", true, "display this message")
-	flag.BoolVar(&explain, "e", true, "explain the query")
-	flag.IntVar(&size, "s", 10, "display n results for per response")
-	flag.IntVar(&from, "f", 0, "display results from number")
+	flag.StringVar(&indexName, "-i", indexName, "use this index")
+	flag.BoolVar(&help, "h", false, "display this message")
+	flag.BoolVar(&explain, "e", false, "explain the query")
+	flag.IntVar(&size, "s", size, "display n results for per response")
+	flag.IntVar(&from, "f", from, "display results from number")
 }
 
 func main() {
 	flag.Parse()
+
+	if help == true {
+		usage()
+	}
+
 	args := flag.Args()
 	if len(args) == 0 {
-		fmt.Fprintln(os.Stderr, "USAGE: search QUERY_TERMS")
-		flag.PrintDefaults()
+		fmt.Fprintln(os.Stderr, "USAGE: search [-h, OPTIONS] QUERY_TERMS")
 		os.Exit(1)
 	}
-	indexName := os.Getenv("CAIT_HTDOCS_INDEX")
+
 	index, err := bleve.Open(indexName)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	terms := strings.Join(args, " ")
 	query := bleve.NewQueryStringQuery(terms)
-	if from < 0 {
-		from = 0
-	}
-	if size < 0 {
-		size = 10
-	}
 	search := bleve.NewSearchRequestOptions(query, size, from, explain)
 
 	search.Highlight = bleve.NewHighlight()
-	//search.Highlight = bleve.NewHighlightWithStyle("ansi")
 	search.Highlight.AddField("title")
 	search.Highlight.AddField("content_description")
 	search.Highlight.AddField("subjects")

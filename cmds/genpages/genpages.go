@@ -51,20 +51,18 @@ var (
 	variables-
 
     CAIT_DATASET    this is the directory that contains the output of the
-                      'cait archivesspace export' command. Defaults to ./data
+                      'cait archivesspace export' command.
 
     CAIT_TEMPLATES  this is the directory that contains the templates
                       used used to generate the static content of the website.
-                      Defaults to ./templates/default.
 
     CAIT_HTDOCS     this is the directory where the HTML files are written.
-                      Defaults to ./htdocs
 
 `
 
 	help        bool
 	htdocsDir   string
-	dataDir     string
+	datasetDir  string
 	templateDir string
 )
 
@@ -120,7 +118,7 @@ func processAgents(templateDir string, aHTMLTmplName string, aIncTmplName string
 	}
 	fp.Close()
 
-	// Process JSON file (an abridged version of the JSON output in data)
+	// Process JSON file (an abridged version of the JSON output a)
 	fname = path.Join(htdocsDir, "agents.json")
 	src, err := json.Marshal(agents)
 	if err != nil {
@@ -190,7 +188,7 @@ func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName st
 	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
 	check(err)
 
-	return filepath.Walk(path.Join(dataDir, "repositories"), func(p string, f os.FileInfo, err error) error {
+	return filepath.Walk(path.Join(datasetDir, "repositories"), func(p string, f os.FileInfo, err error) error {
 		// Process accession records
 		if strings.Contains(p, "accessions") == true && strings.HasSuffix(p, ".json") == true {
 			src, err := ioutil.ReadFile(p)
@@ -268,13 +266,21 @@ func check(err error) {
 	}
 }
 
+func getenv(envar, s string) string {
+	tmp := os.Getenv(envar)
+	if tmp == "" {
+		return s
+	}
+	return tmp
+}
+
 func init() {
-	dataDir = os.Getenv("CAIT_DATASET")
-	templateDir = os.Getenv("CAIT_TEMPLATES")
-	htdocsDir = os.Getenv("CAIT_HTDOCS")
-	flag.StringVar(&htdocsDir, "htdocs", "htdocs", "specify where to write the HTML files to")
-	flag.StringVar(&dataDir, "data", "data", "specify where to read the JSON files from")
-	flag.StringVar(&templateDir, "templates", path.Join("templates", "default"), "specify where to read the templates from")
+	datasetDir = getenv("CAIT_DATASET", "dataset")
+	templateDir = getenv("CAIT_TEMPLATES", path.Join("templates", "default"))
+	htdocsDir = getenv("CAIT_HTDOCS", "htdocs")
+	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "specify where to write the HTML files to")
+	flag.StringVar(&datasetDir, "dataset", datasetDir, "specify where to read the JSON files from")
+	flag.StringVar(&templateDir, "templates", templateDir, "specify where to read the templates from")
 	flag.BoolVar(&help, "h", false, "display this help message")
 	flag.BoolVar(&help, "help", false, "display this help message")
 }
@@ -289,17 +295,18 @@ func main() {
 	// Setup directories relationships
 	//
 	digitalObjectDir := ""
-	filepath.Walk(dataDir, func(p string, info os.FileInfo, err error) error {
-		if info.IsDir() == true && strings.HasSuffix(p, "digital_objects") {
+	filepath.Walk(datasetDir, func(p string, info os.FileInfo, err error) error {
+		if err == nil && info.IsDir() == true && strings.HasSuffix(p, "digital_objects") {
+			fmt.Printf("DEBUG p: %s\n", p)
 			digitalObjectDir = p
 			return nil
 		}
-		return nil
+		return err
 	})
 	if digitalObjectDir == "" {
-		check(fmt.Errorf("Can't find the digital object directory in %s", dataDir))
+		check(fmt.Errorf("Can't find the digital object directory in %s", datasetDir))
 	}
-	subjectDir := path.Join(dataDir, "subjects")
+	subjectDir := path.Join(datasetDir, "subjects")
 
 	//
 	// Setup and Process Lists
@@ -316,7 +323,7 @@ func main() {
 	)
 
 	for _, agentType := range []string{"people", "corporate_entities", "software"} {
-		agentDir = path.Join(dataDir, "agents", agentType)
+		agentDir = path.Join(datasetDir, "agents", agentType)
 		log.Printf("Reading Agents from %s", agentDir)
 		aList, err := cait.MakeAgentList(agentDir)
 		check(err)
@@ -339,7 +346,7 @@ func main() {
 	digitalObjectsMap, err := cait.MakeDigitalObjectMap(digitalObjectDir)
 	check(err)
 
-	log.Printf("Processing accessions in %s\n", dataDir)
+	log.Printf("Processing accessions in %s\n", datasetDir)
 	err = processAccessions(templateDir, "accession.html", "accession.include", subjectsMap, digitalObjectsMap)
 	check(err)
 }

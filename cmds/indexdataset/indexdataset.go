@@ -55,16 +55,17 @@ var (
  configuration when overriding the defaults:
 
     CAIT_DATASET       This should be the path to the directory tree
-                        containings the imported content (e.g. JSON files) to be index.
-                        This is generally populated by the cait command.
-						Defaults to ./dataset.
+                       containings the imported content (e.g. JSON files) to be index.
+                       This is generally populated by the cait command.
 
     CAIT_DATASET_INDEX	This is the directory that will contain all the Bleve
-                        indexes. Defaults to ./dataset.bleve
+                        indexes.
 
 `
 	help         bool
 	replaceIndex bool
+	indexName    string
+	datasetDir   string
 )
 
 func usage() {
@@ -106,9 +107,19 @@ func indexSite(index bleve.Index, batchSize int, dataSet map[string]interface{})
 	return nil
 }
 
+func init() {
+	datasetDir = "dataset"
+	indexName = "dataset.bleve"
+	datasetDir = os.Getenv("CAIT_DATASET")
+	indexName = os.Getenv("CAIT_DATASET_INDEX")
+	flag.StringVar(&datasetDir, "dataset", "dataset", "The document root for the dataset")
+	flag.StringVar(&indexName, "index", "dataset.bleve", "The name of the Bleve index")
+	flag.BoolVar(&replaceIndex, "r", false, "Replace the index if it exists")
+	flag.BoolVar(&help, "h", false, "this help message")
+	flag.BoolVar(&help, "help", false, "this help message")
+}
+
 func main() {
-	dataset := os.Getenv("CAIT_DATASET")
-	indexName := os.Getenv("CAIT_DATASET_INDEX")
 	flag.Parse()
 
 	if help == true {
@@ -120,9 +131,9 @@ func main() {
 	}
 
 	log.Println("Building subject map...")
-	subjectMap, _ := cait.MakeSubjectMap(path.Join(dataset, "subjects"))
+	subjectMap, _ := cait.MakeSubjectMap(path.Join(datasetDir, "subjects"))
 	log.Println("Building digital object map...")
-	digitalObjectMap, _ := cait.MakeDigitalObjectMap(path.Join(dataset, "repositories/2/digital_objects"))
+	digitalObjectMap, _ := cait.MakeDigitalObjectMap(path.Join(datasetDir, "repositories/2/digital_objects"))
 
 	log.Println("Setting up index...")
 	indexMapping := bleve.NewIndexMapping()
@@ -183,7 +194,7 @@ func main() {
 	indexSite(index, 1000, (func() map[string]interface{} {
 		i := 0
 		m := make(map[string]interface{})
-		filepath.Walk(path.Join(dataset, "repositories/2/accessions"), func(p string, _ os.FileInfo, _ error) error {
+		filepath.Walk(path.Join(datasetDir, "repositories/2/accessions"), func(p string, _ os.FileInfo, _ error) error {
 			if strings.HasSuffix(p, ".json") {
 				if (i % 100) == 0 {
 					log.Printf("Read %d accessions", i)
