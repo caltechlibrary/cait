@@ -10,6 +10,8 @@
 + servepages - a web service providing public search services and content browsing
 + xlsximporter - a tool for turning Excel spreadsheets in .xlsx format into JSON files suitable for importing into ArchivesSpace
 + sitemapper - a simple tool to generate a sitemap.xml file from pages rendered with genpages
++ indexdataset - a command line tool to index the dataset directory generated with `cait_ archivesspace export`
++ searchdataset - a command line tool to search the dataset index
 
 ## Requirements
 
@@ -17,7 +19,7 @@
 + Golang 1.5.3 or better to compile
 + Three 3rd party Go packages
     + [Bleve](https://github.com/blevesearch/bleve) by [Blevesearch](http://blevesearch.com), Apache License, Version 2.0
-    + [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
+    + [Otto](https://github.com/rsdoiel/otto) a fork of [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
     + [xlsx](https://github.com/tealeg/xlsx) by Tealeg, BSD license
 
 ## Compiling
@@ -35,7 +37,7 @@ Here's a typical example of setting things up.
     git clone git@github.com:caltechlibrary/cait.git
     cd cait
     go get -u github.com/blevesearch/bleve/...
-    go get -u github.com/robertkrimen/otto
+    go get -u github.com/rsdoiel/otto
     go get -u github.com/tealeg/xlsx
     mkdir bin
     go build -o bin/cait cmds/cait/cait.go

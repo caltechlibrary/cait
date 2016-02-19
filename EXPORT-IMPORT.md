@@ -18,7 +18,7 @@ The easiest way to export content from a production ArchivesSpace deployment is 
 + CAIT_USERNAME admin
 + CAIT_PASSWORD admin
 + CAIT_API_URL (for your production system) http://archives.example.edu:8089
-+ CAIT_DATASET data
++ CAIT_DATASET dataset
 
 The following environment variables not note used in the export process
 
@@ -34,7 +34,7 @@ I am also assuming you have installed the _cait_ utility in *./bin/cait*
     export CAIT_API_URL=http://archives.example.edu:8089
     export CAIT_USERNAME=admin
     export CAIT_PASSWORD=admin
-    export CAIT_DATASET=data
+    export CAIT_DATASET=dataset
 
     ./bin/cait archivesspace export
     unset CAIT_USERNAME
@@ -66,7 +66,7 @@ The basic setups are
 + CAIT_API_URL http://localhost:8089
 + CAIT_USERNAME admin
 + CAIT_PASSWORD admin
-+ CAIT_DATASET data
++ CAIT_DATASET dataset
 
 The following environment variables not note used in the import process
 
@@ -92,7 +92,7 @@ If you have any non-default extent_extent_type create them before proceeding
     export CAIT_API_URL=http://localhost:8089
     export CAIT_USERNAME=admin
     export CAIT_PASSWORD=admin
-    export CAIT_DATASET=data
+    export CAIT_DATASET=dataset
 
     # If you have non-default extent extent types, create them before proceeding
     # e.g. Multimedia, ProRes Master file, DVD

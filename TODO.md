@@ -5,7 +5,6 @@
 
 ### Bugs
 
-+ Need to determine exact Bleve var that needs to change to page through results
 + Need to strip unneeded characters from input to prevent XSS attacks (or figure out how to use html/template and still get highlight)
 + Need a better title sort (e.g. remove stop words)
 + Empty Search results cause broken page

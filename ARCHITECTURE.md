@@ -9,7 +9,7 @@ All tools can be configured through environment variables. Some have additional 
 
 ### cait
 
-_cait_ command line utility is the workhorse for getting content out of ArchivesSpace and onto your local file system in a useful static form (JSON blobs).  _cait_ will eventually support putting content back into ArchivesSpace. At that stage you'll have more options for batch editing content with more general tools like R, Open Refine, etc.
+_cait_ command line utility is the workhorse for getting content out of ArchivesSpace and onto your local file system in a useful static form (JSON blobs).  _cait_ can be used to put some content back into ArchivesSpace. This gives you options for batch editing content with more general tools like R, Open Refine, etc.
 
 ### caitjs
 
