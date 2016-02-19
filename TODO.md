@@ -36,6 +36,8 @@
 
 # some day maybe list
 
++ js.go include polyfils for JS functions and methods describe at MDN's JavaScript section
++ template.go should have the functions that Hugo has to make the templates interoperable
 + Add support for multiple indexes
 + create a JSON to xlsx utility
 + create an digital_object or resources to EAD utility
