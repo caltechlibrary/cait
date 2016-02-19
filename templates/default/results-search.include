@@ -29,17 +29,11 @@
                 {{ end }}
             {{ end }}
             <p>
+            {{ $objLink := (digitalObjectLink .Fields) }}
+            {{ if (ne $objLink "") }}Read on-line: {{ $objLink}}{{ end }}
             {{ range $key, $value := .Fields }}
                 {{ if (eq $key "extents") }}<div>{{ $value }}</div>{{ end }}
-                <!-- FIXME: Need to figure out if $value is a string or []interface{}, if an array use asList function -->
-                {{ if (eq $key "subjects") }}<div>Subjects: {{ $value }}</div>{{ end }}
-                {{ if (eq $key "accession_date")}}<div>Accession Date: {{ $value }}</div>{{ end }}
-                {{ if (eq $key "digital_object.title")}}
-                <div>{{ index $value 0 }}</div>
-                {{ end }}
-                {{ if (eq $key "digital_object.file_uris")}}
-                <div>{{ index $value 0 }}</div>
-                {{ end }}
+                {{ if (eq $key "subjects") }}<div>Subjects: {{ if (eq (getType $value) "[]interface {}") }}{{ (asList $value "; ") }}{{ else }}{{ $value }}{{ end }}</div>{{ end }}
             {{ end }}
             </p>
             <hr />

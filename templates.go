@@ -55,12 +55,33 @@ var (
 			}
 			return next
 		},
+		"getType": func(t interface{}) string {
+			switch tp := t.(type) {
+			default:
+				return fmt.Sprintf("%T", tp)
+			}
+		},
 		"asList": func(li []interface{}, sep string) string {
 			var l []string
 			for _, item := range li {
 				l = append(l, fmt.Sprintf("%s", item))
 			}
 			return strings.Join(l, sep)
+		},
+		"digitalObjectLink": func(m map[string]interface{}) string {
+			var (
+				title string
+				href  string
+			)
+			if _, ok := m["digital_objects.title"]; ok == false {
+				return ""
+			}
+			if _, ok := m["digital_objects.file_uris"]; ok == false {
+				return ""
+			}
+			title = fmt.Sprintf("%s", m["digital_objects.title"])
+			href = fmt.Sprintf("%s", m["digital_objects.file_uris"])
+			return fmt.Sprintf(`<a href="%s">%s</a>`, href, title)
 		},
 	}
 )
