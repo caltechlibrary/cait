@@ -57,6 +57,15 @@ var (
 	size      int
 	from      int
 	indexName string
+	// q match
+	// q_required match all
+	// q_exact match phrase
+	// q_excluded disjunct with match
+	q         string
+	qRequired string
+	qExact    string
+	qExcluded string
+	qAll      bool
 )
 
 func usage() {
@@ -75,6 +84,11 @@ func init() {
 	flag.BoolVar(&explain, "e", false, "explain the query")
 	flag.IntVar(&size, "s", size, "display n results for per response")
 	flag.IntVar(&from, "f", from, "display results from number")
+	flag.StringVar(&q, "q", q, "use query string query")
+	flag.StringVar(&qRequired, "q_required", qRequired, "use match term query")
+	flag.StringVar(&qExact, "q_exact", qExact, "use match phrase query")
+	flag.StringVar(&qExcluded, "q_exclude", qExcluded, "use disjunct query")
+	flag.BoolVar(&qAll, "q_all", false, "use match all query")
 }
 
 func main() {
@@ -85,7 +99,7 @@ func main() {
 	}
 
 	args := flag.Args()
-	if len(args) == 0 {
+	if len(args) == 0 && qAll == false && q == "" && qRequired == "" && qExact == "" && qExcluded == "" {
 		fmt.Fprintln(os.Stderr, "USAGE: search [-h, OPTIONS] QUERY_TERMS")
 		os.Exit(1)
 	}
@@ -95,8 +109,33 @@ func main() {
 		log.Fatal(err)
 	}
 
-	terms := strings.Join(args, " ")
-	query := bleve.NewQueryStringQuery(terms)
+	var (
+		conQry []bleve.Query
+	)
+	if len(args) > 0 {
+		conQry = append(conQry, bleve.NewQueryStringQuery(strings.Join(args, " ")))
+	}
+	if q != "" {
+		conQry = append(conQry, bleve.NewQueryStringQuery(q))
+	}
+	if qRequired != "" {
+		for _, s := range strings.Fields(qRequired) {
+			conQry = append(conQry, bleve.NewTermQuery(s))
+		}
+	}
+	if qExact != "" {
+		conQry = append(conQry, bleve.NewMatchPhraseQuery(qExact))
+	}
+	if qExcluded != "" {
+		for _, s := range strings.Fields(qExcluded) {
+			conQry = append(conQry, bleve.NewQueryStringQuery(fmt.Sprintf("-%s", s)))
+		}
+	}
+	if qAll == true {
+		conQry = append(conQry, bleve.NewMatchAllQuery())
+	}
+
+	query := bleve.NewConjunctionQuery(conQry)
 	search := bleve.NewSearchRequestOptions(query, size, from, explain)
 
 	search.Highlight = bleve.NewHighlight()

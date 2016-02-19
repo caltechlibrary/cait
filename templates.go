@@ -23,6 +23,8 @@ package cait
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
+	"net/url"
 	"strings"
 	"text/template"
 )
@@ -83,6 +85,14 @@ var (
 			href = fmt.Sprintf("%s", m["digital_objects.file_uris"])
 			return fmt.Sprintf(`<a href="%s">%s</a>`, href, title)
 		},
+		"encodeURIComponent": func(s string) string {
+			u, err := url.Parse(s)
+			if err != nil {
+				log.Printf("Bad encoding request: %s, %s\n", s, err)
+				return ""
+			}
+			return strings.Replace(u.String(), "&", "%26", -1)
+		},
 	}
 )
 
@@ -97,7 +107,7 @@ func AssembleTemplate(htmlFilename, includeFilename string) (*template.Template,
 	if err != nil {
 		return nil, fmt.Errorf("Can't read included template %s, %s", includeFilename, err)
 	}
-	return template.New(includeFilename).Funcs(tmplFuncs).Parse(fmt.Sprintf(`{{ define "content" }}%s{{ end }}%s`, htmlTmpl, includeTmpl))
+	return template.New(includeFilename).Funcs(tmplFuncs).Parse(fmt.Sprintf(`{{ define "content" }}%s{{ end }}%s`, includeTmpl, htmlTmpl))
 }
 
 // Template generate a template struct with functions attach.

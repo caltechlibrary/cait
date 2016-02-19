@@ -44,7 +44,7 @@ type SearchQuery struct {
 	From   int    `json:"from"`
 
 	// Simple Search
-	Q string `json:"q,omitempty"`
+	Q string `json:"q"`
 	// Advanced Search
 	QRequired string `json:"q_required"`
 	QExact    string `json:"q_exact"`
