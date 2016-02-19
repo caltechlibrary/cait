@@ -29,6 +29,7 @@ aspace
 setup.*
 production.*
 data/*
+dataset/*
 data-export/*
 data-import/*
 *.log

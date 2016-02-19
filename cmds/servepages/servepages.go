@@ -40,11 +40,11 @@ import (
 
 var (
 	description = `
- USAGE: caitserver [OPTIONS]
+ USAGE: servepages [OPTIONS]
 
  OVERVIEW
 
-	caitserver provides search services defined by CAIT_SITE_URL for the
+	servepages provides search services defined by CAIT_SITE_URL for the
 	website content defined by CAIT_HTDOCS using the index defined
 	by CAIT_HTDOCS_INDEX.
 
@@ -53,7 +53,7 @@ var (
 	configuration = `
  CONFIGURATION
 
- caitserver can be configured through environment variables. The following
+ servepages can be configured through environment variables. The following
  variables are supported-
 
    CAIT_SITE_URL

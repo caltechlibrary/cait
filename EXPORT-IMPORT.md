@@ -126,7 +126,7 @@ installed in *./bin*.
 ### The workflow
 
 1. Make sure the *CAIT_* environment variables are set.
-2. Build the website with `./bin/caitpage`
+2. Build the website with `./bin/genpages`
 3. Create/update the sitemap with `./bin/sitemapper $CAIT_HTDOCS $CAIT_HTDOCS/sitemap.xml $CAIT_SITE_URL`
-4. Index the site (this takes a while on my machine) `./bin/caitindexer`
-5. Launch `./bin/caitserver` and test with your web browser
+4. Index the site (this takes a while on my machine) `./bin/indexpages`
+5. Launch `./bin/servepages` and test with your web browser

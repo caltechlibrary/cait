@@ -11,20 +11,41 @@ All tools can be configured through environment variables. Some have additional 
 
 _cait_ command line utility is the workhorse for getting content out of ArchivesSpace and onto your local file system in a useful static form (JSON blobs).  _cait_ will eventually support putting content back into ArchivesSpace. At that stage you'll have more options for batch editing content with more general tools like R, Open Refine, etc.
 
-### caitpage
+### caitjs
 
-_caitpage_ renders the content dumped by _cait_ into a website structure suitable for hosting with _caitserver_ search engine and web server.  It does NOT talk directly to ArchivesSpace and as a result does not increase the load on your ArchivesSpace server.
+_caitjs_ command line utility will run simple JavaScript files with access to the same API provided internal to _cait_. Helpful for data migrations and fixes.
 
-### caitindexer
+### genpages
 
-_caitindexer_ is a utility for creating and updating a Bleve index used by _caitserver_ web server.  It crawls the website tree an ingesting JSON files found in the accessions directories. It can be run manually but is also suited to run periodically via a cronjob (say once every day as needed).   It takes about 45 mimutes to run through my 10k or so of accessions. Your milleage may very. It runs a little faster creating a new index structure than updating.  The current implementation is overly simplistic and certainly can be improved (e.g. rather than indexing files individually it could batch and index)
+_genpages_ renders the content dumped by _cait_ into a website structure suitable for hosting with _servepages_ search engine and web server.  It does NOT talk directly to ArchivesSpace and as a result does not increase the load on your ArchivesSpace server.
 
-### caitserver
+### indexpages
 
-_caitserver_ is a web server and search engine. It is intended to run behind a more traditional web server like NginX or Apache.  Output of the search results are controlled by the Golang HTML templates.  This is an early implementation so this will see change as the project gets deployed into a production setting.
+_indexpages_ is a utility for creating and updating a Bleve index used by _servepages_ web server.  It crawls the website tree an ingesting JSON files found in the accessions directories. It can be run manually but is also suited to run periodically via a cronjob (say once every day as needed).   It takes about 45 mimutes to run through my 10k or so of accessions. Your milleage may very. It runs a little faster creating a new index structure than updating.  The current implementation is overly simplistic and certainly can be improved (e.g. rather than indexing files individually it could batch and index)
 
-_caitserver_ can be started manually but more typically would be brought up by your init process (e.g. /etc/init.d/caitserver start). An example init file is provided
+### servepages
+
+_servepages_ is a web server and search engine. It is intended to run behind a more traditional web server like NginX or Apache.  Output of the search results are controlled by the Golang HTML templates.  This is an early implementation so this will see change as the project gets deployed into a production setting.
+
+_servepages_ can be started manually but more typically would be brought up by your init process (e.g. /etc/init.d/servepages start). An example init file is provided
 
 ### xlsximporter
 
 _xlsximporter_ is a utility that reads an Excel file in xlsx format and turns each row of a spreadsheet into a JSON object. By default the properties correspond to the column names but you can also provide a JavaScript file and callback that let's you customize the objects produced. This latter capability is useful when migrating content into ArchivesSpace.
+
+### indexdataset
+
+_indexdataset_ is a utility that crawls the dataset directory (the raw content exported from ArchivesSpace) for use by _searchdataset_.
+
+### searchdataset
+
+_searchdataset_ is a utility for searching the content in the dataset directory (the raw content exported from ArchivesSpace).  Helpful in debugging problems with specific records.
+
+
+## Workflow
+
+1. Export ArchivesSpace content with _cait_
+2. Generate pages with _genpages_
+3. Index pages with _indexpages_
+4. Serve content and search service with _servepages_
+

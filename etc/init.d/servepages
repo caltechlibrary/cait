@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# This is an example init.d script for starting caitserver
+# This is an example init.d script for starting servepage service
 #
 
 PROGDIR=/archivesspace/cait/bin

@@ -7,9 +7,9 @@
 + caitjs - a command line utility for ArchivesSpace which will run JavaScript files providing access the ArchivesSpace API
 + genpages - a simple static page generator based on exported ArchivesSpace content
 + indexpages - for indexing exported JSON structures with [Bleve](https://github.com/blevesearch/bleve)
-+ caitserver - a web service providing public search services and content browsing
++ servepages - a web service providing public search services and content browsing
 + xlsximporter - a tool for turning Excel spreadsheets in .xlsx format into JSON files suitable for importing into ArchivesSpace
-+ sitemapper - a simple tool to generate a sitemap.xml file from pages rendered with caitpage
++ sitemapper - a simple tool to generate a sitemap.xml file from pages rendered with genpages
 
 ## Requirements
 
@@ -42,7 +42,7 @@ Here's a typical example of setting things up.
     go build -o bin/caitjs cmds/cait/caitjs.go
     go build -o bin/genpages  cmds/genpages/genpages.go
     go build -o bin/indexpages cmds/indexpages/indexpages.go
-    go build -o bin/caitserver cmds/caitserver/caitserver.go
+    go build -o bin/servepages cmds/servepages/servepages.go
     go build -o bin/xlsximporter cmds/xlsximporter/xlsximporter.go
     go build -o bin/sitemapper cmds/sitemapper/sitemapper.go
     go build -o bin/indexdataset cmds/indexdataset/indexdataset.go
@@ -60,7 +60,7 @@ The command line tools and services are configured via environment variables. Be
 ```
     #
     # setup.sh - this script sets the environment variables for cait project.
-    # You would source file before using cait, caitindexer, or caitserver.
+    # You would source file before using cait, indexpages, or servepages.
     #
 
     #
@@ -149,7 +149,7 @@ It relies on the following environment variables
 + CAIT_HTDOCS, where you want to write your static pages
 + CAIT_TEMPLATES, the templates to use (this defaults to template/defaults but you probably want custom templates for your site)
 
-The typical process would use _cait_ to export all your content and then run _caitpage_ to generate your website content.
+The typical process would use _cait_ to export all your content and then run _genpages_ to generate your website content.
 
 ```
     ./bin/cait archivesspace export # this takes a while
@@ -161,7 +161,7 @@ Assuming the default settings you'll see new webpages in your local *htdocs* dir
 
 ### _indexpages_
 
-This command creates [bleve](http://blevesearch.com) indexes for use by _caitserver_.
+This command creates [bleve](http://blevesearch.com) indexes for use by _servepages_.
 
 Current _indexpages_ operates on JSON content exported with _cait_. It expects
 a specific directory structure with each individual JSON blob named after its
@@ -173,11 +173,11 @@ _indexpages_ depends on four environment variables
 + CAIT_HTDOCS, the root directory where the JSON blobs and HTML files are saved
 + CAIT_HTDOCS_INDEX, the name of the Bleve index (created or maintained)
 
-### _caitserver_
+### _servepages_
 
-_caitserver_ provides both a static web server as well as web search service.
+_servepages_ provides both a static web server as well as web search service.
 
-Current _caitserver_ uses the Bleve indexes created with _caitindexer_. It also
+Current _servepages_ uses the Bleve indexes created with _indexpages_. It also
 uses the search page and results templates defined in CAIT_TEMPLATES.
 
 It uses the following environment variables
@@ -190,7 +190,7 @@ It uses the following environment variables
 Assuming the default setup, you could start the like
 
 ```
-    ./bin/caitserver
+    ./bin/servepages
 ```
 
 Or you could add a startup script to /etc/init.d/ as appropriate.

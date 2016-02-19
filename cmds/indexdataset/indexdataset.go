@@ -1,7 +1,27 @@
+//
+// cmds/indexdataset/indexdataset.go - A command line utility that builds a bleve index of the raw contents exported with cait utility
+//
+// @author R. S. Doiel, <rsdoiel@caltech.edu>
+//
+// Copyright (c) 2016, Caltech
+// All rights not granted herein are expressly reserved by Caltech.
+//
+// Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+//
+// 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+//
+// 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+//
+// 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+//
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+//
 package main
 
 import (
 	"encoding/json"
+	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -13,6 +33,46 @@ import (
 	"../../../cait"
 	"github.com/blevesearch/bleve"
 )
+
+var (
+	description = `
+ USAGE: indexdataset [OPTIONS]
+
+ SYNOPSIS
+
+ indexdataset is a command line utility to indexes content in the dataset directory.
+ It produces a Bleve search index used by servepages web service.
+ Configuration is done through environmental variables.
+
+ OPTIONS
+`
+
+	configuration = `
+
+ CONFIGURATION
+
+ indexdataset relies on the following environment variables for
+ configuration when overriding the defaults:
+
+    CAIT_DATASET       This should be the path to the directory tree
+                        containings the imported content (e.g. JSON files) to be index.
+                        This is generally populated by the cait command.
+						Defaults to ./dataset.
+
+    CAIT_DATASET_INDEX	This is the directory that will contain all the Bleve
+                        indexes. Defaults to ./dataset.bleve
+
+`
+	help         bool
+	replaceIndex bool
+)
+
+func usage() {
+	fmt.Println(description)
+	flag.PrintDefaults()
+	fmt.Println(configuration)
+	os.Exit(0)
+}
 
 func openIndex(indexName string, indexMapping *bleve.IndexMapping) (bleve.Index, error) {
 	if _, err := os.Stat(indexName); os.IsNotExist(err) {
@@ -49,6 +109,15 @@ func indexSite(index bleve.Index, batchSize int, dataSet map[string]interface{})
 func main() {
 	dataset := os.Getenv("CAIT_DATASET")
 	indexName := os.Getenv("CAIT_DATASET_INDEX")
+	flag.Parse()
+
+	if help == true {
+		usage()
+		os.Exit(0)
+	}
+	if replaceIndex == true {
+		os.RemoveAll(indexName)
+	}
 
 	log.Println("Building subject map...")
 	subjectMap, _ := cait.MakeSubjectMap(path.Join(dataset, "subjects"))

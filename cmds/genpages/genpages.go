@@ -1,5 +1,5 @@
 //
-// cmds/caitpage/caitpage.go - A command line utility that builds pages from the exported results of cait.go
+// cmds/genpages/genpages.go - A command line utility that builds pages from the exported results of cait.go
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
 //
@@ -35,11 +35,11 @@ import (
 
 var (
 	description = `
- USAGE: caitpage [OPTIONS]
+ USAGE: genpages [OPTIONS]
 
  OVERVIEW
 
-	caitpage generates HTML, .include pages and normalized JSON based on the JSON output form
+	genpages generates HTML, .include pages and normalized JSON based on the JSON output form
 	cait and templates associated with the command.
 
  OPTIONS
@@ -47,7 +47,7 @@ var (
 	configuration = `
  CONFIGURATION
 
-    caitpages can be configured through setting the following environment
+    genpages can be configured through setting the following environment
 	variables-
 
     CAIT_DATASET    this is the directory that contains the output of the

@@ -1,5 +1,5 @@
 //
-// caitindexer.go - A search indexer for [Bleve Search](https://github.com/blevesearch/bleve)
+// cmds/indexpages/indexpages.go - Create/update a bleve index the htdocs contents generated with the genpages utility.
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
 //
@@ -37,13 +37,12 @@ import (
 
 var (
 	description = `
- USAGE: caitindexer [-h|--help]
+ USAGE: indexpages [-h|--help]
 
  SYNOPSIS
 
- caitindexer is a command line utility to index content fetched from
- an ArchivesSpace via the ArchivesSpace REST API (e.g. with
- cait tool). It indexes content for the Bleve search library.
+ indexpages is a command line utility to indexes content in the htdocs directory.
+ It produces a Bleve search index used by servepages web service.
  Configuration is done through environmental variables.
 
  OPTIONS
@@ -53,7 +52,7 @@ var (
 
  CONFIGURATION
 
- caitindexer relies on the following environment variables for
+ indexpages relies on the following environment variables for
  configuration when overriding the defaults:
 
     CAIT_HTDOCS       This should be the path to the directory tree
@@ -65,11 +64,12 @@ var (
                         indexes. Defaults to ./htdocs.bleve
 
 `
-	help      bool
-	htdocsDir string
-	indexName string
-	dirCount  int
-	fileCount int
+	help         bool
+	replaceIndex bool
+	htdocsDir    string
+	indexName    string
+	dirCount     int
+	fileCount    int
 )
 
 func usage() {
@@ -86,6 +86,7 @@ func init() {
 	indexName = os.Getenv("CAIT_HTDOCS_INDEX")
 	flag.StringVar(&htdocsDir, "htdocs", "htdocs", "The document root for the website")
 	flag.StringVar(&indexName, "index", "htdocs.bleve", "The name of the Bleve index")
+	flag.BoolVar(&replaceIndex, "r", false, "Replace the index if it exists")
 	flag.BoolVar(&help, "h", false, "this help message")
 	flag.BoolVar(&help, "help", false, "this help message")
 }
@@ -211,6 +212,13 @@ func main() {
 	flag.Parse()
 	if help == true {
 		usage()
+	}
+
+	if replaceIndex == true {
+		err := os.RemoveAll(indexName)
+		if err != nil {
+			log.Fatalf("Could not removed %s, %s", indexName, err)
+		}
 	}
 
 	index, err := getIndex(indexName)
