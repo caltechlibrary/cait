@@ -4,7 +4,7 @@
 #
 
 PROGDIR=/archivesspace/cait/bin
-PROGNAME=caitserver
+PROGNAME=servepage
 PROGPATH=$PROGDIR/$PROGNAME
 LOGDIR=/archivesspace/logs
 LOGPATH=$LOGDIR/$PROGNAME.log
