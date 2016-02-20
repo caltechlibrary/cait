@@ -37,7 +37,7 @@ Here's a typical example of setting things up.
     git clone git@github.com:caltechlibrary/cait.git
     cd cait
     go get -u github.com/blevesearch/bleve/...
-    go get -u github.com/rsdoiel/otto
+    go get -u github.com/rsdoiel/otto # I am using a modified fork of Robert Krimen's Otto
     go get -u github.com/tealeg/xlsx
     mkdir bin
     go build -o bin/cait cmds/cait/cait.go
