@@ -55,19 +55,24 @@ if (res.error !== undefined) {
 console.log("Getting accession id list");
 digital_object_ids = api.listDigitalObjects(repo_id);
 console.log("Processing", digital_object_ids.length, "digital_object_ids");
-var re = new RegExp("[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]-[0-9][0-9][0-9][0-9][0-9][0-9]");
+
 for (i = 0; i < digital_object_ids.length; i++) {
     object_id = digital_object_ids[i];
     digital_object = api.getDigitalObject(repo_id, object_id);
+
+if (digital_object.digital_object_id.substr(0, 4) !== "2016") {
+console.log("DEBUG before, digital_object_id", digital_object.digital_object_id);
     digital_object.digital_object_id = fixDigitalObjectID(digital_object.uri);
+console.log("DEBUG  after, digital_object_id", digital_object.digital_object_id);
     res = api.updateDigitalObject(digital_object);
     if (res.status !== "Updated") {
         console.log("ERROR res", JSON.stringify(res), "retrying by appending utime");
         digital_object.digital_object_id += " " + (new Date()).getTime();
         res = api.updateDigitalObject(digital_object);
     }
+}
     if ((i % 10 === 0) && (i > 0)) {
         console.log("Processed", i, "digital_objects");
     }
 }
-console.log("Processed", i, "digital_objects");
+console.log("Done, processed", i, "digital_objects");
