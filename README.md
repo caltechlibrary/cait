@@ -4,11 +4,14 @@
 [cait](https://github.com/caltechlibrary/cait) is a set of utilities written in the [Go](http://golang.org) language that work with and augment the [ArchivesSpace](http://archivesspace.org) API.
 
 + cait - a command line utility for ArchivesSpace interaction (basic CRUD operations and export)
-+ caitpage - a simple static page generator based on exported ArchivesSpace content
-+ caitindexer - for indexing exported JSON structures with [Bleve](https://github.com/blevesearch/bleve)
-+ caitserver - a web service providing public search services and content browsing
++ caitjs - a command line utility for ArchivesSpace which will run JavaScript files providing access the ArchivesSpace API
++ genpages - a simple static page generator based on exported ArchivesSpace content
++ indexpages - for indexing exported JSON structures with [Bleve](https://github.com/blevesearch/bleve)
++ servepages - a web service providing public search services and content browsing
 + xlsximporter - a tool for turning Excel spreadsheets in .xlsx format into JSON files suitable for importing into ArchivesSpace
-+ sitemapper - a simple tool to generate a sitemap.xml file from pages rendered with caitpage
++ sitemapper - a simple tool to generate a sitemap.xml file from pages rendered with genpages
++ indexdataset - a command line tool to index the dataset directory generated with `cait_ archivesspace export`
++ searchdataset - a command line tool to search the dataset index
 
 ## Requirements
 
@@ -16,7 +19,7 @@
 + Golang 1.5.3 or better to compile
 + Three 3rd party Go packages
     + [Bleve](https://github.com/blevesearch/bleve) by [Blevesearch](http://blevesearch.com), Apache License, Version 2.0
-    + [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
+    + [Otto](https://github.com/rsdoiel/otto) a fork of [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
     + [xlsx](https://github.com/tealeg/xlsx) by Tealeg, BSD license
 
 ## Compiling
@@ -38,11 +41,14 @@ Here's a typical example of setting things up.
     go get -u github.com/tealeg/xlsx
     mkdir bin
     go build -o bin/cait cmds/cait/cait.go
-    go build -o bin/caitpage  cmds/caitpage/caitpage.go
-    go build -o bin/caitindexer cmds/caitindexer/caitindexer.go
-    go build -o bin/caitserver cmds/caitserver/caitserver.go
+    go build -o bin/caitjs cmds/cait/caitjs.go
+    go build -o bin/genpages  cmds/genpages/genpages.go
+    go build -o bin/indexpages cmds/indexpages/indexpages.go
+    go build -o bin/servepages cmds/servepages/servepages.go
     go build -o bin/xlsximporter cmds/xlsximporter/xlsximporter.go
     go build -o bin/sitemapper cmds/sitemapper/sitemapper.go
+    go build -o bin/indexdataset cmds/indexdataset/indexdataset.go
+    go build -o bin/searchdataset cmds/searchdataset/searchdataset.go
 ```
 
 At this point you should have your command line utilities ready to go in the *bin* directory. You are now ready to setup your environment variables.
@@ -56,7 +62,7 @@ The command line tools and services are configured via environment variables. Be
 ```
     #
     # setup.sh - this script sets the environment variables for cait project.
-    # You would source file before using cait, caitindexer, or caitserver.
+    # You would source file before using cait, indexpages, or servepages.
     #
 
     #
@@ -65,16 +71,17 @@ The command line tools and services are configured via environment variables. Be
     export CAIT_API_URL=http://localhost:8089
     export CAIT_USERNAME=admin
     export CAIT_PASSWORD=admin
-    export CAIT_DATASETS=data
+    export CAIT_DATASET=dataset
+    export CAIT_DATASET_INDEX=dataset.bleve
     export CAIT_SITE_URL=http://localhost:8501
     export CAIT_HTDOCS=htdocs
+    export CAIT_HTDOCS_INDEX=htdocs.bleve
     export CAIT_TEMPLATES=templates/default
-    export CAIT_BLEVE_INDEX=index.bleve
 
     #
     # Create the necessary directory structure
     #
-    mkdir -p $CAIT_DATASETS
+    mkdir -p $CAIT_DATASET
     mkdir -p $CAIT_HTDOCS
     mkdir -p $CAIT_TEMPLATES
 
@@ -134,7 +141,7 @@ The _cait_ command uses the following environment variables
 + CAIT_PASSWORD, to access the ArchivesSpace API
 + CAIT_DATASET, the directory for exported content
 
-### _caitpage_
+### _genpages_
 
 This command generates static webpages from exported ArchivesSpace content.
 
@@ -144,48 +151,48 @@ It relies on the following environment variables
 + CAIT_HTDOCS, where you want to write your static pages
 + CAIT_TEMPLATES, the templates to use (this defaults to template/defaults but you probably want custom templates for your site)
 
-The typical process would use _cait_ to export all your content and then run _caitpage_ to generate your website content.
+The typical process would use _cait_ to export all your content and then run _genpages_ to generate your website content.
 
 ```
     ./bin/cait archivesspace export # this takes a while
-    ./bin/caitpage # this is faster
+    ./bin/genpages # this is faster
 ```
 
 Assuming the default settings you'll see new webpages in your local *htdocs* directory.
 
 
-### _caitindexer_
+### _indexpages_
 
-This command creates [bleve](http://blevesearch.com) indexes for use by _caitserver_.
+This command creates [bleve](http://blevesearch.com) indexes for use by _servepages_.
 
-Current _caitindexer_ operates on JSON content exported with _cait_. It expects
+Current _indexpages_ operates on JSON content exported with _cait_. It expects
 a specific directory structure with each individual JSON blob named after its
-numeric ID and the extension .json. E.g. data/repositories/2/accession/1.json would
+numeric ID and the extension .json. E.g. htdocs/repositories/2/accession/1.json would
 correspond to accession id 1 for repository 2.
 
-_caitindexer_ depends on four environment variables
+_indexpages_ depends on four environment variables
 
-+ CAIT_DATASET, the root directory where the JSON blobs are saved
-+ CAIT_BLEVE_INDEX, the name of the Bleve index (created or maintained)
-+ CAIT_BLEVE_MAPPING, the name of the Bleve map file (assuming you're not using the default mapping)
++ CAIT_HTDOCS, the root directory where the JSON blobs and HTML files are saved
++ CAIT_HTDOCS_INDEX, the name of the Bleve index (created or maintained)
 
-### _caitserver_
+### _servepages_
 
-_caitserver_ provides both a static web server as well as web search service.
+_servepages_ provides both a static web server as well as web search service.
 
-Current _caitserver_ uses the Bleve indexes created with _caitindexer_. It also
+Current _servepages_ uses the Bleve indexes created with _indexpages_. It also
 uses the search page and results templates defined in CAIT_TEMPLATES.
 
 It uses the following environment variables
 
-+ CAIT_BLEVE_INDEX, the Bleve index to use to drive the search service
++ CAIT_HTDOCS, the htdoc root of the website
++ CAIT_HTDOCS_INDEX, the Bleve index to use to drive the search service
 + CAIT_TEMPLATES, templates for search service as well as browsable static pages
 + CAIT_SITE_URL, the url you want to run the search service on (e.g. http://localhost:8501)
 
 Assuming the default setup, you could start the like
 
 ```
-    ./bin/caitserver
+    ./bin/servepages
 ```
 
 Or you could add a startup script to /etc/init.d/ as appropriate.

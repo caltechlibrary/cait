@@ -18,14 +18,15 @@ The easiest way to export content from a production ArchivesSpace deployment is 
 + CAIT_USERNAME admin
 + CAIT_PASSWORD admin
 + CAIT_API_URL (for your production system) http://archives.example.edu:8089
-+ CAIT_DATASET data
++ CAIT_DATASET dataset
 
 The following environment variables not note used in the export process
 
 + CAIT_SITE_URL
 + CAIT_HTDOCS
++ CAIT_HTDOCS_INDEX
 + CAIT_TEMPLATES
-+ CAIT_BLEVE_INDEX
++ CAIT_DATASET_INDEX
 
 I am also assuming you have installed the _cait_ utility in *./bin/cait*
 
@@ -33,7 +34,7 @@ I am also assuming you have installed the _cait_ utility in *./bin/cait*
     export CAIT_API_URL=http://archives.example.edu:8089
     export CAIT_USERNAME=admin
     export CAIT_PASSWORD=admin
-    export CAIT_DATASETS=data
+    export CAIT_DATASET=dataset
 
     ./bin/cait archivesspace export
     unset CAIT_USERNAME
@@ -65,14 +66,15 @@ The basic setups are
 + CAIT_API_URL http://localhost:8089
 + CAIT_USERNAME admin
 + CAIT_PASSWORD admin
-+ CAIT_DATASETS data
++ CAIT_DATASET dataset
 
 The following environment variables not note used in the import process
 
 + CAIT_SITE_URL
 + CAIT_HTDOCS
++ CAIT_HTDOCS_INDEX
 + CAIT_TEMPLATES
-+ CAIT_BLEVE_INDEX
++ CAIT_DATASET_INDEX
 
 Here's the stops to populate your local development ArchivesSpace. In this example I am assuming you're importing
 into repository id of 2.
@@ -90,7 +92,7 @@ If you have any non-default extent_extent_type create them before proceeding
     export CAIT_API_URL=http://localhost:8089
     export CAIT_USERNAME=admin
     export CAIT_PASSWORD=admin
-    export CAIT_DATASETS=data
+    export CAIT_DATASET=dataset
 
     # If you have non-default extent extent types, create them before proceeding
     # e.g. Multimedia, ProRes Master file, DVD
@@ -114,16 +116,17 @@ installed in *./bin*.
 
 ### Environment required
 
-+ CAIT_DATASETS
++ CAIT_DATASET
++ CAIT_DATASET_INDEX
 + CAIT_HTDOCS
++ CAIT_HTDOCS_INDEX
 + CAIT_SITE_URL
 + CAIT_TEMPLATES
-+ CAIT_BLEVE_INDEX
 
 ### The workflow
 
 1. Make sure the *CAIT_* environment variables are set.
-2. Build the website with `./bin/caitpage`
+2. Build the website with `./bin/genpages`
 3. Create/update the sitemap with `./bin/sitemapper $CAIT_HTDOCS $CAIT_HTDOCS/sitemap.xml $CAIT_SITE_URL`
-4. Index the site (this takes a while on my machine) `./bin/caitindexer`
-5. Launch `./bin/caitserver` and test with your web browser
+4. Index the site (this takes a while on my machine) `./bin/indexpages`
+5. Launch `./bin/servepages` and test with your web browser

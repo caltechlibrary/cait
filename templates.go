@@ -23,6 +23,9 @@ package cait
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
+	"net/url"
+	"strings"
 	"text/template"
 )
 
@@ -40,20 +43,55 @@ var (
 		"mapsize": func(m map[string]string) int {
 			return len(m)
 		},
-		"prevPage": func(cur, page, pageSize, max int) int {
-			page--
-			if page < 0 {
-				return 1
+		"prevPage": func(from, size, max int) int {
+			next := from - size
+			if next < 0 {
+				return 0
 			}
-			return page
+			return next
 		},
-		"nextPage": func(cur, page, pageSize, max int) int {
-			next := cur + pageSize
+		"nextPage": func(from, size, max int) int {
+			next := from + size
 			if next > max {
-				return page
+				return from
 			}
-			page++
-			return page
+			return next
+		},
+		"getType": func(t interface{}) string {
+			switch tp := t.(type) {
+			default:
+				return fmt.Sprintf("%T", tp)
+			}
+		},
+		"asList": func(li []interface{}, sep string) string {
+			var l []string
+			for _, item := range li {
+				l = append(l, fmt.Sprintf("%s", item))
+			}
+			return strings.Join(l, sep)
+		},
+		"digitalObjectLink": func(m map[string]interface{}) string {
+			var (
+				title string
+				href  string
+			)
+			if _, ok := m["digital_objects.title"]; ok == false {
+				return ""
+			}
+			if _, ok := m["digital_objects.file_uris"]; ok == false {
+				return ""
+			}
+			title = fmt.Sprintf("%s", m["digital_objects.title"])
+			href = fmt.Sprintf("%s", m["digital_objects.file_uris"])
+			return fmt.Sprintf(`<a href="%s">%s</a>`, href, title)
+		},
+		"encodeURIComponent": func(s string) string {
+			u, err := url.Parse(s)
+			if err != nil {
+				log.Printf("Bad encoding request: %s, %s\n", s, err)
+				return ""
+			}
+			return strings.Replace(u.String(), "&", "%26", -1)
 		},
 	}
 )
@@ -69,7 +107,7 @@ func AssembleTemplate(htmlFilename, includeFilename string) (*template.Template,
 	if err != nil {
 		return nil, fmt.Errorf("Can't read included template %s, %s", includeFilename, err)
 	}
-	return template.New("results-search").Funcs(tmplFuncs).Parse(fmt.Sprintf(`{{ define "content" }}%s{{ end }}%s`, htmlTmpl, includeTmpl))
+	return template.New(includeFilename).Funcs(tmplFuncs).Parse(fmt.Sprintf(`{{ define "content" }}%s{{ end }}%s`, includeTmpl, htmlTmpl))
 }
 
 // Template generate a template struct with functions attach.

@@ -47,10 +47,11 @@ func New(apiURL, username, password string) *ArchivesSpaceAPI {
 	api.AuthToken = MergeEnv("CAIT_API_TOKEN", "")
 	api.Username = MergeEnv("CAIT_USERNAME", username)
 	api.Password = MergeEnv("CAIT_PASSWORD", password)
-	api.DataSet = MergeEnv("CAIT_DATASET", "data")
+	api.Dataset = MergeEnv("CAIT_DATASET", "dataset")
+	api.DatasetIndex = MergeEnv("CAIT_DATASET_INDEX", "dataset.bleve")
 	api.Htdocs = MergeEnv("CAIT_HTDOCS", "htdocs")
+	api.HtdocsIndex = MergeEnv("CAIT_HTDOCS_INDEX", "htdocs.bleve")
 	api.Templates = MergeEnv("CAIT_TEMPLATES", "templates")
-	api.BleveIndex = MergeEnv("CAIT_BLEVE_INDEX", "index.bleve")
 	return api
 }
 

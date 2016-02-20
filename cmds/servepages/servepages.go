@@ -40,25 +40,25 @@ import (
 
 var (
 	description = `
- USAGE: caitserver [OPTIONS]
+ USAGE: servepages [OPTIONS]
 
  OVERVIEW
 
-	caitserver provides search services defined by CAIT_SITE_URL for the
+	servepages provides search services defined by CAIT_SITE_URL for the
 	website content defined by CAIT_HTDOCS using the index defined
-	by CAIT_BLEVE_INDEX.
+	by CAIT_HTDOCS_INDEX.
 
  OPTIONS
 `
 	configuration = `
  CONFIGURATION
 
- caitserver can be configured through environment variables. The following
+ servepages can be configured through environment variables. The following
  variables are supported-
 
    CAIT_SITE_URL
 
-   CAIT_BLEVE_INDEX
+   CAIT_HTDOCS_INDEX
 
    CAIT_TEMPLATES
 
@@ -92,6 +92,13 @@ func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
 	err = json.Unmarshal(src, &q)
 	if err != nil {
 		return nil, fmt.Errorf("Can't unmarshal %s, %s", src, err)
+	}
+	//Note: if q.Size is not set by the query request pick a nice default value
+	if q.Size == 0 {
+		q.Size = 10
+	}
+	if q.From < 0 {
+		q.From = 0
 	}
 	return q, nil
 }
@@ -139,7 +146,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 			if k == "all_ids" {
 				b, _ := strconv.ParseBool(strings.Join(v, ""))
 				submission[k] = b
-			} else if k == "page" || k == "page_size" || k == "total" {
+			} else if k == "from" || k == "size" || k == "total" {
 				i, _ := strconv.Atoi(strings.Join(v, ""))
 				submission[k] = i
 			} else {
@@ -153,7 +160,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 			if k == "all_ids" {
 				b, _ := strconv.ParseBool(strings.Join(v, ""))
 				submission[k] = b
-			} else if k == "page" || k == "page_size" || k == "total" {
+			} else if k == "from" || k == "size" || k == "total" {
 				i, _ := strconv.Atoi(strings.Join(v, ""))
 				submission[k] = i
 			} else {
@@ -163,69 +170,80 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	q, err := mapToSearchQuery(submission)
+	//log.Printf("DEBUG q.Q [%s]\n", q.Q)
 	if err != nil {
 		log.Printf("API access error %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
-	q.DetailsBaseURI = "/search/results/"
 
-	// FIXME: Are we requesting a detailed result or a list result?
-	if strings.Contains(r.URL.Path, "/repositories/") == true {
-		// FIXME: Handle carrying the search contents with the detailed page contents
-		repoID, accessionID, err := urlToRepoAccessionIDs(r.URL.Path)
-		if err != nil {
-			log.Printf("Could not determine repo and accession IDs %s, %s", r.URL.Path, err)
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte(fmt.Sprintf("%s", err)))
-			return
-
-		}
-		src, err := ioutil.ReadFile(path.Join(htdocsDir, "repositories", fmt.Sprintf("%d", repoID), "accessions", fmt.Sprintf("%d.json", accessionID)))
-		if err != nil {
-			log.Printf("Can't decode /repositories/%d/accessions/%d.json, %s", repoID, accessionID, err)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("%s", err)))
-			return
-		}
-		err = json.Unmarshal(src, &q.DetailedResult)
-		pageHTML = "details-search.html"
-		pageInclude = "details-search.include"
-	} else {
-		// FIXME: Add logic to handle basic and advanced search...
-
-		// q match
-		// q_required match all
-		// q_exact match phrase
-		// q_excluded disjunct with match
-
-		qry := bleve.NewMatchQuery(q.Q)
-		search := bleve.NewSearchRequest(qry)
-		search.Highlight = bleve.NewHighlightWithStyle("html")
-
-		searchResults, err := index.Search(search)
-		if err != nil {
-			log.Printf("Bleve results error %v, %s", qry, err)
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(fmt.Sprintf("%s", err)))
-			return
-		}
-		src, _ := json.Marshal(searchResults.Request.Query)
-		queryTerms := struct {
-			Match string `json:"match,omitempty"`
-		}{}
-		_ = json.Unmarshal(src, &queryTerms)
-
-		t, e := json.Marshal(searchResults)               // DEBUG
-		fmt.Printf("DEBUG searchResults %s, %+v\n", t, e) // DEBUG
-		// q (ciat.SearchQuery) performs double duty as both the structure for query submission as well
-		// as carring the results to support paging and other types of navigation through
-		// the query set. Results are a query with the bleve.SearchReults merged
-		q.AttachSearchResults(searchResults)
-		pageHTML = "results-search.html"
-		pageInclude = "results-search.include"
+	//
+	// Note: Add logic to handle basic and advanced search...
+	//
+	// q           NewQueryStringQuery
+	// q_required  NewQueryStringQuery with a + prefix for each strings.Fields(q_required) value
+	// q_exact     NewMatchPhraseQuery
+	// q_excluded NewQueryStringQuery with a - prefix for each strings.Feilds(q_excluded) value
+	//
+	var (
+		conQry []bleve.Query
+	)
+	if q.Q != "" {
+		conQry = append(conQry, bleve.NewQueryStringQuery(q.Q))
 	}
+	if q.QRequired != "" {
+		for _, s := range strings.Fields(q.QRequired) {
+			conQry = append(conQry, bleve.NewTermQuery(s))
+		}
+	}
+	if q.QExact != "" {
+		conQry = append(conQry, bleve.NewMatchPhraseQuery(q.QExact))
+	}
+	if q.QExcluded != "" {
+		for _, s := range strings.Fields(q.QExcluded) {
+			conQry = append(conQry, bleve.NewQueryStringQuery(fmt.Sprintf("-%s", s)))
+		}
+	}
+	qry := bleve.NewConjunctionQuery(conQry)
+	if q.Size == 0 {
+		q.Size = 10
+	}
+	search := bleve.NewSearchRequestOptions(qry, q.Size, q.From, q.Explain)
+	search.Highlight = bleve.NewHighlightWithStyle("html")
+
+	search.Highlight.AddField("title")
+	search.Highlight.AddField("content_description")
+	search.Highlight.AddField("subjects")
+	search.Highlight.AddField("extents")
+	search.Highlight.AddField("digital_objects.title")
+	// search.Highlight.AddField("digital_objects.file_uris")
+
+	subjectFacet := bleve.NewFacetRequest("subjects", 3)
+	search.AddFacet("subjects", subjectFacet)
+
+	// Return all fields
+	search.Fields = []string{"title", "context_description", "extents", "subjects", "digital_objects.title", "digital_objects.file_uris"}
+
+	searchResults, err := index.Search(search)
+	if err != nil {
+		log.Printf("Bleve results error %v, %s", qry, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("%s", err)))
+		return
+	}
+	src, _ := json.Marshal(searchResults.Request.Query)
+	queryTerms := struct {
+		Match string `json:"match,omitempty"`
+	}{}
+	_ = json.Unmarshal(src, &queryTerms)
+
+	// q (ciat.SearchQuery) performs double duty as both the structure for query submission as well
+	// as carring the results to support paging and other types of navigation through
+	// the query set. Results are a query with the bleve.SearchReults merged
+	q.AttachSearchResults(searchResults)
+	pageHTML = "results-search.html"
+	pageInclude = "results-search.include"
 
 	// Load my tempaltes and setup to execute them
 	tmpl, err := cait.AssembleTemplate(path.Join(templatesDir, pageHTML), path.Join(templatesDir, pageInclude))
@@ -316,11 +334,11 @@ func init() {
 	var err error
 
 	uri := os.Getenv("CAIT_SITE_URL")
-	indexName = os.Getenv("CAIT_BLEVE_INDEX")
 	htdocsDir = os.Getenv("CAIT_HTDOCS")
+	indexName = os.Getenv("CAIT_HTDOCS_INDEX")
 	templatesDir = os.Getenv("CAIT_TEMPLATES")
 	flag.StringVar(&uri, "search", "http://localhost:8501", "The URL to listen on for search requests")
-	flag.StringVar(&indexName, "index", "index.bleve", "specify the Bleve index to use")
+	flag.StringVar(&indexName, "index", "htdocs.bleve", "specify the Bleve index to use")
 	flag.StringVar(&htdocsDir, "htdocs", "htdocs", "specify where to write the HTML files to")
 	flag.StringVar(&templatesDir, "templates", "templates/default", "The directory path for templates")
 	flag.BoolVar(&help, "h", false, "display this help message")

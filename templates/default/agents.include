@@ -1,0 +1,12 @@
+<section>
+<a href="/search/basic/">New Search</a>
+</section>
+<nav>
+</nav>
+<section>
+{{ range . }}
+    <pre>
+    {{ . }}
+    </pre>
+{{ end }}
+</section>

@@ -346,24 +346,6 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 		return responseObject(response)
 	})
 
-	// api.updateAgent(agent) update an agent
-	apiObj.Set("updateAgent", func(call otto.FunctionCall) otto.Value {
-		obj, err := vm.Object(`({})`)
-		if len(call.ArgumentList) != 1 {
-			return errorObject(obj, fmt.Sprintf("api.updateAgent(agent), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
-		}
-		agent := new(Agent)
-		err = call.Argument(0).ToStruct(&agent)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.updateAgent(%q) arg error %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
-		}
-		response, err := api.UpdateAgent(agent)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.updateAgent(%q) response error %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
-		}
-		return responseObject(response)
-	})
-
 	// api.deleteAgent(agent) delete an agent
 	apiObj.Set("deleteAgent", func(call otto.FunctionCall) otto.Value {
 		obj, err := vm.Object(`({})`)
@@ -684,7 +666,14 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 	//
 	// Add Polyfills, FIXME: these need to be implemented in Otto...
 	//
-	vm.Eval(`if (!String.prototype.repeat) {
+	vm.Eval(`
+	if (!Date.prototype.now) {
+		Date.prototype.now = function now() {
+			'use strict';
+		 	return new Date().getTime();
+		};
+	}
+	if (!String.prototype.repeat) {
 	  String.prototype.repeat = function(count) {
 	    'use strict';
 	    if (this == null) {

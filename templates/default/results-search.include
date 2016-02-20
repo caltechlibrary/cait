@@ -1,26 +1,43 @@
-    <section>
-    <a href="/search/basic/">New Search</a>
-    </section>
-    <nav>
-        {{ .Request.From }} of {{ .Total }}<br />
-        {{ if (gt .Page 0) }}
-            <a href="?page={{ (prevPage .Request.From .Page .PageSize .Total) }}&page_size={{ .PageSize }}&q={{ .Q }}&q_required={{ .QRequired }}&q_exact={{ .QExact }}&q_excluded={{ .QExcluded }}">Prev Page</a>
+    <nav class="search-nav">
+        {{ if (and (gt .Total .Size) (lt .From (sub .Total .Size))) }}
+            {{ printf "%d-%d" (add .From 1) (add .From .Size) }} of {{ .Total }} found<br />
+        {{ else }}
+            {{ .Total }} found<br />
         {{ end }}
-        {{ if (lt .Request.From .Total) }}
-            <a href="?page={{ (nextPage .Request.From .Page .PageSize .Total) }}&page_size={{ .PageSize }}&q={{ .Q }}&q_required={{ .QRequired }}&q_exact={{ .QExact }}&q_excluded={{ .QExcluded }}">Next Page</a>
+        {{ if (gt .From 0) }}
+            <a href="?from={{ (prevPage .From .Size .Total) }}&size={{ .Size }}&q={{ encodeURIComponent .Q }}&q_required={{ encodeURIComponent .QRequired }}&q_exact={{ encodeURIComponent .QExact }}&q_excluded={{ encodeURIComponent .QExcluded }}">Prev Page</a>
+        {{ end }}
+        {{ if (lt .From (sub .Total .Size)) }}
+            <a href="?from={{ (nextPage .From .Size .Total) }}&size={{ .Size }}&q={{ encodeURIComponent .Q }}&q_required={{ encodeURIComponent .QRequired }}&q_exact={{ encodeURIComponent .QExact }}&q_excluded={{ encodeURIComponent .QExcluded }}">Next Page</a>
         {{ end }}
     </nav>
-    <section>
+    <section class="search-results">
     {{ if (eq .Total 0) }}
-    No items found for {{ with .Request.Query.Match }} {{ . }} {{ else }} [] {{ end }}
+    No items found
     {{ end }}
     {{ $baseURI := (printf "%s" .DetailsBaseURI) }}
     {{ $queryParams := (printf "%s" .QueryURLEncoded) }}
     <hr />
     {{ range .Results.Hits }}
         <div class="search-result">
-            {{ $href := (printf "%s%shtml?%s" $baseURI .ID $queryParams)  }}
-            {{ range .Fragments.title }}<h2><a href="{{ $href }}">{{ . }}</a></h2>{{ end }}
+            {{ $href := (printf "%shtml?%s" .ID $queryParams)  }}
+            {{ range $key, $value := .Fields }}
+                {{ if (eq $key "title") }}<h2><a href="{{ $href }}">{{ $value }}</a></h2>{{ end }}
+            {{ end }}
+            {{ range $key, $value := .Fragments }}
+                {{  if (or (eq $key "title") (eq $key "content_description"))}}
+                    <div>{{ index $value 0 }}</div>
+                {{ end }}
+            {{ end }}
+            <p>
+            {{ $objLink := (digitalObjectLink .Fields) }}
+            {{ if (ne $objLink "") }}Read on-line: {{ $objLink}}{{ end }}
+            {{ range $key, $value := .Fields }}
+                {{ if (eq $key "extents") }}<div>{{ $value }}</div>{{ end }}
+                {{ if (eq $key "subjects") }}<div>Subjects: {{ if (eq (getType $value) "[]interface {}") }}{{ (asList $value "; ") }}{{ else }}{{ $value }}{{ end }}</div>{{ end }}
+            {{ end }}
+            </p>
+            <hr />
         </div>
     {{ end }}
     </section>
