@@ -3,6 +3,8 @@
 
 ## Action Item
 
++ Need to implement "creator" view and like subjects
+
 ### Bugs
 
 + Need to strip unneeded characters from input to prevent XSS attacks (or figure out how to use html/template and still get highlight)

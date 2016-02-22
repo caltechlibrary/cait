@@ -107,13 +107,19 @@ func indexSite(index bleve.Index, batchSize int, dataSet map[string]interface{})
 	return nil
 }
 
+func getenv(envvar, defaultValue string) string {
+	tmp := os.Getenv(envvar)
+	if tmp != "" {
+		return tmp
+	}
+	return defaultValue
+}
+
 func init() {
-	datasetDir = "dataset"
-	indexName = "dataset.bleve"
-	datasetDir = os.Getenv("CAIT_DATASET")
-	indexName = os.Getenv("CAIT_DATASET_INDEX")
-	flag.StringVar(&datasetDir, "dataset", "dataset", "The document root for the dataset")
-	flag.StringVar(&indexName, "index", "dataset.bleve", "The name of the Bleve index")
+	datasetDir = getenv("CAIT_DATASET", "dataset")
+	indexName = getenv("CAIT_DATASET_INDEX", "dataset.bleve")
+	flag.StringVar(&datasetDir, "dataset", datasetDir, "The document root for the dataset")
+	flag.StringVar(&indexName, "index", indexName, "The name of the Bleve index")
 	flag.BoolVar(&replaceIndex, "r", false, "Replace the index if it exists")
 	flag.BoolVar(&help, "h", false, "this help message")
 	flag.BoolVar(&help, "help", false, "this help message")

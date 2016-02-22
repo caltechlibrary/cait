@@ -75,9 +75,17 @@ func usage() {
 	os.Exit(0)
 }
 
+func getenv(envvar, defaultValue string) string {
+	tmp := os.Getenv(envvar)
+	if tmp != "" {
+		return tmp
+	}
+	return defaultValue
+}
+
 func init() {
 	from = 0
-	indexName = "dataset.bleve"
+	indexName = getenv("CAIT_DATASET_INDEX", "dataset.bleve")
 	size = 10
 	flag.StringVar(&indexName, "-i", indexName, "use this index")
 	flag.BoolVar(&help, "h", false, "display this message")

@@ -205,7 +205,7 @@ func init() {
 	flag.BoolVar(&help, "h", false, "display this help message")
 	flag.BoolVar(&help, "help", false, "display this help message")
 	flag.BoolVar(&asArray, "as-array", false, "Write the JSON blobs output as an array")
-	flag.IntVar(&sheetNo, "sheet", 0, "Process a specific sheet number, index starts at 1, zero means process all sheets")
+	flag.IntVar(&sheetNo, "sheet", sheetNo, "Process a specific sheet number, index starts at 1, zero means process all sheets")
 	inputFilename = flag.String("i", "", "Read the Excel file from this name")
 	jsFilename = flag.String("js", "", "The name of the JavaScript file containing callback function")
 	jsCallback = flag.String("callback", "callback", "The name of the JavaScript function to use as a callback")

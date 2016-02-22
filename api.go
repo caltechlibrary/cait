@@ -31,10 +31,10 @@ import (
 	"strings"
 )
 
-// MergeEnv - given an environment variable get the value or set a default.
-func MergeEnv(environmentVar, defaultValue string) string {
-	if s := os.Getenv(environmentVar); s != "" {
-		return s
+func getenv(envvar, defaultValue string) string {
+	tmp := os.Getenv(envvar)
+	if tmp != "" {
+		return tmp
 	}
 	return defaultValue
 }
@@ -43,15 +43,15 @@ func MergeEnv(environmentVar, defaultValue string) string {
 // in the gas package.
 func New(apiURL, username, password string) *ArchivesSpaceAPI {
 	api := new(ArchivesSpaceAPI)
-	api.URL, _ = url.Parse(MergeEnv("CAIT_API_URL", apiURL))
-	api.AuthToken = MergeEnv("CAIT_API_TOKEN", "")
-	api.Username = MergeEnv("CAIT_USERNAME", username)
-	api.Password = MergeEnv("CAIT_PASSWORD", password)
-	api.Dataset = MergeEnv("CAIT_DATASET", "dataset")
-	api.DatasetIndex = MergeEnv("CAIT_DATASET_INDEX", "dataset.bleve")
-	api.Htdocs = MergeEnv("CAIT_HTDOCS", "htdocs")
-	api.HtdocsIndex = MergeEnv("CAIT_HTDOCS_INDEX", "htdocs.bleve")
-	api.Templates = MergeEnv("CAIT_TEMPLATES", "templates")
+	api.URL, _ = url.Parse(getenv("CAIT_API_URL", apiURL))
+	api.AuthToken = getenv("CAIT_API_TOKEN", "")
+	api.Username = getenv("CAIT_USERNAME", username)
+	api.Password = getenv("CAIT_PASSWORD", password)
+	api.Dataset = getenv("CAIT_DATASET", "dataset")
+	api.DatasetIndex = getenv("CAIT_DATASET_INDEX", "dataset.bleve")
+	api.Htdocs = getenv("CAIT_HTDOCS", "htdocs")
+	api.HtdocsIndex = getenv("CAIT_HTDOCS_INDEX", "htdocs.bleve")
+	api.Templates = getenv("CAIT_TEMPLATES", "templates/default")
 	return api
 }
 
