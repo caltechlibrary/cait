@@ -4,10 +4,13 @@
 #
 
 PROGDIR=/archivesspace/cait/bin
-PROGNAME=servepage
+PROGNAME=servepages
 PROGPATH=$PROGDIR/$PROGNAME
 LOGDIR=/archivesspace/logs
 LOGPATH=$LOGDIR/$PROGNAME.log
+
+# Read in local configuration
+. /archivesspace/cait/etc/setup.conf
 
 # Set place for log
 mkdir -p $LOGDIR
@@ -23,9 +26,11 @@ case "$1" in
     ;;
   stop)
     cat /var/run/$PROGNAME.pid | while read PID; do
-    	echo "Stopping $PROGNAME $PID" >> /var/run/$PROGNAME.pid
-        echo "Stopping $PID"
-        kill $PID
+	if [ "$PID" != "" ]; then
+            echo "Stopping $PROGNAME $PID" 
+    	    echo "Stopping $PROGNAME $PID" >> $LOGPATH
+            kill $PID
+        fi
         sleep 3
     done
     /bin/rm /var/run/$PROGNAME.pid
