@@ -351,13 +351,15 @@ func init() {
 	flag.BoolVar(&help, "h", false, "display this help message")
 	flag.BoolVar(&help, "help", false, "display this help message")
 
-	advancedPage, err = ioutil.ReadFile(path.Join(templatesDir, "advanced-search.html"))
+	templateName := path.Join(templatesDir, "advanced-search.html")
+	advancedPage, err = ioutil.ReadFile(templateName)
 	if err != nil {
-		log.Fatalf("Can't read templates/advanced.html, %s", err)
+		log.Fatalf("Can't read %s, %s", templateName, err)
 	}
-	basicPage, err = ioutil.ReadFile(path.Join(templatesDir, "basic-search.html"))
+	templateName = path.Join(templatesDir, "basic-search.html")
+	basicPage, err = ioutil.ReadFile(templateName)
 	if err != nil {
-		log.Fatalf("Can't read templates/basic.html, %s", err)
+		log.Fatalf("Can't read %s, %s", templateName, err)
 	}
 
 	if uri != "" {
