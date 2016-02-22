@@ -79,11 +79,17 @@ func usage() {
 	os.Exit(0)
 }
 
+func getenv(envvar, defaultValue string) string {
+	tmp := os.Getenv(envvar)
+	if tmp != "" {
+		return tmp
+	}
+	return defaultValue
+}
+
 func init() {
-	htdocsDir = "htdocs"
-	indexName = "htdocs.bleve"
-	htdocsDir = os.Getenv("CAIT_HTDOCS")
-	indexName = os.Getenv("CAIT_HTDOCS_INDEX")
+	htdocsDir = getenv("CAIT_HTDOCS", "htdocs")
+	indexName = getenv("CAIT_HTDOCS_INDEX", "htdocs.bleve")
 	flag.StringVar(&htdocsDir, "htdocs", "htdocs", "The document root for the website")
 	flag.StringVar(&indexName, "index", "htdocs.bleve", "The name of the Bleve index")
 	flag.BoolVar(&replaceIndex, "r", false, "Replace the index if it exists")

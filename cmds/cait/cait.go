@@ -851,19 +851,27 @@ func (c *command) String() string {
 	return string(src)
 }
 
+func getenv(envvar, defaultValue string) string {
+	tmp := os.Getenv(envvar)
+	if tmp != "" {
+		return tmp
+	}
+	return defaultValue
+}
+
 func main() {
 	flag.BoolVar(help, "h", false, "Display the help page")
 	flag.StringVar(payload, "i", "", "Use this filepath for the payload")
 	flag.BoolVar(version, "v", false, "Display version info")
 
-	caitAPIURL = cait.MergeEnv("CAIT_API_URL", caitAPIURL)
-	caitUsername = cait.MergeEnv("CAIT_USERNAME", caitUsername)
-	caitPassword = cait.MergeEnv("CAIT_PASSWORD", caitPassword)
-	caitDataset = cait.MergeEnv("CAIT_DATASET", caitDataset)
-	caitDatasetIndex = cait.MergeEnv("CAIT_DATASET_INDEX", caitDatasetIndex)
-	caitHtdocs = cait.MergeEnv("CAIT_HTDOCS", caitHtdocs)
-	caitHtdocsIndex = cait.MergeEnv("CAIT_HTDOCS_INDEX", caitHtdocsIndex)
-	caitTemplates = cait.MergeEnv("CAIT_TEMPLATES", caitTemplates)
+	caitAPIURL = getenv("CAIT_API_URL", caitAPIURL)
+	caitUsername = getenv("CAIT_USERNAME", caitUsername)
+	caitPassword = getenv("CAIT_PASSWORD", caitPassword)
+	caitDataset = getenv("CAIT_DATASET", caitDataset)
+	caitDatasetIndex = getenv("CAIT_DATASET_INDEX", caitDatasetIndex)
+	caitHtdocs = getenv("CAIT_HTDOCS", caitHtdocs)
+	caitHtdocsIndex = getenv("CAIT_HTDOCS_INDEX", caitHtdocsIndex)
+	caitTemplates = getenv("CAIT_TEMPLATES", caitTemplates)
 
 	api := cait.New(caitAPIURL, caitUsername, caitPassword)
 

@@ -170,7 +170,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	q, err := mapToSearchQuery(submission)
-	//log.Printf("DEBUG q.Q [%s]\n", q.Q)
 	if err != nil {
 		log.Printf("API access error %s", err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -330,27 +329,37 @@ func searchRoutes(next http.Handler) http.Handler {
 	})
 }
 
+func getenv(envvar, defaultValue string) string {
+	tmp := os.Getenv(envvar)
+	if tmp != "" {
+		return tmp
+	}
+	return defaultValue
+}
+
 func init() {
 	var err error
 
-	uri := os.Getenv("CAIT_SITE_URL")
-	htdocsDir = os.Getenv("CAIT_HTDOCS")
-	indexName = os.Getenv("CAIT_HTDOCS_INDEX")
-	templatesDir = os.Getenv("CAIT_TEMPLATES")
-	flag.StringVar(&uri, "search", "http://localhost:8501", "The URL to listen on for search requests")
-	flag.StringVar(&indexName, "index", "htdocs.bleve", "specify the Bleve index to use")
-	flag.StringVar(&htdocsDir, "htdocs", "htdocs", "specify where to write the HTML files to")
-	flag.StringVar(&templatesDir, "templates", "templates/default", "The directory path for templates")
+	uri := getenv("CAIT_SITE_URL", "http://localhost:8501")
+	htdocsDir = getenv("CAIT_HTDOCS", "htdocs")
+	indexName = getenv("CAIT_HTDOCS_INDEX", "htdocs.bleve")
+	templatesDir = getenv("CAIT_TEMPLATES", "templates/default")
+	flag.StringVar(&uri, "search", uri, "The URL to listen on for search requests")
+	flag.StringVar(&indexName, "index", indexName, "specify the Bleve index to use")
+	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "specify where to write the HTML files to")
+	flag.StringVar(&templatesDir, "templates", templatesDir, "The directory path for templates")
 	flag.BoolVar(&help, "h", false, "display this help message")
 	flag.BoolVar(&help, "help", false, "display this help message")
 
-	advancedPage, err = ioutil.ReadFile(path.Join(templatesDir, "advanced-search.html"))
+	templateName := path.Join(templatesDir, "advanced-search.html")
+	advancedPage, err = ioutil.ReadFile(templateName)
 	if err != nil {
-		log.Fatalf("Can't read templates/advanced.html, %s", err)
+		log.Fatalf("Can't read %s, %s", templateName, err)
 	}
-	basicPage, err = ioutil.ReadFile(path.Join(templatesDir, "basic-search.html"))
+	templateName = path.Join(templatesDir, "basic-search.html")
+	basicPage, err = ioutil.ReadFile(templateName)
 	if err != nil {
-		log.Fatalf("Can't read templates/basic.html, %s", err)
+		log.Fatalf("Can't read %s, %s", templateName, err)
 	}
 
 	if uri != "" {

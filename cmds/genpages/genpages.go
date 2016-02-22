@@ -269,12 +269,12 @@ func check(err error) {
 	}
 }
 
-func getenv(envar, s string) string {
+func getenv(envar, defaultValue string) string {
 	tmp := os.Getenv(envar)
-	if tmp == "" {
-		return s
+	if tmp != "" {
+		return tmp
 	}
-	return tmp
+	return defaultValue
 }
 
 func init() {
