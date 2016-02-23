@@ -64,9 +64,6 @@ var (
 	htdocsDir     string
 	datasetDir    string
 	templateDir   string
-	genSubjects   bool
-	genAgents     bool
-	genAccessions bool
 )
 
 func usage() {
@@ -88,104 +85,6 @@ func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.T
 	return aHTMLTmpl, aIncTmpl, nil
 }
 
-func processAgents(templateDir string, aHTMLTmplName string, aIncTmplName string, agents []*cait.Agent) error {
-	log.Printf("Reading templates from %s\n", templateDir)
-	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
-	check(err)
-
-	// Process HTML file
-	fname := path.Join(htdocsDir, "agents.html")
-	fp, err := os.Create(fname)
-	if err != nil {
-		return fmt.Errorf("Problem creating %s, %s", fname, err)
-	}
-	log.Printf("Writing %s", fname)
-	err = aHTMLTmpl.Execute(fp, agents)
-	if err != nil {
-		log.Fatalf("template execute error %s, %s", aHTMLTmplName, err)
-		return err
-	}
-	fp.Close()
-
-	// Process Include file (just the HTML content)
-	fname = path.Join(htdocsDir, "agents.include")
-	fp, err = os.Create(fname)
-	if err != nil {
-		return fmt.Errorf("Problem creating %s, %s", fname, err)
-	}
-	log.Printf("Writing %s", fname)
-	err = aIncTmpl.Execute(fp, agents)
-	if err != nil {
-		log.Fatalf("template execute error %s, %s", aIncTmplName, err)
-		return err
-	}
-	fp.Close()
-
-	// Process JSON file (an abridged version of the JSON output a)
-	fname = path.Join(htdocsDir, "agents.json")
-	src, err := json.Marshal(agents)
-	if err != nil {
-		return fmt.Errorf("Could not JSON encode %s, %s", fname, err)
-	}
-	log.Printf("Writing %s", fname)
-	err = ioutil.WriteFile(fname, src, 0664)
-	if err != nil {
-		log.Fatalf("could not write JSON view %s, %s", fname, err)
-		return err
-	}
-	fp.Close()
-	return nil
-}
-
-func processSubjects(templateDir string, aHTMLTmplName string, aIncTmplName string, subjects []string) error {
-	log.Printf("Reading templates from %s %s\n", path.Join(templateDir, aHTMLTmplName), path.Join(templateDir, aIncTmplName))
-	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
-	check(err)
-
-	// Process HTML file
-	fname := path.Join(htdocsDir, "subjects.html")
-	fp, err := os.Create(fname)
-	if err != nil {
-		return fmt.Errorf("Problem creating %s, %s", fname, err)
-	}
-	log.Printf("Writing %s", fname)
-	err = aHTMLTmpl.Execute(fp, subjects)
-	if err != nil {
-		log.Fatalf("template execute error %s, %s", aHTMLTmplName, err)
-		return err
-	}
-	fp.Close()
-
-	// Process Include file (just the HTML content)
-	fname = path.Join(htdocsDir, "subjects.include")
-	fp, err = os.Create(fname)
-	if err != nil {
-		return fmt.Errorf("Problem creating %s, %s", fname, err)
-	}
-	log.Printf("Writing %s", fname)
-	err = aIncTmpl.Execute(fp, subjects)
-	if err != nil {
-		log.Fatalf("template execute error %s, %s", aIncTmplName, err)
-		return err
-	}
-	fp.Close()
-
-	// Process JSON file (an abridged version of the JSON output in data)
-	fname = path.Join(htdocsDir, "subjects.json")
-	src, err := json.Marshal(subjects)
-	if err != nil {
-		return fmt.Errorf("Could not JSON encode %s, %s", fname, err)
-	}
-	log.Printf("Writing %s", fname)
-	err = ioutil.WriteFile(fname, src, 0664)
-	if err != nil {
-		log.Fatalf("could not write JSON view %s, %s", fname, err)
-		return err
-	}
-	fp.Close()
-	return nil
-}
-
 func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName string, subjects map[string]*cait.Subject, digitalObjects map[string]*cait.DigitalObject) error {
 	log.Printf("Reading templates from %s\n", templateDir)
 	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
@@ -203,7 +102,7 @@ func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName st
 			if err != nil {
 				return err
 			}
-			if accession.Publish == true && accession.Suppressed == false {
+			if accession.Publish == true && accession.Suppressed == false && accession.RestrictionsApply == false {
 				// Create a normalized view of the accession to make it easier to work with
 				view, err := accession.NormalizeView(subjects, digitalObjects)
 				if err != nil {
@@ -278,15 +177,9 @@ func getenv(envar, defaultValue string) string {
 }
 
 func init() {
-	genSubjects = false
-	genAgents = false
-	genAccessions = false
 	datasetDir = getenv("CAIT_DATASET", "dataset")
 	templateDir = getenv("CAIT_TEMPLATES", path.Join("templates", "default"))
 	htdocsDir = getenv("CAIT_HTDOCS", "htdocs")
-	flag.BoolVar(&genSubjects, "subjects", genSubjects, "Only generate subjects pages")
-	flag.BoolVar(&genAgents, "agents", genAgents, "Only generate agents pages")
-	flag.BoolVar(&genAccessions, "accessions", genAgents, "Only generate accessions pages")
 	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "specify where to write the HTML files to")
 	flag.StringVar(&datasetDir, "dataset", datasetDir, "specify where to read the JSON files from")
 	flag.StringVar(&templateDir, "templates", templateDir, "specify where to read the templates from")
@@ -312,7 +205,6 @@ func main() {
 	digitalObjectDir := ""
 	filepath.Walk(datasetDir, func(p string, info os.FileInfo, err error) error {
 		if err == nil && info.IsDir() == true && strings.HasSuffix(p, "digital_objects") {
-			fmt.Printf("DEBUG p: %s\n", p)
 			digitalObjectDir = p
 			return nil
 		}
@@ -324,56 +216,17 @@ func main() {
 	subjectDir := path.Join(datasetDir, "subjects")
 
 	//
-	// Setup and Process Lists
+	// Setup Maps and generate the accessions pages
 	//
-	if genSubjects == false && genAgents == false && genAccessions == false {
-		genSubjects = true
-		genAgents = true
-		genAccessions = true
-	}
+	log.Printf("Reading Subjects from %s", subjectDir)
+	subjectsMap, err := cait.MakeSubjectMap(subjectDir)
+	check(err)
 
-	if genSubjects == true {
-		subjectList, err := cait.MakeSubjectList(subjectDir)
-		check(err)
-		log.Printf("Processing subjects in %s\n", subjectDir)
-		err = processSubjects(templateDir, "subjects.html", "subjects.include", subjectList)
-		check(err)
-	}
+	log.Printf("Reading Digital Objects from %s", digitalObjectDir)
+	digitalObjectsMap, err := cait.MakeDigitalObjectMap(digitalObjectDir)
+	check(err)
 
-	if genAgents == true {
-		var (
-			agentList []*cait.Agent
-			agentDir  string
-		)
-
-		for _, agentType := range []string{"people", "corporate_entities", "software"} {
-			agentDir = path.Join(datasetDir, "agents", agentType)
-			log.Printf("Reading Agents from %s", agentDir)
-			aList, err := cait.MakeAgentList(agentDir)
-			check(err)
-			for _, item := range aList {
-				agentList = append(agentList, item)
-			}
-		}
-		log.Printf("Processing agents in %s\n", agentDir)
-		err := processAgents(templateDir, "agents.html", "agents.include", agentList)
-		check(err)
-	}
-
-	if genAccessions == true {
-		//
-		// Setup Maps
-		//
-		log.Printf("Reading Subjects from %s", subjectDir)
-		subjectsMap, err := cait.MakeSubjectMap(subjectDir)
-		check(err)
-
-		log.Printf("Reading Digital Objects from %s", digitalObjectDir)
-		digitalObjectsMap, err := cait.MakeDigitalObjectMap(digitalObjectDir)
-		check(err)
-
-		log.Printf("Processing accessions in %s\n", datasetDir)
-		err = processAccessions(templateDir, "accession.html", "accession.include", subjectsMap, digitalObjectsMap)
-		check(err)
-	}
+	log.Printf("Processing accessions in %s\n", datasetDir)
+	err = processAccessions(templateDir, "accession.html", "accession.include", subjectsMap, digitalObjectsMap)
+	check(err)
 }

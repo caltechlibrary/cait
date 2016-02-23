@@ -1,7 +1,5 @@
     <nav>
     <ul>
-        <li><a href="/subjects/">Subjects</a></li>
-        <li> <a href="/creators/">Creators</a></li>
         <li><a href="/search/basic/">Basic Search</a></li>
         <li><a href="/search/advanced/">Advanced Search</a></li>
     </ul>

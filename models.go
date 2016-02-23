@@ -221,7 +221,7 @@ type Accession struct {
 	Suppressed             bool                     `json:"suppressed"`
 	AcquisitionType        string                   `json:"acquision_type,omitempty"`
 	ResourceType           string                   `json:"resource_type,omitempty"`
-	RestrictionsApply      bool                     `json:"restrictions_apply,omitempty"`
+	RestrictionsApply      bool                     `json:"restrictions_apply"`
 	RetentionRule          string                   `json:"retention_rule,omitempty"`
 	GeneralNote            string                   `json:"general_note,omitempty"`
 	AccessRestrictions     bool                     `json:"access_restrictions,omitempty"`

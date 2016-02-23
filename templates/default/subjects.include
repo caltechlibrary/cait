@@ -1,8 +1,0 @@
-<section>
-<h1>Subjects</h1>
-<ul>
-{{ range . }}
-  <li><a href="/search/subjects?q=%2B%22{{ encodeURIComponent . }}%22">{{ . }}</a></li>
-{{ end }}
-</ul>
-</section>
