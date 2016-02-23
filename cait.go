@@ -3,7 +3,6 @@
 // for interacting with ArchivesSpace's REST API
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
-// copyright (c) 2016
 //
 // Copyright (c) 2016, Caltech
 // All rights not granted herein are expressly reserved by Caltech.
