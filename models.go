@@ -224,9 +224,9 @@ type Accession struct {
 	RestrictionsApply      bool                     `json:"restrictions_apply"`
 	RetentionRule          string                   `json:"retention_rule,omitempty"`
 	GeneralNote            string                   `json:"general_note,omitempty"`
-	AccessRestrictions     bool                     `json:"access_restrictions,omitempty"`
+	AccessRestrictions     bool                     `json:"access_restrictions"`
 	AccessRestrictionsNote string                   `json:"access_restrictions_note,omitempty"`
-	UseRestrictions        bool                     `json:"use_restrictions,omitempty"`
+	UseRestrictions        bool                     `json:"use_restrictions"`
 	UseRestrictionsNote    string                   `json:"use_restrictions_note,omitempty"`
 	LinkedAgents           []map[string]interface{} `json:"linked_agents"`
 	Instances              []map[string]interface{} `json:"instances"`

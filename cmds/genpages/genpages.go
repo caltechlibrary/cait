@@ -60,10 +60,10 @@ var (
 
 `
 
-	help          bool
-	htdocsDir     string
-	datasetDir    string
-	templateDir   string
+	help        bool
+	htdocsDir   string
+	datasetDir  string
+	templateDir string
 )
 
 func usage() {
@@ -102,7 +102,10 @@ func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName st
 			if err != nil {
 				return err
 			}
-			if accession.Publish == true && accession.Suppressed == false && accession.RestrictionsApply == false {
+			// FIXME: which restrictions do we care about--
+			//        accession.Publish, accession.Suppressed, accession.AccessRestrictions,
+			//        accession.RestrictionsApply, accession.UseRestrictions
+			if accession.Publish == true && accession.Suppressed == false && accession.AccessRestrictions == false {
 				// Create a normalized view of the accession to make it easier to work with
 				view, err := accession.NormalizeView(subjects, digitalObjects)
 				if err != nil {
