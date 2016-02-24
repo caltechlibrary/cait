@@ -27,6 +27,7 @@ import (
 	"net/url"
 	"strings"
 	"text/template"
+	"reflect"
 )
 
 var (
@@ -71,19 +72,34 @@ var (
 			return strings.Join(l, sep)
 		},
 		"digitalObjectLink": func(m map[string]interface{}) string {
-			var (
-				title string
-				href  string
-			)
 			if _, ok := m["digital_objects.title"]; ok == false {
 				return ""
 			}
 			if _, ok := m["digital_objects.file_uris"]; ok == false {
 				return ""
 			}
-			title = fmt.Sprintf("%s", m["digital_objects.title"])
-			href = fmt.Sprintf("%s", m["digital_objects.file_uris"])
-			return fmt.Sprintf(`<a href="%s">%s</a>`, href, title)
+			var links []string
+			titles := m["digital_objects.title"]
+			hrefs := m["digital_objects.file_uris"]
+			switch reflect.TypeOf(titles).Kind() {
+			case reflect.Slice:
+				t := reflect.ValueOf(titles)
+				h := reflect.ValueOf(hrefs)
+				// Now merge everything into links
+				for i := 0; i < t.Len() && i < h.Len(); i++ {
+					anchor := fmt.Sprintf(`<a href="%s">%s</a>`, h.Index(i), t.Index(i))
+					if i == 0 {
+						links = append(links, anchor)
+					}
+					if strings.Compare(anchor, links[0]) != 0 {
+						links = append(links, anchor)
+					}
+				}
+				return strings.Join(links, " ")
+			default:
+				return fmt.Sprintf(`<a href="%s">%s</a>`, m["digital_objects.file_uris"], m["digital_objects.title"])
+			}
+			return ""
 		},
 		"encodeURIComponent": func(s string) string {
 			u, err := url.Parse(s)
