@@ -222,7 +222,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	search.AddFacet("subjects", subjectFacet)
 
 	// Return all fields
-	search.Fields = []string{"title", "context_description", "extents", "subjects", "digital_objects.title", "digital_objects.file_uris"}
+	search.Fields = []string{"title", "context_description", "extents", "subjects", "linked_agents", "digital_objects.title", "digital_objects.file_uris"}
 
 	searchResults, err := index.Search(search)
 	if err != nil {

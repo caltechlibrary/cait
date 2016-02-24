@@ -44,12 +44,12 @@ type PageView struct {
 
 // NavElementView defined previous, next links used in paging results or browsable record lists
 type NavElementView struct {
-	ThisLabel string `json:"this_label,omitempty"`
-	ThisURI   string `json:"this_uri, omitempty"`
-	PrevURI   string `json:"prev_uri,omitempty"`
-	PrevLabel string `json:"prev_label,omitempty"`
-	NextURI   string `json:"next_uri,omitempty"`
-	NextLabel string `json:"next_label,omitempty"`
+	ThisLabel string `json:"this_label"`
+	ThisURI   string `json:"this_uri"`
+	PrevURI   string `json:"prev_uri"`
+	PrevLabel string `json:"prev_label"`
+	NextURI   string `json:"next_uri"`
+	NextLabel string `json:"next_label"`
 	Weight    int    `json:"weight"`
 }
 
@@ -73,20 +73,26 @@ type NormalizedAccessionView struct {
 	ConditionDescription string                         `json:"condition_description"`
 	Subjects             []string                       `json:"subjects"`
 	Extents              []string                       `json:"extents"`
-	RelatedResources     []string                       `json:"related_resources,omitempty"`
-	RelatedAccessions    []string                       `json:"related_accessions,omitempty"`
+	RelatedResources     []string                       `json:"related_resources"`
+	RelatedAccessions    []string                       `json:"related_accessions"`
 	DigitalObjects       []*NormalizedDigitalObjectView `json:"digital_objects"`
-	LinkedAgents         []string                       `json:"linked_agents,omitempty"`
+	LinkedAgents         []string                       `json:"linked_agents"`
 	AccessionDate        string                         `json:"accession_date"`
 	CreatedBy            string                         `json:"created_by"`
 	Created              string                         `json:"created"`
-	LastModifiedBy       string                         `json:"last_modified_by,omitempty"`
+	LastModifiedBy       string                         `json:"last_modified_by"`
 	LastModified         string                         `json:"last_modified"`
 }
 
 // NormalizeView returns a normalized view from an Accession structure and
 // an array of subject structures.
-func (a *Accession) NormalizeView(subjects map[string]*Subject, digitalObjects map[string]*DigitalObject) (*NormalizedAccessionView, error) {
+func (a *Accession) NormalizeView(agents []*Agent, subjects map[string]*Subject, digitalObjects map[string]*DigitalObject) (*NormalizedAccessionView, error) {
+	agentMap := make(map[string]string)
+	for _, agent := range agents {
+		title := agent.Title
+		uri := agent.URI
+		agentMap[uri] = title
+	}
 	v := new(NormalizedAccessionView)
 	v.Title = a.Title
 	v.URI = a.URI
@@ -118,6 +124,14 @@ func (a *Accession) NormalizeView(subjects map[string]*Subject, digitalObjects m
 			rec := subjects[fmt.Sprintf("%s", ref)]
 			if rec != nil {
 				v.Subjects = append(v.Subjects, rec.Title)
+			}
+		}
+	}
+	//FIXME: add linked Agents data, should really only include if type is subject ...
+	for _, item := range a.LinkedAgents {
+		if ref, ok := item["ref"].(string); ok == true {
+			if title, found := agentMap[ref]; found == true {
+				v.LinkedAgents = append(v.LinkedAgents, title)
 			}
 		}
 	}

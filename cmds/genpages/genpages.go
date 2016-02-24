@@ -85,7 +85,7 @@ func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.T
 	return aHTMLTmpl, aIncTmpl, nil
 }
 
-func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName string, subjects map[string]*cait.Subject, digitalObjects map[string]*cait.DigitalObject) error {
+func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName string, agents []*cait.Agent, subjects map[string]*cait.Subject, digitalObjects map[string]*cait.DigitalObject) error {
 	log.Printf("Reading templates from %s\n", templateDir)
 	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
 	check(err)
@@ -105,9 +105,9 @@ func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName st
 			// FIXME: which restrictions do we care about--
 			//        accession.Publish, accession.Suppressed, accession.AccessRestrictions,
 			//        accession.RestrictionsApply, accession.UseRestrictions
-			if accession.Publish == true && accession.Suppressed == false && accession.AccessRestrictions == false {
+			if accession.Publish == true && accession.Suppressed == false && accession.RestrictionsApply == false {
 				// Create a normalized view of the accession to make it easier to work with
-				view, err := accession.NormalizeView(subjects, digitalObjects)
+				view, err := accession.NormalizeView(agents, subjects, digitalObjects)
 				if err != nil {
 					return fmt.Errorf("Could not generate normalized view, %s", err)
 				}
@@ -217,6 +217,7 @@ func main() {
 		check(fmt.Errorf("Can't find the digital object directory in %s", datasetDir))
 	}
 	subjectDir := path.Join(datasetDir, "subjects")
+	agentsDir := path.Join(datasetDir, "agents", "people")
 
 	//
 	// Setup Maps and generate the accessions pages
@@ -229,7 +230,10 @@ func main() {
 	digitalObjectsMap, err := cait.MakeDigitalObjectMap(digitalObjectDir)
 	check(err)
 
+	agentsList, err := cait.MakeAgentList(agentsDir)
+	check(err)
+
 	log.Printf("Processing accessions in %s\n", datasetDir)
-	err = processAccessions(templateDir, "accession.html", "accession.include", subjectsMap, digitalObjectsMap)
+	err = processAccessions(templateDir, "accession.html", "accession.include", agentsList, subjectsMap, digitalObjectsMap)
 	check(err)
 }
