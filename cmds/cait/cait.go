@@ -279,14 +279,16 @@ func runAgentCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	}
 	//Agent Type Payload as JSON encoded objects
 	agent := new(cait.Agent)
-	err := json.Unmarshal([]byte(cmd.Payload), &agent)
-	if err != nil {
-		return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
+	if cmd.Payload != "" {
+		err := json.Unmarshal([]byte(cmd.Payload), &agent)
+		if err != nil {
+			return "", fmt.Errorf("Could not decode cmd.Payload %s, error: %s", cmd.Payload, err)
+		}
 	}
 	agentID := cait.URIToID(agent.URI)
 	p := strings.Split(agent.URI, "/")
 	if len(p) < 3 {
-		return "", fmt.Errorf(`Agent commands require a uri in the JSON payload, e.g. {"uri":"/agents/people"} or {"uri":/"agents/poeple/3"}, %s`, cmd.Payload)
+		return "", fmt.Errorf(`Agent commands require a uri in the JSON payload, e.g. {"uri":"/agents/people"} or {"uri":"/agents/poeple/3"}, %s`, cmd.Payload)
 	} else if len(p) == 3 {
 		agent.URI = ""
 	}
@@ -317,7 +319,7 @@ func runAgentCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 			}
 			return string(src), nil
 		}
-		agent, err = api.GetAgent(aType, agentID)
+		agent, err := api.GetAgent(aType, agentID)
 		if err != nil {
 			return "", fmt.Errorf(`{"error": %q}`, err)
 		}
@@ -334,7 +336,7 @@ func runAgentCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "delete":
-		agent, err = api.GetAgent(aType, agentID)
+		agent, err := api.GetAgent(aType, agentID)
 		if err != nil {
 			return "", err
 		}
@@ -360,14 +362,16 @@ func runAccessionCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	}
 	// Repo ID is passed as a JSON object
 	accession := new(cait.Accession)
-	err := json.Unmarshal([]byte(cmd.Payload), &accession)
-	if err != nil {
-		return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
+	if cmd.Payload != "" {
+		err := json.Unmarshal([]byte(cmd.Payload), &accession)
+		if err != nil {
+			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
+		}
 	}
 	accessionID := cait.URIToID(accession.URI)
 	repoID := cait.URIToRepoID(accession.URI)
 	if repoID == 0 {
-		return "", fmt.Errorf(`{"error":"Could not determine repository id from uri"}`)
+		return "", fmt.Errorf(`Accession commands require a uri in the JSON payload, e.g. {"uri":"/repositories/2/accessions"} or {"uri":"/repositories/2/accecssions/333"}`)
 	}
 	switch cmd.Action {
 	case "create":
@@ -395,7 +399,7 @@ func runAccessionCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 			}
 			return string(src), nil
 		}
-		accession, err = api.GetAccession(repoID, accessionID)
+		accession, err := api.GetAccession(repoID, accessionID)
 		if err != nil {
 			return "", fmt.Errorf(`{"error": %q}`, err)
 		}
@@ -412,7 +416,7 @@ func runAccessionCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "delete":
-		accession, err = api.GetAccession(repoID, accessionID)
+		accession, err := api.GetAccession(repoID, accessionID)
 		if err != nil {
 			return "", err
 		}
