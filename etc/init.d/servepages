@@ -27,7 +27,7 @@ function startService() {
 
 function stopService() {
     cat /var/run/$PROGNAME.pid | while read PID; do
-	if [ "$PID" != "" ]; then
+	    if [ "$PID" != "" ]; then
             echo "Stopping $PROGNAME $PID"
     	    echo "Stopping $PROGNAME $PID" >> $LOGPATH
             kill $PID
