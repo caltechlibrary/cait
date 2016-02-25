@@ -16,25 +16,39 @@ LOGPATH=$LOGDIR/$PROGNAME.log
 mkdir -p $LOGDIR
 touch $LOGPATH
 
-# Handle requested action
-case "$1" in
-  start)
+function startService() {
     $PROGPATH &>> $LOGPATH &
     PID="$!"
     echo "$PID" >> /var/run/$PROGNAME.pid
-    echo "Started $PID"
-    ;;
-  stop)
+    echo "Started $PROGNAME $PID"
+    echo "Started $PROGNAME $PID" >> $LOGPATH
+    echo "Using templates $CAIT_TEMPLATES">> $LOGPATH
+}
+
+function stopService() {
     cat /var/run/$PROGNAME.pid | while read PID; do
 	if [ "$PID" != "" ]; then
-            echo "Stopping $PROGNAME $PID" 
+            echo "Stopping $PROGNAME $PID"
     	    echo "Stopping $PROGNAME $PID" >> $LOGPATH
             kill $PID
         fi
         sleep 3
     done
     /bin/rm /var/run/$PROGNAME.pid
+}
+
+# Handle requested action
+case "$1" in
+  start)
+    startService
     ;;
+  stop)
+    stopService
+    ;;
+  restart)
+     stopService
+     startService
+     ;;
   status)
     if [ -f /var/run/$PROGNAME.pid ]; then
         echo "$PROGNAME running as $(cat /var/run/$PROGNAME.pid)"
