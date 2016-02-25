@@ -330,7 +330,7 @@ func (api *ArchivesSpaceAPI) ListRepositories() ([]Repository, error) {
 func (api *ArchivesSpaceAPI) CreateAgent(aType string, agent *Agent) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/agents/%s", aType)
-	agent.LockVersion = 0
+	agent.LockVersion = "0"
 	return api.CreateAPI(u.String(), agent)
 }
 
@@ -342,7 +342,7 @@ func (api *ArchivesSpaceAPI) GetAgent(agentType string, agentID int) (*Agent, er
 	agent := new(Agent)
 	err := api.GetAPI(u.String(), agent)
 	if err != nil {
-		return nil, fmt.Errorf("GetAgent(%q, %d) %s", agentType, agentID, err)
+		return nil, fmt.Errorf("GetAgent(%s, %d) %s", agentType, agentID, err)
 	}
 	agent.ID = URIToID(agent.URI)
 	return agent, nil
@@ -376,7 +376,7 @@ func (api *ArchivesSpaceAPI) ListAgents(agentType string) ([]int, error) {
 func (api *ArchivesSpaceAPI) CreateAccession(repoID int, accession *Accession) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/repositories/%d/accessions", repoID)
-	accession.LockVersion = 0
+	accession.LockVersion = "0"
 	return api.CreateAPI(u.String(), accession)
 }
 
@@ -426,7 +426,7 @@ func (api *ArchivesSpaceAPI) ListAccessions(repositoryID int) ([]int, error) {
 func (api *ArchivesSpaceAPI) CreateSubject(subject *Subject) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = "/subjects"
-	subject.LockVersion = 0
+	subject.LockVersion = "0"
 	return api.CreateAPI(u.String(), subject)
 }
 
@@ -473,7 +473,7 @@ func (api *ArchivesSpaceAPI) ListSubjects() ([]int, error) {
 func (api *ArchivesSpaceAPI) CreateVocabulary(vocabulary *Vocabulary) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = "/vocabularies"
-	vocabulary.LockVersion = 0
+	vocabulary.LockVersion = "0"
 	return api.CreateAPI(u.String(), vocabulary)
 }
 
@@ -534,7 +534,7 @@ func (api *ArchivesSpaceAPI) ListVocabularies() ([]int, error) {
 func (api *ArchivesSpaceAPI) CreateTerm(vocabularyID int, term *Term) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/vocabularies/%d/terms", vocabularyID)
-	term.LockVersion = 0
+	term.LockVersion = "0"
 	return api.CreateAPI(u.String(), term)
 }
 
@@ -628,7 +628,7 @@ func (api *ArchivesSpaceAPI) ListTerms(vocabularyID int) ([]*Term, error) {
 func (api *ArchivesSpaceAPI) CreateLocation(location *Location) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/locations")
-	location.LockVersion = 0
+	location.LockVersion = "0"
 	return api.CreateAPI(u.String(), location)
 }
 
@@ -679,7 +679,7 @@ func (api *ArchivesSpaceAPI) CreateDigitalObject(repoID int, obj *DigitalObject)
 	// NOTE: attempt extract accession ID for the edge of importing a digital object as opposed to a clean create
 	uriPrefix := fmt.Sprintf("/repositories/%d/digital_objects", repoID)
 	obj.JSONModelType = "digital_object"
-	obj.LockVersion = 0
+	obj.LockVersion = "0"
 	u := *api.URL
 	u.Path = uriPrefix
 	// We need to create the object

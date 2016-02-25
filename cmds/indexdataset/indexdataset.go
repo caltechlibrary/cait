@@ -141,6 +141,9 @@ func main() {
 	log.Println("Building digital object map...")
 	digitalObjectMap, _ := cait.MakeDigitalObjectMap(path.Join(datasetDir, "repositories/2/digital_objects"))
 
+	log.Println("Building agent list...")
+	agentList, _ := cait.MakeAgentList(path.Join(datasetDir, "people"))
+
 	log.Println("Setting up index...")
 	indexMapping := bleve.NewIndexMapping()
 	// Add Accession as a specific document map
@@ -210,7 +213,7 @@ func main() {
 				err := json.Unmarshal(src, &data)
 				if err == nil {
 					i++
-					m[data.URI], _ = data.NormalizeView(subjectMap, digitalObjectMap)
+					m[data.URI], _ = data.NormalizeView(agentList, subjectMap, digitalObjectMap)
 				}
 				return err
 			}

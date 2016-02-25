@@ -224,7 +224,7 @@ func runRepoCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		if repoID == 0 {
 			repos, err := api.ListRepositories()
 			if err != nil {
-				return "", fmt.Errorf(`{"error": "%s"}`, err)
+				return "", fmt.Errorf(`{"error": %q}`, err)
 			}
 			src, err := json.Marshal(repos)
 			if err != nil {
@@ -234,7 +234,7 @@ func runRepoCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		}
 		repo, err := api.GetRepository(repoID)
 		if err != nil {
-			return "", fmt.Errorf(`{"error": "%s"}`, err)
+			return "", fmt.Errorf(`{"error": %q}`, err)
 		}
 		src, err := json.Marshal(repo)
 		if err != nil {
@@ -309,7 +309,7 @@ func runAgentCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		if agentID == 0 {
 			agents, err := api.ListAgents(aType)
 			if err != nil {
-				return "", fmt.Errorf(`{"error": "%s"}`, err)
+				return "", fmt.Errorf(`{"error": %q}`, err)
 			}
 			src, err := json.Marshal(agents)
 			if err != nil {
@@ -319,7 +319,7 @@ func runAgentCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		}
 		agent, err = api.GetAgent(aType, agentID)
 		if err != nil {
-			return "", fmt.Errorf(`{"error": "%s"}`, err)
+			return "", fmt.Errorf(`{"error": %q}`, err)
 		}
 		src, err := json.Marshal(agent)
 		if err != nil {
@@ -387,7 +387,7 @@ func runAccessionCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		if accessionID == 0 {
 			accessions, err := api.ListAccessions(repoID)
 			if err != nil {
-				return "", fmt.Errorf(`{"uri": "/repositories/%d/accessions","error": "%s"}`, repoID, err)
+				return "", fmt.Errorf(`{"uri": "/repositories/%d/accessions","error": %q}`, repoID, err)
 			}
 			src, err := json.Marshal(accessions)
 			if err != nil {
@@ -397,7 +397,7 @@ func runAccessionCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		}
 		accession, err = api.GetAccession(repoID, accessionID)
 		if err != nil {
-			return "", fmt.Errorf(`{"error": "%s"}`, err)
+			return "", fmt.Errorf(`{"error": %q}`, err)
 		}
 		src, err := json.Marshal(accession)
 		if err != nil {
@@ -462,7 +462,7 @@ func runSubjectCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		if subjectID == 0 {
 			subjects, err := api.ListSubjects()
 			if err != nil {
-				return "", fmt.Errorf(`{"error": "%s"}`, err)
+				return "", fmt.Errorf(`{"error": %q}`, err)
 			}
 			src, err := json.Marshal(subjects)
 			if err != nil {
@@ -472,7 +472,7 @@ func runSubjectCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		}
 		subject, err := api.GetSubject(subjectID)
 		if err != nil {
-			return "", fmt.Errorf(`{"error": "%s"}`, err)
+			return "", fmt.Errorf(`{"error": %q}`, err)
 		}
 		src, err := json.Marshal(subject)
 		if err != nil {
@@ -537,7 +537,7 @@ func runLocationCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		if locationID == 0 {
 			locations, err := api.ListLocations()
 			if err != nil {
-				return "", fmt.Errorf(`{"error": "%s"}`, err)
+				return "", fmt.Errorf(`{"error": %q}`, err)
 			}
 			src, err := json.Marshal(locations)
 			if err != nil {
@@ -547,7 +547,7 @@ func runLocationCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		}
 		location, err := api.GetLocation(locationID)
 		if err != nil {
-			return "", fmt.Errorf(`{"error": "%s"}`, err)
+			return "", fmt.Errorf(`{"error": %q}`, err)
 		}
 		src, err := json.Marshal(location)
 		if err != nil {
@@ -613,7 +613,7 @@ func runVocabularyCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) 
 			var ids []int
 			ids, err := api.ListVocabularies()
 			if err != nil {
-				return "", fmt.Errorf(`{"error": "%s"}`, err)
+				return "", fmt.Errorf(`{"error": %q}`, err)
 			}
 			src, err := json.Marshal(ids)
 			if err != nil {
@@ -623,7 +623,7 @@ func runVocabularyCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) 
 		}
 		vocabulary, err := api.GetVocabulary(vocabularyID)
 		if err != nil {
-			return "", fmt.Errorf(`{"error": "%s"}`, err)
+			return "", fmt.Errorf(`{"error": %q}`, err)
 		}
 		src, err := json.Marshal(vocabulary)
 		if err != nil {
@@ -694,7 +694,7 @@ func runTermCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 			var ids []int
 			ids, err := api.ListTermIDs(vocabularyID)
 			if err != nil {
-				return "", fmt.Errorf(`{"error": "%s"}`, err)
+				return "", fmt.Errorf(`{"error": %q}`, err)
 			}
 			src, err := json.Marshal(ids)
 			if err != nil {
@@ -704,7 +704,7 @@ func runTermCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		}
 		term, err := api.GetTerm(vocabularyID, termID)
 		if err != nil {
-			return "", fmt.Errorf(`{"error": "%s"}`, err)
+			return "", fmt.Errorf(`{"error": %q}`, err)
 		}
 		src, err := json.Marshal(term)
 		if err != nil {
@@ -774,7 +774,7 @@ func runDigitalObjectCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, erro
 		if objID == 0 {
 			objs, err := api.ListDigitalObjects(repoID)
 			if err != nil {
-				return "", fmt.Errorf(`{"error": "%s", "uri": "/repositories/%d/digital_objects"}`, err, repoID)
+				return "", fmt.Errorf(`{"error": %q, "uri": "/repositories/%d/digital_objects"}`, err, repoID)
 			}
 			src, err := json.Marshal(objs)
 			if err != nil {
@@ -784,7 +784,7 @@ func runDigitalObjectCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, erro
 		}
 		obj, err := api.GetDigitalObject(repoID, objID)
 		if err != nil {
-			return "", fmt.Errorf(`{"error": "%s"}`, err)
+			return "", fmt.Errorf(`{"error": %q}`, err)
 		}
 		src, err := json.Marshal(obj)
 		if err != nil {
