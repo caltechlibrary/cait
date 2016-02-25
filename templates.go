@@ -22,12 +22,13 @@ package cait
 
 import (
 	"fmt"
+	"go/doc"
 	"io/ioutil"
 	"log"
 	"net/url"
+	"reflect"
 	"strings"
 	"text/template"
-	"reflect"
 )
 
 var (
@@ -70,6 +71,9 @@ var (
 				l = append(l, fmt.Sprintf("%s", item))
 			}
 			return strings.Join(l, sep)
+		},
+		"synopsis": func(s string) string {
+			return doc.Synopsis(s)
 		},
 		"digitalObjectLink": func(m map[string]interface{}) string {
 			if _, ok := m["digital_objects.title"]; ok == false {

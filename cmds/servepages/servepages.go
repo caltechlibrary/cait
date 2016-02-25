@@ -209,12 +209,12 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		q.Size = 10
 	}
 	search := bleve.NewSearchRequestOptions(qry, q.Size, q.From, q.Explain)
-	//search.Highlight = bleve.NewHighlightWithStyle("html")
+	search.Highlight = bleve.NewHighlight()
 
-	//search.Highlight.AddField("title")
-	//search.Highlight.AddField("content_description")
-	//search.Highlight.AddField("subjects")
-	//search.Highlight.AddField("extents")
+	search.Highlight.AddField("title")
+	search.Highlight.AddField("content_description")
+	search.Highlight.AddField("subjects")
+	search.Highlight.AddField("extents")
 	//search.Highlight.AddField("digital_objects.title")
 	//search.Highlight.AddField("digital_objects.file_uris")
 
@@ -222,7 +222,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	search.AddFacet("subjects", subjectFacet)
 
 	// Return all fields
-	search.Fields = []string{"title", "context_description", "extents", "subjects", "linked_agents", "digital_objects.title", "digital_objects.file_uris"}
+	search.Fields = []string{"title", "content_description", "content_condition", "extents", "subjects", "linked_agents", "digital_objects.title", "digital_objects.file_uris"}
 
 	searchResults, err := index.Search(search)
 	if err != nil {
