@@ -3,6 +3,9 @@
 
 ## Action Item
 
++ Prototype new results pages with fields identified by Mariella and Eliza
++ Prototype new accessions pages with fields identified by Mariella and Eliza
+
 ### Bugs
 
 + Need to strip unneeded characters from input to prevent XSS attacks (or figure out how to use html/template and still get highlight)

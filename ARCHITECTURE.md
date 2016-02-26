@@ -13,7 +13,7 @@ _cait_ command line utility is the workhorse for getting content out of Archives
 
 ### caitjs
 
-_caitjs_ command line utility will run simple JavaScript files with access to the same API provided internal to _cait_. Helpful for data migrations and fixes.
+_caitjs_ a shell (repl) and JavaScript file runner for working with ArchicesSpace REST API. It provides access to the same API provided internal to _cait_. Helpful for data migrations and fixes.
 
 ### genpages
 
@@ -42,10 +42,22 @@ _indexdataset_ is a utility that crawls the dataset directory (the raw content e
 _searchdataset_ is a utility for searching the content in the dataset directory (the raw content exported from ArchivesSpace).  Helpful in debugging problems with specific records.
 
 
-## Workflow
+## Workflow for website
 
 1. Export ArchivesSpace content with _cait_
 2. Generate pages with _genpages_
 3. Index pages with _indexpages_
 4. Serve content and search service with _servepages_
 
+## Workflow for data fixes
+
++ Export ArchivesSpace content as needed with _cait_
++ Index the exported data with _indexdataset_
++ Explore dataset with _searchdataset_
++ Write a JavaScript program to make corrections or use _caitjs_ interactively to fix/update data
+
+## Workflow for importing data from Excel
+
++ Make your Excel file
++ Map the column and rows to ArchivesSpace objects in JavaScript
++ Run _xlsximporter_ invoking the JavaScript mappings along with spreadsheet name and sheet number

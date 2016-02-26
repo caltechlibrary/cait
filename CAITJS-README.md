@@ -1,8 +1,8 @@
 
 # caitjs
 
-_caitjs_ is a command line JavaScript runner for working with the ArchivesSpace API.
-_caitjs_ exposes some of the exported API calls implemented int the cait Golang package 
+_caitjs_ is a command line JavaScript runner and repl for working with the ArchivesSpace API.
+_caitjs_ exposes some of the exported API calls implemented int the cait Golang package
 to JavaScript. This makes it easy to implement ad-hoc scripts to process data, as well
 as import/export content.
 
@@ -47,7 +47,5 @@ These are the same JavaScript functions available in _xlsximporter_.
 
 ## Examples
 
-In the examples directory under the caitjs subdirect you'll find a number of scripts
+In the examples directory under the caitjs sub-direct you'll find a number of scripts
 demonstrating the usage of the API features.
-
-

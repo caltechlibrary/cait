@@ -123,7 +123,7 @@ installed in *./bin*.
 + CAIT_SITE_URL
 + CAIT_TEMPLATES
 
-### The workflow
+### The workflow to generate website
 
 1. Make sure the *CAIT_* environment variables are set.
 2. Build the website with `./bin/genpages`
