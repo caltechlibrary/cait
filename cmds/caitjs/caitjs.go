@@ -20,23 +20,31 @@
 package main
 
 import (
+	// standard library
 	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
+	// 3rd Party packages
+	"gopkg.in/readline.v1"
+
+	// Cait specific packages
 	"../../../cait"
 )
 
 var (
 	showHelp    bool
 	showVersion bool
+	runRepl     bool
 )
 
 func init() {
 	flag.BoolVar(&showHelp, "h", false, "display this message")
 	flag.BoolVar(&showVersion, "v", false, "display version information")
+	flag.BoolVar(&runRepl, "i", false, "run interactively in a REPL")
 }
 
 func main() {
@@ -66,22 +74,53 @@ func main() {
 		log.Fatalf("You need to setup your environment vairables to use caitjs.")
 	}
 
+	jsFilename := ""
 	jsArgs := flag.Args()
-	jsFilename, jsArgs := jsArgs[0], jsArgs[1:]
-
-	jsSrc, err := ioutil.ReadFile(jsFilename)
-	if err != nil {
-		log.Fatalf("Can't ready %s, %s", jsFilename, err)
-	}
 	api := cait.New(caitAPIURL, caitUsername, caitPassword)
 	vm := cait.NewJavaScript(api, jsArgs)
+	// if we have a script run it.
+	if len(jsArgs) > 0 {
+		jsFilename, jsArgs = jsArgs[0], jsArgs[1:]
 
-	script, err := vm.Compile(jsFilename, jsSrc)
-	if err != nil {
-		log.Fatalf("Compile error, %s", err)
+		jsSrc, err := ioutil.ReadFile(jsFilename)
+		if err != nil {
+			log.Fatalf("Can't ready %s, %s", jsFilename, err)
+		}
+		script, err := vm.Compile(jsFilename, jsSrc)
+		if err != nil {
+			log.Fatalf("Compile error, %s", err)
+		}
+		_, err = vm.Run(script)
+		if err != nil {
+			log.Fatalf("Runtime error, %s", err)
+		}
 	}
-	_, err = vm.Run(script)
-	if err != nil {
-		log.Fatalf("Runtime error, %s", err)
+	// if we need a repl run it
+	if runRepl == true {
+		rl, err := readline.New("> ")
+		if err != nil {
+			panic(err)
+		}
+		defer rl.Close()
+
+		for {
+			jsSrc, err := rl.Readline()
+			if err != nil { // io.EOF, readline.ErrInterrupt
+				break
+			}
+			if len(strings.Trim(jsSrc, " ")) > 0 {
+				if script, err := vm.Compile("repl", jsSrc); err != nil {
+					fmt.Printf("Compile error, %s\n", err)
+				} else {
+					out, err := vm.Eval(script)
+					switch {
+					case err != nil:
+						fmt.Printf("Runtime error, %s\n", err)
+					default:
+						fmt.Println(out.String())
+					}
+				}
+			}
+		}
 	}
 }
