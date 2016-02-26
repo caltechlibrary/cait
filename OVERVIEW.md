@@ -13,7 +13,7 @@ _cait_ command line utility is the workhorse for getting content out of Archives
 
 ### caitjs
 
-_caitjs_ a shell (repl) and JavaScript file runner for working with ArchicesSpace REST API. It provides access to the same API provided internal to _cait_. Helpful for data migrations and fixes.
+_caitjs_ a shell (repl) and JavaScript file runner for working with [ArchicesSpace REST API](CAITJS-README.md). It provides access to the same API provided internal to _cait_. Helpful for data migrations and fixes.
 
 ### genpages
 
