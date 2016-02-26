@@ -50,6 +50,21 @@ func init() {
 func main() {
 	flag.Parse()
 
+	jsFilename := ""
+	jsArgs := flag.Args()
+
+	if runRepl == false && len(jsArgs) == 0 {
+		fmt.Println(`
+ USAGE: caitjs [OPTIONS] JAVASCRIPT_FILENAME [OPTIONS_PASSED_TO_JAVASCRIPT_FILE]
+
+ OPTIONS
+
+`)
+		flag.PrintDefaults()
+		fmt.Printf("\nVersion %s\n", cait.Version)
+		os.Exit(1)
+	}
+
 	if showHelp == true {
 		fmt.Println(`
  USAGE: caitjs [OPTIONS] JAVASCRIPT_FILENAME [OPTIONS_PASSED_TO_JAVASCRIPT_FILE]
@@ -74,8 +89,6 @@ func main() {
 		log.Fatalf("You need to setup your environment vairables to use caitjs.")
 	}
 
-	jsFilename := ""
-	jsArgs := flag.Args()
 	api := cait.New(caitAPIURL, caitUsername, caitPassword)
 	vm := cait.NewJavaScript(api, jsArgs)
 	// if we have a script run it.
@@ -97,6 +110,9 @@ func main() {
 	}
 	// if we need a repl run it
 	if runRepl == true {
+		fmt.Printf("\n Welcome to cait %s\n", cait.Version)
+		fmt.Printf(" Accessing ArchivesSpace REST API %q\n", caitAPIURL)
+		fmt.Printf(" With username %q\n\n", caitUsername)
 		rl, err := readline.New("> ")
 		if err != nil {
 			panic(err)
