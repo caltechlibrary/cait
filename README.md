@@ -4,7 +4,7 @@
 [cait](https://github.com/caltechlibrary/cait) is a set of utilities written in the [Go](http://golang.org) language that work with and augment the [ArchivesSpace](http://archivesspace.org) API.
 
 + cait - a command line utility for ArchivesSpace interaction (basic CRUD operations and export)
-+ caitjs - a command line utility for ArchivesSpace which will run JavaScript files providing access the ArchivesSpace API
++ [caitjs](CAITJS-README.md) - a command line utility for ArchivesSpace which will run JavaScript files providing access the ArchivesSpace API
 + genpages - a simple static page generator based on exported ArchivesSpace content
 + indexpages - for indexing exported JSON structures with [Bleve](https://github.com/blevesearch/bleve)
 + servepages - a web service providing public search services and content browsing
@@ -21,6 +21,7 @@
     + [Bleve](https://github.com/blevesearch/bleve) by [Blevesearch](http://blevesearch.com), Apache License, Version 2.0
     + [Otto](https://github.com/rsdoiel/otto) a fork of [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
     + [xlsx](https://github.com/tealeg/xlsx) by Tealeg, BSD license
+    + [Readline.v1](https://github.com/gopkg.in/readline.v1) a go native readline implementation
 
 ## Compiling
 
