@@ -1,14 +1,18 @@
 //
-// fix-agent-peoples.js - this is a clean up script post Java MigrationTool import.
+// fix-agents-peoples.js - this is a clean up script post Java MigrationTool import.
 //
 // In some of our agents/people records the name did not migrate
 // properly with the Java based Migration tool.  This script looks at each agent
 // record, if the primary_name is populated with a comma and rest_of_name is empty
-// this program will split the name with everything after the comma put in rest_of_ name field.
+// this program will split the primary_name and place with everything after the comma
+// put in rest_of_ name field.
 //
-// Set the name_order to inverted for display_name and names.
+// It will also set the name_order to inverted for display_name and names elements.
 //
-// All our agents/people should be "published"
+// It sets the publish property to true.
+//
+// Assumptions: we know the agents/peoples ID value and they will be provided via command line args
+// E.g. ./bin/caits -js examples/caitjs/fix-agents-peoples.js 101 202 333
 //
 
 // splitName takes a nameObject split's the primary_name at the comma into primary_name, rest_of_name properties

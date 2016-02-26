@@ -26,6 +26,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -77,7 +78,196 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 		envvar := call.Argument(0).String()
 		result, err := vm.ToValue(os.Getenv(envvar))
 		if err != nil {
-			return errorObject(nil, fmt.Sprintf("os.getEnv(%q) %s, %s", call.CallerLocation(), envvar, err))
+			return errorObject(nil, fmt.Sprintf("%s os.getEnv(%q), %s", call.CallerLocation(), envvar, err))
+		}
+		return result
+	})
+
+	// os.readFile(filepath) returns the content of the filepath or empty string
+	osObj.Set("readFile", func(call otto.FunctionCall) otto.Value {
+		filename := call.Argument(0).String()
+		buf, err := ioutil.ReadFile(filename)
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.readFile(%q), %s", call.CallerLocation(), filename, err))
+		}
+		result, err := vm.ToValue(fmt.Sprintf("%s", buf))
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.readFile(%q), %s", call.CallerLocation(), filename, err))
+		}
+		return result
+	})
+
+	// os.writeFile(filepath, contents) returns true on sucess, false on failure
+	osObj.Set("writeFile", func(call otto.FunctionCall) otto.Value {
+		filename := call.Argument(0).String()
+		buf := call.Argument(1).String()
+		err := ioutil.WriteFile(filename, []byte(buf), 0660)
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.writeFile(%q, %q), %s", call.CallerLocation(), filename, buf, err))
+		}
+		result, err := vm.ToValue(buf)
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.writeFile(%q, %q), %s", call.CallerLocation(), filename, buf, err))
+		}
+		return result
+	})
+
+	// os.rename(oldpath, newpath) renames a path returns an error object or true on success
+	osObj.Set("rename", func(call otto.FunctionCall) otto.Value {
+		oldpath := call.Argument(0).String()
+		newpath := call.Argument(1).String()
+		err := os.Rename(oldpath, newpath)
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.rename(%q, %q), %s", call.CallerLocation(), oldpath, newpath, err))
+		}
+		result, _ := vm.ToValue(true)
+		return result
+	})
+
+	// os.remove(filepath) returns an error object or true if successful
+	osObj.Set("remove", func(call otto.FunctionCall) otto.Value {
+		pathname := call.Argument(0).String()
+		fp, err := os.Open(pathname)
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.remove(%q), %s", call.CallerLocation(), pathname, err))
+		}
+		defer fp.Close()
+		stat, err := fp.Stat()
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.remove(%q), %s", call.CallerLocation(), pathname, err))
+		}
+		result, _ := vm.ToValue(false)
+		if stat.IsDir() == false {
+			err := os.Remove(pathname)
+			if err != nil {
+				return errorObject(nil, fmt.Sprintf("%s os.remove(%q), %s", call.CallerLocation(), pathname, err))
+			}
+			result, _ = vm.ToValue(true)
+		}
+		return result
+	})
+
+	// os.chmod(filepath, perms) returns an error object or true if successful
+	osObj.Set("chmod", func(call otto.FunctionCall) otto.Value {
+		filename := call.Argument(0).String()
+		perms := call.Argument(1).String()
+
+		fp, err := os.Open(filename)
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.chmod(%q, %s), %s", call.CallerLocation(), filename, perms, err))
+		}
+		defer fp.Close()
+
+		perm, err := strconv.ParseUint(perms, 10, 32)
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.chmod(%q, %s), %s", call.CallerLocation(), filename, perms, err))
+		}
+		err = fp.Chmod(os.FileMode(perm))
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.chmod(%q, %s), %s", call.CallerLocation(), filename, perms, err))
+		}
+		result, _ := vm.ToValue(true)
+		return result
+	})
+
+	// os.find(startpath) returns an array of path names
+	osObj.Set("find", func(call otto.FunctionCall) otto.Value {
+		var dirs []string
+		startpath := call.Argument(0).String()
+		err := filepath.Walk(startpath, func(p string, info os.FileInfo, err error) error {
+			dirs = append(dirs, p)
+			return err
+		})
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.find(%q), %s", call.CallerLocation(), startpath, err))
+		}
+		result, err := vm.ToValue(dirs)
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.find(%q), %s", call.CallerLocation(), startpath, err))
+		}
+		return result
+	})
+
+	// os.mkdir(pathname, perms) return an error object or true
+	osObj.Set("mkdir", func(call otto.FunctionCall) otto.Value {
+		newpath := call.Argument(0).String()
+		perms := call.Argument(1).String()
+
+		perm, err := strconv.ParseUint(perms, 10, 32)
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.mkdir(%q, %s), %s", call.CallerLocation(), newpath, perms, err))
+		}
+		err = os.Mkdir(newpath, os.FileMode(perm))
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.mkdir(%q, %s), %s", call.CallerLocation(), newpath, perms, err))
+		}
+
+		result, _ := vm.ToValue(true)
+		return result
+	})
+
+	// os.mkdir(pathname, perms) return an error object or true
+	osObj.Set("mkdirAll", func(call otto.FunctionCall) otto.Value {
+		newpath := call.Argument(0).String()
+		perms := call.Argument(1).String()
+
+		perm, err := strconv.ParseUint(perms, 10, 32)
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.mkdir(%q, %s), %s", call.CallerLocation(), newpath, perms, err))
+		}
+		err = os.MkdirAll(newpath, os.FileMode(perm))
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.mkdir(%q, %s), %s", call.CallerLocation(), newpath, perms, err))
+		}
+
+		result, _ := vm.ToValue(true)
+		return result
+	})
+
+	// os.rmdir(pathname) returns an error object or true if successful
+	osObj.Set("rmdir", func(call otto.FunctionCall) otto.Value {
+		pathname := call.Argument(0).String()
+		// NOTE: make sure this is a directory and not a file
+		fp, err := os.Open(pathname)
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.rmdir(%q), %s", call.CallerLocation(), pathname, err))
+		}
+		defer fp.Close()
+		stat, err := fp.Stat()
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.rmdir(%q), %s", call.CallerLocation(), pathname, err))
+		}
+		result, _ := vm.ToValue(false)
+		if stat.IsDir() == true {
+			err := os.Remove(pathname)
+			if err != nil {
+				return errorObject(nil, fmt.Sprintf("%s os.rmdir(%q), %s", call.CallerLocation(), pathname, err))
+			}
+			result, _ = vm.ToValue(true)
+		}
+		return result
+	})
+
+	// os.rmdirAll(pathname) returns an error object or true if successful
+	osObj.Set("rmdirAll", func(call otto.FunctionCall) otto.Value {
+		pathname := call.Argument(0).String()
+		// NOTE: make sure this is a directory and not a file
+		fp, err := os.Open(pathname)
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.rmdirAll(%q), %s", call.CallerLocation(), pathname, err))
+		}
+		defer fp.Close()
+		stat, err := fp.Stat()
+		if err != nil {
+			return errorObject(nil, fmt.Sprintf("%s os.rmdirAll(%q), %s", call.CallerLocation(), pathname, err))
+		}
+		result, _ := vm.ToValue(false)
+		if stat.IsDir() == true {
+			err := os.RemoveAll(pathname)
+			if err != nil {
+				return errorObject(nil, fmt.Sprintf("%s os.rmdirAll(%q), %s", call.CallerLocation(), pathname, err))
+			}
+			result, _ = vm.ToValue(true)
 		}
 		return result
 	})
@@ -666,7 +856,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 	//
 	// Add Polyfills, FIXME: these need to be implemented in Otto...
 	//
-	vm.Eval(`
+	polyfil := `
 	if (!Date.prototype.now) {
 		Date.prototype.now = function now() {
 			'use strict';
@@ -716,7 +906,11 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 	    return rpt;
 	  }
 	}
-`)
-
+`
+	script, err := vm.Compile("polyfil", polyfil)
+	if err != nil {
+		log.Fatalf("polyfil compile error: %s\n\n%s\n", err, polyfil)
+	}
+	vm.Eval(script)
 	return vm
 }
