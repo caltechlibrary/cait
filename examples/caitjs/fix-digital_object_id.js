@@ -1,6 +1,6 @@
 //
 // fix-digital_object_id.js reads the JSON blobs of Digital Objects, reformats the ID and then
-// Uploads the revised record.
+// updates the revised record.
 //
 // + api.login()
 // + api.listDigitalObjects(repo_id)

@@ -2,10 +2,11 @@
 # caitjs
 
 _caitjs_ is a command line JavaScript runner for working with the ArchivesSpace API.
-_caitjs_ exposes some of the exported API calls implemented int the cait Golang package 
+_caitjs_ exposes some of the exported API calls implemented int the cait Golang package
 to JavaScript. This makes it easy to implement ad-hoc scripts to process data, as well
 as import/export content.
 
+## ArchivesSpace API object and methods
 
 + api is the object that holds the *cait api* methods
 + api.login(), logs into the ArchivesSpace API based on the current environment variables
@@ -36,6 +37,8 @@ as import/export content.
 + api.deleteDigitalObject(),  deletes a digital object
 + api.listDigitalObjects(),  lists all the digital object ids
 
+## Additional Objects and methods
+
 In addition to the ArchivesSpace API functions there are three additional functions
 which maybe of some use
 
@@ -43,11 +46,10 @@ which maybe of some use
 + http.Get() which performs a HTTP GET request
 + http.Post() which performs a HTTP POST request
 
-These are the same JavaScript functions available in _xlsximporter_.
+These are the similar JavaScript functions available in _xlsximporter_.
 
 ## Examples
 
-In the examples directory under the caitjs subdirect you'll find a number of scripts
-demonstrating the usage of the API features.
-
-
+In the [examples directory](./examples/caitjs) under the caitjs sub-direct you'll find a number of scripts
+demonstrating the usage of the API features. These should be treated as proofs of concepts and exploratory
+as they were developed primarily in response to figuring out how _caitjs_ should work.
