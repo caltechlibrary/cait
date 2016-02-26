@@ -16,12 +16,12 @@
 ## Requirements
 
 + A working deployment of ArchivesSpace
-+ Golang 1.5.3 or better to compile
++ Golang 1.6 or better to compile
 + Three 3rd party Go packages
     + [Bleve](https://github.com/blevesearch/bleve) by [Blevesearch](http://blevesearch.com), Apache License, Version 2.0
     + [Otto](https://github.com/rsdoiel/otto) a fork of [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
     + [xlsx](https://github.com/tealeg/xlsx) by Tealeg, BSD license
-    + [Readline.v1](https://github.com/gopkg.in/readline.v1) a go native readline implementation
+    + [readline](https://github.com/chzyer/readline) Chzyer, MIT License, a go native readline implementation by
 
 ## Compiling
 
