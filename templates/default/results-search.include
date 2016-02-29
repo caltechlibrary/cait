@@ -33,6 +33,10 @@
             {{ $objLink := (digitalObjectLink .Fields) }}
             {{ if (ne $objLink "") }}Read on-line: {{ $objLink}}{{ end }}
             {{ range $key, $value := .Fields }}
+                {{ if (eq $key "dates")}}<pre>{{ $value }}</pre>{{ end }}
+                {{ if (eq $key "link_agents_creators")}}<div>Creators: {{ $value }}</div>{{ end }}
+                {{ if (eq $key "link_agents_subjects")}}<div>Sources: {{ $value }}</div>{{ end }}
+                {{ if (eq $key "link_agents_sources")}}<div>Sources: {{ $value }}</div>{{ end }}
                 {{ if (eq $key "digital_objects")}}<div>{{ $value }}</div>{{ end }}
                 {{ if (eq $key "extents") }}<div>{{ $value }}</div>{{ end }}
                 {{ if (eq $key "subjects") }}<div>Subjects: {{ if (eq (getType $value) "[]interface {}") }}{{ (asList $value "; ") }}{{ else }}{{ $value }}{{ end }}</div>{{ end }}

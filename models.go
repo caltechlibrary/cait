@@ -220,14 +220,14 @@ type Accession struct {
 	RelatedResources       []map[string]interface{} `json:"related_resources,omitempty"`
 	Suppressed             bool                     `json:"suppressed"`
 	AcquisitionType        string                   `json:"acquision_type,omitempty"`
-	ResourceType           string                   `json:"resource_type,omitempty"`
+	ResourceType           string                   `json:"resource_type"`
 	RestrictionsApply      bool                     `json:"restrictions_apply"`
 	RetentionRule          string                   `json:"retention_rule,omitempty"`
-	GeneralNote            string                   `json:"general_note,omitempty"`
+	GeneralNote            string                   `json:"general_note"`
 	AccessRestrictions     bool                     `json:"access_restrictions"`
-	AccessRestrictionsNote string                   `json:"access_restrictions_note,omitempty"`
+	AccessRestrictionsNote string                   `json:"access_restrictions_note"`
 	UseRestrictions        bool                     `json:"use_restrictions"`
-	UseRestrictionsNote    string                   `json:"use_restrictions_note,omitempty"`
+	UseRestrictionsNote    string                   `json:"use_restrictions_note"`
 	LinkedAgents           []map[string]interface{} `json:"linked_agents"`
 	Instances              []map[string]interface{} `json:"instances"`
 
@@ -1110,12 +1110,12 @@ type Event struct {
 
 // Extent represents an extends json model found in Accession records
 type Extent struct {
-	Portion          string `json:"portion,omitempty"`
-	Number           string `json:"number,omitempty"`
-	ExtentType       string `json:"extent_type,omitempty"`
-	ContainerSummary string `json:"container_summary,omitempty"`
-	PhysicalDetails  string `json:"physical_details,omitempty"`
-	Dimensions       string `json:"dimensions,omitempty"`
+	Portion          string `json:"portion"`
+	Number           string `json:"number"`
+	ExtentType       string `json:"extent_type"`
+	ContainerSummary string `json:"container_summary"`
+	PhysicalDetails  string `json:"physical_details"`
+	Dimensions       string `json:"dimensions"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`

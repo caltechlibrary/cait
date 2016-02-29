@@ -7,8 +7,22 @@
     <section>
     <h1 class="accession-title">{{ .Title }}</h1>
     <!-- URI: {{ .URI }} {{ .CreatedBy }} {{ .Created }} -->
+    {{ with .ResourceType }}<span>{{ . }}</span>{{ end }}
+    {{ with .Identifier }}<span>{{ . }}</span>{{ end }}
     {{ with .ContentDescription }}<p>{{ . }}</p>{{ end }}
     {{ with .ConditionDescription }}<p>{{ . }}</p>{{ end }}
+    {{ if .AccessRestrictions }}
+        <div>{{ .AccessRestrictionsNote }}</div>
+    {{ end }}
+    {{ if .UseRestrictions }}
+        <div>{{ .UseRestrictionsNote }}</div>
+    {{ end }}
+    {{ if .Deaccessions }}
+        <pre>{{ .Deaccessions }}<pre>
+    {{ end }}
+    {{ if .Dates }}
+        <pre>{{ .Dates }}</pre>
+    {{ end }}
     {{ if .Extents }}
         <div class="accession-extents">
         {{ range .Extents }}
@@ -42,12 +56,32 @@
             </ul>
     </p>
     {{ end }}
-    {{ if .LinkedAgents }}
+    {{ if .LinkedAgentsCreators }}
     <p>
-            <span>Linked Agents</span>
+            <span>Creator Agents</span>
             <ul>
-            {{ range .LinkedAgents }}
-                <li><a href="/search/agents/?q={{ . }}">{{ . }}</a></li>
+            {{ range .LinkedAgentsCreators }}
+                <li><a href="/search/agents/?q_exact={{ . }}">{{ . }}</a></li>
+            {{ end }}
+            </ul>
+    </p>
+    {{ end }}
+    {{ if .LinkedAgentsSubjects }}
+    <p>
+            <span>Subject Agents</span>
+            <ul>
+            {{ range .LinkedAgentsSubjects }}
+                <li><a href="/search/agents/?q_exact={{ . }}">{{ . }}</a></li>
+            {{ end }}
+            </ul>
+    </p>
+    {{ end }}
+    {{ if .LinkedAgentsSources }}
+    <p>
+            <span>Source Agents</span>
+            <ul>
+            {{ range .LinkedAgentsSources }}
+                <li><a href="/search/agents/?q_exact={{ . }}">{{ . }}</a></li>
             {{ end }}
             </ul>
     </p>

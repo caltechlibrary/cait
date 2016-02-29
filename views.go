@@ -58,30 +58,40 @@ type NavView []*NavElementView
 
 // NormalizedDigitalObjectView returns a structure suitable for templating public web content.
 type NormalizedDigitalObjectView struct {
-	//FIXME: Need to have a sane strategy for generating an indexable, useful structure
-	URI      string   `json:"uri"`
-	Title    string   `json:"title"`
-	Publish  bool     `json:"publish"`
-	FileURIs []string `json:"file_uris"`
+	URI               string   `json:"uri"`
+	Title             string   `json:"title"`
+	DigitalObjectType string   `json:"digital_object_type"`
+	Publish           bool     `json:"publish"`
+	FileURIs          []string `json:"file_uris"`
 }
 
 // NormalizedAccessionView returns a structure suitable for templating public web content.
 type NormalizedAccessionView struct {
-	URI                  string                         `json:"uri"`
-	Title                string                         `json:"title"`
-	ContentDescription   string                         `json:"content_description"`
-	ConditionDescription string                         `json:"condition_description"`
-	Subjects             []string                       `json:"subjects"`
-	Extents              []string                       `json:"extents"`
-	RelatedResources     []string                       `json:"related_resources"`
-	RelatedAccessions    []string                       `json:"related_accessions"`
-	DigitalObjects       []*NormalizedDigitalObjectView `json:"digital_objects"`
-	LinkedAgents         []string                       `json:"linked_agents"`
-	AccessionDate        string                         `json:"accession_date"`
-	CreatedBy            string                         `json:"created_by"`
-	Created              string                         `json:"created"`
-	LastModifiedBy       string                         `json:"last_modified_by"`
-	LastModified         string                         `json:"last_modified"`
+	URI                    string                         `json:"uri"`
+	Title                  string                         `json:"title"`
+	Identifier             string                         `json:"identifier"`
+	ResourceType           string                         `json:"resource_type"`
+	ContentDescription     string                         `json:"content_description"`
+	ConditionDescription   string                         `json:"condition_description"`
+	AccessRestrictions     bool                           `json:"access_restrictions"`
+	AccessRestrictionsNote string                         `json:"access_restrictions_notes"`
+	UseRestrictions        bool                           `json:"use_restrictions"`
+	UseRestrictionsNote    string                         `json:"use_restrictions_notes"`
+	Dates                  []*Date                        `json:"dates"`
+	Subjects               []string                       `json:"subjects"`
+	Extents                []string                       `json:"extents"`
+	RelatedResources       []string                       `json:"related_resources"`
+	RelatedAccessions      []string                       `json:"related_accessions"`
+	DigitalObjects         []*NormalizedDigitalObjectView `json:"digital_objects"`
+	Deaccessions           string                         `json:"deaccessions"`
+	LinkedAgentsCreators   []string                       `json:"linked_agents_creators"`
+	LinkedAgentsSubjects   []string                       `json:"linked_agents_subjects"`
+	LinkedAgentsSources    []string                       `json:"linked_agents_sources"`
+	AccessionDate          string                         `json:"accession_date"`
+	CreatedBy              string                         `json:"created_by"`
+	Created                string                         `json:"created"`
+	LastModifiedBy         string                         `json:"last_modified_by"`
+	LastModified           string                         `json:"last_modified"`
 }
 
 // NormalizeView returns a normalized view from an Accession structure and
@@ -95,9 +105,16 @@ func (a *Accession) NormalizeView(agents []*Agent, subjects map[string]*Subject,
 	}
 	v := new(NormalizedAccessionView)
 	v.Title = a.Title
+	v.Identifier = strings.Trim(strings.Join([]string{a.ID0, a.ID1, a.ID2, a.ID3}, "-"), "-")
+	v.ResourceType = a.ResourceType
 	v.URI = a.URI
 	v.ContentDescription = a.ContentDescription
 	v.ConditionDescription = a.ConditionDescription
+	v.AccessRestrictions = a.AccessRestrictions
+	v.AccessRestrictionsNote = a.AccessRestrictionsNote
+	v.UseRestrictions = a.UseRestrictions
+	v.UseRestrictionsNote = a.UseRestrictionsNote
+	v.Dates = a.Dates
 	v.AccessionDate = a.AccessionDate
 	v.CreatedBy = a.CreatedBy
 	v.Created = a.CreateTime
@@ -127,11 +144,19 @@ func (a *Accession) NormalizeView(agents []*Agent, subjects map[string]*Subject,
 			}
 		}
 	}
-	//FIXME: add linked Agents data, should really only include if type is subject ...
+	//NOTE: Normalized view adds Linked Agents by type creator, subject, sources ...
 	for _, item := range a.LinkedAgents {
 		if ref, ok := item["ref"].(string); ok == true {
 			if title, found := agentMap[ref]; found == true {
-				v.LinkedAgents = append(v.LinkedAgents, title)
+				role, _ := item["role"]
+				switch role {
+				case "creator":
+					v.LinkedAgentsCreators = append(v.LinkedAgentsCreators, title)
+				case "subject":
+					v.LinkedAgentsSubjects = append(v.LinkedAgentsSubjects, title)
+				case "source":
+					v.LinkedAgentsSources = append(v.LinkedAgentsSources, title)
+				}
 			}
 		}
 	}
@@ -144,6 +169,7 @@ func (o *DigitalObject) NormalizeView() *NormalizedDigitalObjectView {
 	result.URI = o.URI
 	result.Title = o.Title
 	result.Publish = o.Publish
+	result.DigitalObjectType = o.DigitalObjectType
 	for _, fv := range o.FileVersions {
 		if fv.FileURI != "" {
 			result.FileURIs = append(result.FileURIs, fv.FileURI)
