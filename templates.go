@@ -21,6 +21,7 @@
 package cait
 
 import (
+	"encoding/json"
 	"fmt"
 	"go/doc"
 	"io/ioutil"
@@ -112,6 +113,16 @@ var (
 				return ""
 			}
 			return strings.Replace(u.String(), "&", "%26", -1)
+		},
+		"stringify": func(data interface{}, prettyPrint bool) string {
+			if prettyPrint == true {
+				if buf, err := json.MarshalIndent(data, "", "\t"); err == nil {
+					return string(buf)
+				}
+			} else if buf, err := json.Marshal(data); err == nil {
+				return string(buf)
+			}
+			return ""
 		},
 	}
 )

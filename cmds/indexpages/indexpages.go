@@ -30,8 +30,10 @@ import (
 	"strings"
 	"time"
 
+	// 3rd Party packages
 	"github.com/blevesearch/bleve"
 
+	// Caltech Libraries packages
 	"../../../cait"
 )
 

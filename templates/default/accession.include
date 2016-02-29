@@ -5,6 +5,7 @@
     </ul>
     </nav>
     <section>
+    <div class="debug">JSON:<pre>{{ stringify . true }}</pre></div>
     <h1 class="accession-title">{{ .Title }}</h1>
     <!-- URI: {{ .URI }} {{ .CreatedBy }} {{ .Created }} -->
     {{ with .ResourceType }}<span>{{ . }}</span>{{ end }}
@@ -12,16 +13,16 @@
     {{ with .ContentDescription }}<p>{{ . }}</p>{{ end }}
     {{ with .ConditionDescription }}<p>{{ . }}</p>{{ end }}
     {{ if .AccessRestrictions }}
-        <div>{{ .AccessRestrictionsNote }}</div>
+        <div>Accession restrictions: {{ .AccessRestrictionsNote }}</div>
     {{ end }}
     {{ if .UseRestrictions }}
-        <div>{{ .UseRestrictionsNote }}</div>
+        <div>Use restrictions: {{ .UseRestrictionsNote }}</div>
     {{ end }}
     {{ if .Deaccessions }}
         <pre>{{ .Deaccessions }}<pre>
     {{ end }}
     {{ if .Dates }}
-        <pre>{{ .Dates }}</pre>
+        Dates:<pre>{{stringify .Dates true}}</pre>
     {{ end }}
     {{ if .Extents }}
         <div class="accession-extents">

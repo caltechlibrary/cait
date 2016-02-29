@@ -215,24 +215,31 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	search.Highlight.AddField("content_description")
 	search.Highlight.AddField("subjects")
 	search.Highlight.AddField("extents")
-	//search.Highlight.AddField("digital_objects.title")
-	//search.Highlight.AddField("digital_objects.file_uris")
 
 	subjectFacet := bleve.NewFacetRequest("subjects", 3)
 	search.AddFacet("subjects", subjectFacet)
 
 	// Return all fields
 	search.Fields = []string{
-		"title", "identifier", "content_description", "content_condition",
+		"title",
+		"identifier",
+		"content_description",
+		"content_condition",
 		"resource_type",
-		"access_restrictions", "access_restrictions_note",
-		"use_restrictins", "use_restrictons_note",
+		"access_restrictions",
+		"access_restrictions_note",
+		"use_restrictins",
+		"use_restrictons_note",
 		"dates",
 		"extents",
 		"subjects",
-		"linked_agents_creators", "linked_agents_subjects", "link_agents_sources",
-		"digital_objects.title", "digital_objects.file_uris",
-		"related_resources", "deaccessions",
+		"linked_agents_creators",
+		"linked_agents_subjects",
+		"link_agents_sources",
+		"digital_objects.title",
+		"digital_objects.file_uris",
+		"related_resources",
+		"deaccessions",
 	}
 
 	searchResults, err := index.Search(search)
