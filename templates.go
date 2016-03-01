@@ -24,18 +24,36 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/doc"
-	"html/template"
+	//"html/template"
 	"io/ioutil"
 	"log"
 	"net/url"
 	"reflect"
 	"strings"
+	"text/template"
+	"time"
 )
 
 var (
 	tmplFuncs = template.FuncMap{
-		"marked": func(s string) string {
-			return strings.Replace(strings.Replace(s, "&lt;mark&gt;", "<mark>", -1), "&lt;/mark&gt;", "</mark>", -1)
+		"datefmt": func(dt, inputFmt, outputFmt string) string {
+			// Date formats default to MySQL style date strings
+			if inputFmt == "" {
+				inputFmt = "2006-01-02"
+			}
+			if outputFmt == "" {
+				outputFmt = "2006-01-02"
+			}
+			//intputFmt: 2006-01-02
+			//outputfmt: Jan _2, 2006
+			d, err := time.Parse(inputFmt, dt)
+			if err != nil {
+				return fmt.Sprintf("%s, %s", dt, err.Error())
+			}
+			return d.Format(outputFmt)
+		},
+		"title": func(s string) string {
+			return strings.Title(s)
 		},
 		"add": func(a, b int) int {
 			return a + b

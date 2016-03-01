@@ -20,10 +20,11 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"html/template"
+	//"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -33,10 +34,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"bytes"
+	"text/template"
 
-	"../../../cait"
+	// 3rd Party packages
 	"github.com/blevesearch/bleve"
+
+	// Caltech Library packages
+	"../../../cait"
 )
 
 var (
