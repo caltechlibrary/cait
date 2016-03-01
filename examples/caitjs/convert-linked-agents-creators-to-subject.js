@@ -18,7 +18,7 @@ function checkAccessionAndUpdate(id, cnt) {
         }
     }
     if (cnt % 100 === 0) {
-        console.log("processed", cnt);
+        console.log("processed", cnt, Date());
     }
 }
 
