@@ -24,16 +24,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"go/doc"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/url"
 	"reflect"
 	"strings"
-	"text/template"
 )
 
 var (
 	tmplFuncs = template.FuncMap{
+		"marked": func(s string) string {
+			return strings.Replace(strings.Replace(s, "&lt;mark&gt;", "<mark>", -1), "&lt;/mark&gt;", "</mark>", -1)
+		},
 		"add": func(a, b int) int {
 			return a + b
 		},

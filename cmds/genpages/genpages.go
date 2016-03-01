@@ -28,7 +28,7 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"text/template"
+	"html/template"
 
 	"../../../cait"
 )

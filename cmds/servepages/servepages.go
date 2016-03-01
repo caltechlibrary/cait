@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -32,7 +33,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"text/template"
+	"bytes"
 
 	"../../../cait"
 	"github.com/blevesearch/bleve"
@@ -272,11 +273,15 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	// Render the page
 	w.Header().Set("Content-Type", "text/html")
-	err = tmpl.Execute(w, q)
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, q)
+	//err = tmpl.Execute(w, q)
 	if err != nil {
 		log.Printf("Can't render %s, %s/%s, %s", templatesDir, pageHTML, pageInclude, err)
-		w.Write([]byte(fmt.Sprintf("Template error")))
+		w.Write([]byte("Template error"))
 	}
+	//NOTE: This bit of ugliness is here because I need to allow <mark> elements and ellipis in the results fragments
+	w.Write(bytes.Replace(bytes.Replace(bytes.Replace(buf.Bytes(), []byte("&lt;mark&gt;"), []byte("<mark>"), -1), []byte("&lt;/mark&gt;"), []byte("</mark>"), -1), []byte(`…`), []byte(`&hellip;`), -1))
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
