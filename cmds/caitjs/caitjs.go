@@ -29,7 +29,7 @@ import (
 	"strings"
 
 	// 3rd Party packages
-	"gopkg.in/readline.v1"
+	"github.com/chzyer/readline"
 
 	// Cait specific packages
 	"../../../cait"
