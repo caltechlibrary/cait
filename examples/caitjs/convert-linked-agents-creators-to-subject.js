@@ -18,12 +18,16 @@ function checkAccessionAndUpdate(id, cnt) {
             api.updateAccession(a);
         }
     }
-    if (cnt % 100) {
+    if (cnt % 100 === 0) {
         console.log("processed", cnt);
     }
 }
 
+console.log("Logging in");
 api.login();
+console.log("Get a list of accession ids");
 ids = api.listAccessions(2);
+console.log("Sort accession ids");
 ids.sort();
+console.log("For each accession id, check and update");
 ids.forEach(checkAccessionAndUpdate);
