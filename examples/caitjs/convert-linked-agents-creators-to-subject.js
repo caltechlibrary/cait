@@ -3,10 +3,7 @@
 //
 // convert creator linked agents to subject linked agents
 //
-api.login();
-ids = api.listAccessions(2);
-
-ids.forEach(function (id) {
+function checkAccessionAndUpdate(id, cnt) {
     var a = api.getAccession(2, id), i = 0, changed = false;
     if (a.linked_agents !== undefined && a.linked_agents.length > 0) {
         changed = false;
@@ -21,4 +18,12 @@ ids.forEach(function (id) {
             api.updateAccession(a);
         }
     }
-});
+    if (cnt % 100) {
+        console.log("processed", cnt);
+    }
+}
+
+api.login();
+ids = api.listAccessions(2);
+ids.sort();
+ids.forEach(checkAccessionAndUpdate);
