@@ -14,7 +14,6 @@ function checkAccessionAndUpdate(id, cnt) {
             }
         }
         if (changed === true) {
-            console.log("Updating", a.uri);
             api.updateAccession(a);
         }
     }
