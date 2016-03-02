@@ -30,6 +30,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 )
 
 //
@@ -72,26 +73,46 @@ type NormalizedAccessionView struct {
 	Identifier             string                         `json:"identifier"`
 	ResourceType           string                         `json:"resource_type"`
 	ContentDescription     string                         `json:"content_description"`
-	ConditionDescription   string                         `json:"condition_description"`
+	ConditionDescription   string                         `json:"condition_description,omitempty"`
 	AccessRestrictions     bool                           `json:"access_restrictions"`
 	AccessRestrictionsNote string                         `json:"access_restrictions_notes"`
 	UseRestrictions        bool                           `json:"use_restrictions"`
 	UseRestrictionsNote    string                         `json:"use_restrictions_notes"`
 	Dates                  []*Date                        `json:"dates"`
-	Subjects               []string                       `json:"subjects"`
+	DateExpression         string                         `json:"date_expression"`
+	Subjects               []string                       `json:"subjects,omitempty"`
+	SubjectsFunction       []string                       `json:"subjects_function,omitempty"`
+	SubjectsTopical        []string                       `json:"subjects_topical,omitempty"`
 	Extents                []string                       `json:"extents"`
-	RelatedResources       []string                       `json:"related_resources"`
-	RelatedAccessions      []string                       `json:"related_accessions"`
-	DigitalObjects         []*NormalizedDigitalObjectView `json:"digital_objects"`
-	Deaccessions           string                         `json:"deaccessions"`
+	RelatedResources       []string                       `json:"related_resources,omitempty"`
+	RelatedAccessions      []string                       `json:"related_accessions,omitempty"`
+	DigitalObjects         []*NormalizedDigitalObjectView `json:"digital_objects,omitempty"`
+	Deaccessions           string                         `json:"deaccessions,omitempty"`
 	LinkedAgentsCreators   []string                       `json:"linked_agents_creators"`
 	LinkedAgentsSubjects   []string                       `json:"linked_agents_subjects"`
-	LinkedAgentsSources    []string                       `json:"linked_agents_sources"`
+	LinkedAgentsSources    []string                       `json:"linked_agents_sources,omitempty"`
 	AccessionDate          string                         `json:"accession_date"`
 	CreatedBy              string                         `json:"created_by"`
 	Created                string                         `json:"created"`
 	LastModifiedBy         string                         `json:"last_modified_by"`
 	LastModified           string                         `json:"last_modified"`
+}
+
+// FlattenDates takes an array of Date types, flatten it into a human readable string.
+func FlattenDates(dates []*Date) string {
+	var out []string
+	for _, dt := range dates {
+		switch dt.DateType {
+		case "single":
+			d, _ := time.Parse("2006-01-02", dt.Expression)
+			out = append(out, fmt.Sprintf("%s", d.Format("Jan. 2, 2006")))
+		case "inclusive":
+			start, _ := time.Parse("2006-01-02", dt.Begin)
+			end, _ := time.Parse("2006-01-02", dt.End)
+			out = append(out, fmt.Sprintf("%s - %s", start.Format("Jan. 2, 2006"), end.Format("Jan. 2, 2006")))
+		}
+	}
+	return strings.Join(out, "; ")
 }
 
 // NormalizeView returns a normalized view from an Accession structure and
@@ -115,6 +136,7 @@ func (a *Accession) NormalizeView(agents []*Agent, subjects map[string]*Subject,
 	v.UseRestrictions = a.UseRestrictions
 	v.UseRestrictionsNote = a.UseRestrictionsNote
 	v.Dates = a.Dates
+	v.DateExpression = FlattenDates(a.Dates)
 	v.AccessionDate = a.AccessionDate
 	v.CreatedBy = a.CreatedBy
 	v.Created = a.CreateTime
@@ -141,6 +163,15 @@ func (a *Accession) NormalizeView(agents []*Agent, subjects map[string]*Subject,
 			rec := subjects[fmt.Sprintf("%s", ref)]
 			if rec != nil {
 				v.Subjects = append(v.Subjects, rec.Title)
+				if len(rec.Terms) > 0 {
+					if termType, ok := rec.Terms[0]["term_type"]; ok == true && termType == "function" {
+						v.SubjectsFunction = append(v.SubjectsFunction, rec.Title)
+					} else {
+						v.SubjectsTopical = append(v.SubjectsTopical, rec.Title)
+					}
+				} else {
+					v.SubjectsTopical = append(v.SubjectsTopical, rec.Title)
+				}
 			}
 		}
 	}

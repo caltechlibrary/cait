@@ -128,16 +128,30 @@ func getIndex(indexName string) (bleve.Index, error) {
 		subjectsMapping.IncludeTermVectors = true
 		accessionMapping.AddFieldMappingsAt("subjects", subjectsMapping)
 
+		subjectsFunctionMapping := bleve.NewTextFieldMapping()
+		subjectsFunctionMapping.Analyzer = "en"
+		subjectsFunctionMapping.Store = true
+		subjectsFunctionMapping.Index = true
+		subjectsFunctionMapping.IncludeTermVectors = true
+		accessionMapping.AddFieldMappingsAt("subjects_function", subjectsFunctionMapping)
+
+		subjectsTopicalMapping := bleve.NewTextFieldMapping()
+		subjectsTopicalMapping.Analyzer = "en"
+		subjectsTopicalMapping.Store = true
+		subjectsTopicalMapping.Index = true
+		subjectsTopicalMapping.IncludeTermVectors = true
+		accessionMapping.AddFieldMappingsAt("subjects_topical", subjectsTopicalMapping)
+
 		objectTitleMapping := bleve.NewTextFieldMapping()
 		objectTitleMapping.Analyzer = "en"
 		objectTitleMapping.Store = true
-		objectTitleMapping.Index = true
+		objectTitleMapping.Index = false
 		accessionMapping.AddFieldMappingsAt("digital_objects.title", objectTitleMapping)
 
 		objectFileURIMapping := bleve.NewTextFieldMapping()
 		objectFileURIMapping.Analyzer = ""
 		objectFileURIMapping.Store = true
-		objectFileURIMapping.Index = true
+		objectFileURIMapping.Index = false
 		accessionMapping.AddFieldMappingsAt("digital_objects.file_uris", objectFileURIMapping)
 
 		extentsMapping := bleve.NewTextFieldMapping()
@@ -146,7 +160,20 @@ func getIndex(indexName string) (bleve.Index, error) {
 		extentsMapping.Index = true
 		accessionMapping.AddFieldMappingsAt("extents", extentsMapping)
 
+		accessionDateMapping := bleve.NewTextFieldMapping()
+		accessionDateMapping.Analyzer = "en"
+		accessionDateMapping.Store = true
+		accessionDateMapping.Index = false
+		accessionMapping.AddFieldMappingsAt("accession_date", accessionDateMapping)
+
+		datesMapping := bleve.NewTextFieldMapping()
+		datesMapping.Store = true
+		datesMapping.Index = false
+		accessionMapping.AddFieldMappingsAt("date_expression", datesMapping)
+
 		createdMapping := bleve.NewDateTimeFieldMapping()
+		createdMapping.Store = true
+		createdMapping.Index = false
 		accessionMapping.AddFieldMappingsAt("created", createdMapping)
 
 		// Finally add this mapping to the main index mapping

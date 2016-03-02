@@ -214,15 +214,23 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		q.Size = 10
 	}
 	search := bleve.NewSearchRequestOptions(qry, q.Size, q.From, q.Explain)
-	search.Highlight = bleve.NewHighlight()
 
+	search.Highlight = bleve.NewHighlight()
 	search.Highlight.AddField("title")
 	search.Highlight.AddField("content_description")
 	search.Highlight.AddField("subjects")
+	search.Highlight.AddField("subjects_function")
+	search.Highlight.AddField("subjects_topical")
 	search.Highlight.AddField("extents")
 
 	subjectFacet := bleve.NewFacetRequest("subjects", 3)
 	search.AddFacet("subjects", subjectFacet)
+
+	subjectTopicalFacet := bleve.NewFacetRequest("subjects_topical", 3)
+	search.AddFacet("subjects_topical", subjectTopicalFacet)
+
+	subjectFunctionFacet := bleve.NewFacetRequest("subjects_function", 3)
+	search.AddFacet("subjects_function", subjectFunctionFacet)
 
 	// Return all fields
 	search.Fields = []string{
@@ -236,8 +244,11 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		"use_restrictins",
 		"use_restrictons_note",
 		"dates",
+		"date_expression",
 		"extents",
 		"subjects",
+		"subjects_function",
+		"subjects_topical",
 		"linked_agents_creators",
 		"linked_agents_subjects",
 		"link_agents_sources",
@@ -245,6 +256,8 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		"digital_objects.file_uris",
 		"related_resources",
 		"deaccessions",
+		"accession_date",
+		"created",
 	}
 
 	searchResults, err := index.Search(search)

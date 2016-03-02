@@ -36,6 +36,12 @@ import (
 
 var (
 	tmplFuncs = template.FuncMap{
+		"nl2p": func(s string) string {
+			return strings.Replace(strings.Replace(s, "\n\n", "<p>", -1), "\n", "<br />", -1)
+		},
+		"contains": func(s, substring string) bool {
+			return strings.Contains(s, substring)
+		},
 		"datefmt": func(dt, inputFmt, outputFmt string) string {
 			// Date formats default to MySQL style date strings
 			if inputFmt == "" {
