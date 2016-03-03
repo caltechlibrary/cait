@@ -34,9 +34,12 @@ import (
 	"os"
 	"path"
 
-	"../../../cait"
-	"github.com/rsdoiel/otto"
+	// 3rd Party packages
 	"github.com/tealeg/xlsx"
+
+	// Caltech Library maintained packages
+	"../../../cait"
+	"github.com/caltechlibrary/otto"
 )
 
 var (

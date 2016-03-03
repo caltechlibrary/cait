@@ -30,7 +30,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rsdoiel/otto"
+	"github.com/caltechlibrary/otto"
 )
 
 // NewJavaScript creates a *otto.Otto (JavaScript VM) with functions added to integrate

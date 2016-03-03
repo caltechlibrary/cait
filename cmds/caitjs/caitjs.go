@@ -108,12 +108,75 @@ func main() {
 			log.Fatalf("Runtime error, %s", err)
 		}
 	}
+
 	// if we need a repl run it
 	if runRepl == true {
-		fmt.Printf("\n Welcome to cait %s\n", cait.Version)
-		fmt.Printf(" Accessing ArchivesSpace REST API %q\n", caitAPIURL)
-		fmt.Printf(" With username %q\n\n", caitUsername)
-		rl, err := readline.New("> ")
+		fmt.Printf(`
+
+   Welcome to cait %s, Caltech Archives Integration Tools
+   Accessing ArchivesSpace REST API %q
+   With username %q
+
+   Autocomplete enabled for os, http and api objects
+   Press Ctrl+I for line completion choices
+   Press Ctrl+G cancel
+
+   Exit catijs with Ctrl+D or type: os.exit(0);
+
+		`, cait.Version, caitAPIURL, caitUsername)
+
+		completer := readline.NewPrefixCompleter(
+			// os object completions
+			readline.PcItem("os.args()"),
+			readline.PcItem("os.exit(exitCode)"),
+			readline.PcItem("os.getEnv(envvar)"),
+			readline.PcItem("os.readFile(filename)"),
+			readline.PcItem("os.writeFile(filename, data)"),
+			readline.PcItem("os.rename(oldname, newname)"),
+			readline.PcItem("os.remove(filename)"),
+			readline.PcItem("os.chmod(filename, perms)"),
+			readline.PcItem("os.find(filename)"),
+			readline.PcItem("os.mkdir(dirname)"),
+			readline.PcItem("os.mkdirAll(pathDirname)"),
+			readline.PcItem("os.rmdir(dirname)"),
+			readline.PcItem("os.rmdirAll(pathDirname)"),
+			// http object completions
+			readline.PcItem("http.get(url, headers)"),
+			readline.PcItem("http.post(url, headers, payload)"),
+			// api object completions
+			readline.PcItem("api.login()"),
+			readline.PcItem("api.logout()"),
+			readline.PcItem("api.createRepository(repoObject)"),
+			readline.PcItem("api.getRepository(repoID)"),
+			readline.PcItem("api.updateRepository(repoObject)"),
+			readline.PcItem("api.deleteRepository(repoObject)"),
+			readline.PcItem("api.listRepositories()"),
+			readline.PcItem("api.createAgent(agentObject)"),
+			readline.PcItem("api.getAgent(agentType, agentID)"),
+			readline.PcItem("api.updateAgent(agentObject)"),
+			readline.PcItem("api.deleteAgent(agentObject)"),
+			readline.PcItem("api.listAgents(agentType)"),
+			readline.PcItem("api.createAccession(accessionObject)"),
+			readline.PcItem("api.getAccession(repoID, accessionID)"),
+			readline.PcItem("api.updateAccession(accessionObject)"),
+			readline.PcItem("api.deleteAccession(accessionObject)"),
+			readline.PcItem("api.listAccessions(repoID)"),
+			readline.PcItem("api.createSubject(subjectObject)"),
+			readline.PcItem("api.getSubject(subjectID)"),
+			readline.PcItem("api.updateSubject(subjectObject)"),
+			readline.PcItem("api.deleteSubject(subjectObject)"),
+			readline.PcItem("api.listSubjects()"),
+			readline.PcItem("api.createDigitalObject(digitalObjectObject)"),
+			readline.PcItem("api.getDigitalObject(repoID, digitalObjectID)"),
+			readline.PcItem("api.updateDigitalObject(digitalObjectObject)"),
+			readline.PcItem("api.deleteDigitalObject(digitalObjectObject)"),
+			readline.PcItem("api.listDigitalObjects(repoID)"),
+		)
+
+		rl, err := readline.NewEx(&readline.Config{
+			Prompt:       "> ",
+			AutoComplete: completer,
+		})
 		if err != nil {
 			panic(err)
 		}
