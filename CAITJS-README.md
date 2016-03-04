@@ -5,6 +5,13 @@ _caitjs_ is a command line JavaScript runner and repl for working with the Archi
 It provides access via JavaScript to some of the exported API methods implemented int the _cait_ package.
 This makes it easy to implement ad-hoc scripts to process data, as well as import/export content.
 
+## Interactive
+
+When run in interactive mode (e.g. `caitjs -i`) you can use autocomplete to explore the additional non-standard
+JavaScript objects available (i.e. os, http, api). To active command line completion use Ctrl+I (or tab)
+and to cancel command line completion use Ctrl+G at the command prompt '> '.
+
+
 ## ArchivesSpace API object and methods
 
 + api is the object that holds the *cait api* methods
@@ -68,3 +75,15 @@ These are the similar JavaScript functions available in _xlsximporter_.
 In the [examples directory](./examples/caitjs) under the caitjs sub-direct you'll find a number of scripts
 demonstrating the usage of the API features. These should be treated as proofs of concepts and exploratory
 as they were developed primarily in response to figuring out how _caitjs_ should work.
+
++ examples/caitjs/convert-linked-agents-creators-to-subject.js - shows how you could change an agents' type in an accession record from creator to subject
++ examples/caitjs/fix-agents-people.js - demonstrates modifying agents people record
++ examples/caitjs/fix-digital_object_id.js - demontstrates modifying digitalobject identifiers
++ examples/caitjs/get-repository.js - demonstrates listing repositories available
++ examples/caitjs/helloworld.js - your basic "Hello World" example
++ examples/caitjs/link-digital-objects-to-accessions.js - demonstrates linking digital objects to accessions with matching titles
++ examples/caitjs/list-date-types-in-accessions.js - list the types of dates associated with accessions (very slow running)
++ examples/caitjs/list-linked-agents-roles.js - list the types of roles that agents have linked to accessions
++ examples/caitjs/signon-signoff.js - demonstrate api.login() and api.logout() function 
+
+
