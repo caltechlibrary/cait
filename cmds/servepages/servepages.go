@@ -40,7 +40,7 @@ import (
 	"github.com/blevesearch/bleve"
 
 	// Caltech Library packages
-	"../../../cait"
+	"github.com/caltechlibrary/cait"
 )
 
 var (

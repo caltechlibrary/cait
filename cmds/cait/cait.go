@@ -29,7 +29,12 @@ import (
 	"path"
 	"strings"
 
-	"../../../cait"
+	// 3rd Party Packages
+	"github.com/robertkrimen/otto"
+
+	// Caltech Library Packages
+	"github.com/caltechlibrary/cait"
+	"github.com/caltechlibrary/ostdlib"
 )
 
 type command struct {
@@ -864,10 +869,8 @@ func getenv(envvar, defaultValue string) string {
 }
 
 func main() {
-	flag.BoolVar(help, "h", false, "Display the help page")
-	flag.StringVar(payload, "i", "", "Use this filepath for the payload")
-	flag.BoolVar(version, "v", false, "Display version info")
-
+	jsRunner := false
+	jsInteractive := false
 	caitAPIURL = getenv("CAIT_API_URL", caitAPIURL)
 	caitUsername = getenv("CAIT_USERNAME", caitUsername)
 	caitPassword = getenv("CAIT_PASSWORD", caitPassword)
@@ -876,6 +879,12 @@ func main() {
 	caitHtdocs = getenv("CAIT_HTDOCS", caitHtdocs)
 	caitHtdocsIndex = getenv("CAIT_HTDOCS_INDEX", caitHtdocsIndex)
 	caitTemplates = getenv("CAIT_TEMPLATES", caitTemplates)
+
+	flag.BoolVar(help, "h", false, "Display the help page")
+	flag.StringVar(payload, "I", "", "Use this filepath for the payload")
+	flag.BoolVar(version, "v", false, "Display version info")
+	flag.BoolVar(&jsRunner, "js", false, "Run JavaScript enterpreter")
+	flag.BoolVar(&jsInteractive, "i", false, "Run JavaScript shell")
 
 	api := cait.New(caitAPIURL, caitUsername, caitPassword)
 
@@ -886,6 +895,22 @@ func main() {
 
 	if *version == true {
 		fmt.Printf("Version: %s\n", cait.Version)
+		os.Exit(0)
+	}
+
+	if jsRunner == true || jsInteractive == true {
+		vm := otto.New()
+		js := ostdlib.New(vm)
+		js.AddHelp()
+		js.AddExtensions()
+		cait.AddExtensions(api, js)
+		cait.AddHelp(api, js)
+		if jsRunner == true {
+			js.Runner(flag.Args())
+		}
+		if jsInteractive == true {
+			js.Repl()
+		}
 		os.Exit(0)
 	}
 

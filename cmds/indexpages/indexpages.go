@@ -34,7 +34,7 @@ import (
 	"github.com/blevesearch/bleve"
 
 	// Caltech Libraries packages
-	"../../../cait"
+	"github.com/caltechlibrary/cait"
 )
 
 var (

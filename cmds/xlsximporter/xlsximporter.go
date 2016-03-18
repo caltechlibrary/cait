@@ -35,11 +35,12 @@ import (
 	"path"
 
 	// 3rd Party packages
+	"github.com/robertkrimen/otto"
 	"github.com/tealeg/xlsx"
 
 	// Caltech Library maintained packages
-	"../../../cait"
-	"github.com/caltechlibrary/otto"
+	"github.com/caltechlibrary/cait"
+	"github.com/caltechlibrary/ostdlib"
 )
 
 var (
@@ -172,7 +173,7 @@ func processSheet(sheet *xlsx.Sheet, asArray, jsMap bool, vm *otto.Otto) {
 					log.Fatalf("row: %d, Can't run %s, %s", rowNo, *jsFilename, err)
 				}
 				response := new(jsResponse)
-				err = jsValue.ToStruct(&response)
+				err = ostdlib.ToStruct(jsValue, &response)
 				if err != nil {
 					log.Fatalf("row: %d, do not understand response %s, %s", rowNo, src, err)
 				}

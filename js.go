@@ -22,22 +22,55 @@ package cait
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	// "io/ioutil"
 	"log"
-	"net/http"
-	"os"
-	"path/filepath"
+	// "net/http"
+	// "os"
+	// "path/filepath"
 	"strconv"
-	"strings"
+	// "strings"
 
-	"github.com/caltechlibrary/otto"
+	// 3rd Party Packages
+	"github.com/robertkrimen/otto"
+
+	// Caltech Library Packages
+	"github.com/caltechlibrary/ostdlib"
 )
 
-// NewJavaScript creates a *otto.Otto (JavaScript VM) with functions added to integrate
-// the internal cait API.
-func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
-	vm := otto.New()
+// AddHelp adds cait API help for the JavaScript Repl
+func AddHelp(api *ArchivesSpaceAPI, js *ostdlib.JavaScriptVM) {
+	js.SetHelp("api", "login", []string{}, "Using environment variables authenticate with the ArchivesSpace REST API")
+	js.SetHelp("api", "logout", []string{}, "Logout of the ArchivesSpace REST API")
+	js.SetHelp("api", "createRepostiory", []string{"repo object"}, "Create an repository based on the respoistory describe by the repo object")
+	js.SetHelp("api", "getRepository", []string{"repoID int"}, "Get a repository object using the repository id")
+	js.SetHelp("api", "updateRepository", []string{"repo object"}, "Update the repository definition using the repo object")
+	js.SetHelp("api", "deleteRepository", []string{"repo object"}, "Delete the repository definition described by repo object")
+	js.SetHelp("api", "listRepositories", []string{}, "list repositories ids")
+	js.SetHelp("api", "createAgent", []string{"agent_type string, agent object"}, "Create an agent of agent_type using agent object. Agent types are person, software")
+	js.SetHelp("api", "getAgent", []string{"agent_type string, agent_id int"}, "return an agent object using agent type and id.")
+	js.SetHelp("api", "updateAgent", []string{"agent object"}, "Update an agent in ArchivesSpace from an agent object")
+	js.SetHelp("api", "deleteAgent", []string{"agent object"}, "delete an agent in ArchivesSpace using agent object")
+	js.SetHelp("api", "listAgents", []string{"agent_type"}, "List agents by type, returns agent ids as an array")
+	js.SetHelp("api", "createAccession", []string{"repo_id int", "accession object"}, "Create an accession in the repository in ArchivesSpace from a repository id and accession object")
+	js.SetHelp("api", "getAccession", []string{"repo_id int", "accession_id int"}, "Get an accession object from ArchivesSpace by repo id and accesison id")
+	js.SetHelp("api", "updateAccession", []string{"accession object"}, "Update an accession from an accession object")
+	js.SetHelp("api", "deleteAccession", []string{"accession object"}, "Delete an accession using an accession object")
+	js.SetHelp("api", "listAccessions", []string{"repo_id int"}, "list accessions ids in repository with matching repo id")
+	js.SetHelp("api", "createSubject", []string{"subject object"}, "create a subject from a subject object")
+	js.SetHelp("api", "getSubject", []string{"subject_id int"}, "get an subject by subject id")
+	js.SetHelp("api", "updateSubject", []string{"subject object"}, "Update a subject in ArchivesSpace from a subject object")
+	js.SetHelp("api", "deleteSubject", []string{"subject object"}, "Delete a subject in ArchivesSpace from a subject object")
+	js.SetHelp("api", "listSubjects", []string{}, "return a list of subject ids")
+	js.SetHelp("api", "createDigitalObject", []string{"repo_id int", "digital_object object"}, "Create a digital object in the repository indicated by id")
+	js.SetHelp("api", "getDigitalObject", []string{"repo_id int", "object_id int"}, "get a digital object form ArchivesSpace by repository id and object id")
+	js.SetHelp("api", "updateDigitalObject", []string{"digital_object object"}, "Update a digital object in ArchivesSpace from digital_object")
+	js.SetHelp("api", "deleteDigitalObject", []string{"digital_object object"}, "Delete a digital object form ArchivesSpace using digital_object")
+	js.SetHelp("api", "listDigitalObjects", []string{"repo_id int"}, "get a list of digital object ids from repository with matching id")
+}
 
+// AddExtensions add cait API to a JavaScript environment along with the
+func AddExtensions(api *ArchivesSpaceAPI, js *ostdlib.JavaScriptVM) {
+	vm := js.VM
 	errorObject := func(obj *otto.Object, msg string) otto.Value {
 		if obj == nil {
 			obj, _ = vm.Object(`({})`)
@@ -53,315 +86,6 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 		obj, _ := vm.Object(fmt.Sprintf(`(%s)`, src))
 		return obj.Value()
 	}
-
-	osObj, _ := vm.Object(`os = {}`)
-
-	// os.args() returns an array of command line args
-	osObj.Set("args", func(call otto.FunctionCall) otto.Value {
-		results, _ := vm.ToValue(jsArgs)
-		return results
-	})
-
-	// os.exit()
-	osObj.Set("exit", func(call otto.FunctionCall) otto.Value {
-		exitCode := 0
-		if len(call.ArgumentList) == 1 {
-			s := call.Argument(0).String()
-			exitCode, _ = strconv.Atoi(s)
-		}
-		os.Exit(exitCode)
-		return responseObject(exitCode)
-	})
-
-	// os.getEnv(env_varname) returns empty string or the value found as a string
-	osObj.Set("getEnv", func(call otto.FunctionCall) otto.Value {
-		envvar := call.Argument(0).String()
-		result, err := vm.ToValue(os.Getenv(envvar))
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.getEnv(%q), %s", call.CallerLocation(), envvar, err))
-		}
-		return result
-	})
-
-	// os.readFile(filepath) returns the content of the filepath or empty string
-	osObj.Set("readFile", func(call otto.FunctionCall) otto.Value {
-		filename := call.Argument(0).String()
-		buf, err := ioutil.ReadFile(filename)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.readFile(%q), %s", call.CallerLocation(), filename, err))
-		}
-		result, err := vm.ToValue(fmt.Sprintf("%s", buf))
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.readFile(%q), %s", call.CallerLocation(), filename, err))
-		}
-		return result
-	})
-
-	// os.writeFile(filepath, contents) returns true on sucess, false on failure
-	osObj.Set("writeFile", func(call otto.FunctionCall) otto.Value {
-		filename := call.Argument(0).String()
-		buf := call.Argument(1).String()
-		err := ioutil.WriteFile(filename, []byte(buf), 0660)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.writeFile(%q, %q), %s", call.CallerLocation(), filename, buf, err))
-		}
-		result, err := vm.ToValue(buf)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.writeFile(%q, %q), %s", call.CallerLocation(), filename, buf, err))
-		}
-		return result
-	})
-
-	// os.rename(oldpath, newpath) renames a path returns an error object or true on success
-	osObj.Set("rename", func(call otto.FunctionCall) otto.Value {
-		oldpath := call.Argument(0).String()
-		newpath := call.Argument(1).String()
-		err := os.Rename(oldpath, newpath)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.rename(%q, %q), %s", call.CallerLocation(), oldpath, newpath, err))
-		}
-		result, _ := vm.ToValue(true)
-		return result
-	})
-
-	// os.remove(filepath) returns an error object or true if successful
-	osObj.Set("remove", func(call otto.FunctionCall) otto.Value {
-		pathname := call.Argument(0).String()
-		fp, err := os.Open(pathname)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.remove(%q), %s", call.CallerLocation(), pathname, err))
-		}
-		defer fp.Close()
-		stat, err := fp.Stat()
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.remove(%q), %s", call.CallerLocation(), pathname, err))
-		}
-		result, _ := vm.ToValue(false)
-		if stat.IsDir() == false {
-			err := os.Remove(pathname)
-			if err != nil {
-				return errorObject(nil, fmt.Sprintf("%s os.remove(%q), %s", call.CallerLocation(), pathname, err))
-			}
-			result, _ = vm.ToValue(true)
-		}
-		return result
-	})
-
-	// os.chmod(filepath, perms) returns an error object or true if successful
-	osObj.Set("chmod", func(call otto.FunctionCall) otto.Value {
-		filename := call.Argument(0).String()
-		perms := call.Argument(1).String()
-
-		fp, err := os.Open(filename)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.chmod(%q, %s), %s", call.CallerLocation(), filename, perms, err))
-		}
-		defer fp.Close()
-
-		perm, err := strconv.ParseUint(perms, 10, 32)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.chmod(%q, %s), %s", call.CallerLocation(), filename, perms, err))
-		}
-		err = fp.Chmod(os.FileMode(perm))
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.chmod(%q, %s), %s", call.CallerLocation(), filename, perms, err))
-		}
-		result, _ := vm.ToValue(true)
-		return result
-	})
-
-	// os.find(startpath) returns an array of path names
-	osObj.Set("find", func(call otto.FunctionCall) otto.Value {
-		var dirs []string
-		startpath := call.Argument(0).String()
-		err := filepath.Walk(startpath, func(p string, info os.FileInfo, err error) error {
-			dirs = append(dirs, p)
-			return err
-		})
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.find(%q), %s", call.CallerLocation(), startpath, err))
-		}
-		result, err := vm.ToValue(dirs)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.find(%q), %s", call.CallerLocation(), startpath, err))
-		}
-		return result
-	})
-
-	// os.mkdir(pathname, perms) return an error object or true
-	osObj.Set("mkdir", func(call otto.FunctionCall) otto.Value {
-		newpath := call.Argument(0).String()
-		perms := call.Argument(1).String()
-
-		perm, err := strconv.ParseUint(perms, 10, 32)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.mkdir(%q, %s), %s", call.CallerLocation(), newpath, perms, err))
-		}
-		err = os.Mkdir(newpath, os.FileMode(perm))
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.mkdir(%q, %s), %s", call.CallerLocation(), newpath, perms, err))
-		}
-
-		result, _ := vm.ToValue(true)
-		return result
-	})
-
-	// os.mkdir(pathname, perms) return an error object or true
-	osObj.Set("mkdirAll", func(call otto.FunctionCall) otto.Value {
-		newpath := call.Argument(0).String()
-		perms := call.Argument(1).String()
-
-		perm, err := strconv.ParseUint(perms, 10, 32)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.mkdir(%q, %s), %s", call.CallerLocation(), newpath, perms, err))
-		}
-		err = os.MkdirAll(newpath, os.FileMode(perm))
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.mkdir(%q, %s), %s", call.CallerLocation(), newpath, perms, err))
-		}
-
-		result, _ := vm.ToValue(true)
-		return result
-	})
-
-	// os.rmdir(pathname) returns an error object or true if successful
-	osObj.Set("rmdir", func(call otto.FunctionCall) otto.Value {
-		pathname := call.Argument(0).String()
-		// NOTE: make sure this is a directory and not a file
-		fp, err := os.Open(pathname)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.rmdir(%q), %s", call.CallerLocation(), pathname, err))
-		}
-		defer fp.Close()
-		stat, err := fp.Stat()
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.rmdir(%q), %s", call.CallerLocation(), pathname, err))
-		}
-		result, _ := vm.ToValue(false)
-		if stat.IsDir() == true {
-			err := os.Remove(pathname)
-			if err != nil {
-				return errorObject(nil, fmt.Sprintf("%s os.rmdir(%q), %s", call.CallerLocation(), pathname, err))
-			}
-			result, _ = vm.ToValue(true)
-		}
-		return result
-	})
-
-	// os.rmdirAll(pathname) returns an error object or true if successful
-	osObj.Set("rmdirAll", func(call otto.FunctionCall) otto.Value {
-		pathname := call.Argument(0).String()
-		// NOTE: make sure this is a directory and not a file
-		fp, err := os.Open(pathname)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.rmdirAll(%q), %s", call.CallerLocation(), pathname, err))
-		}
-		defer fp.Close()
-		stat, err := fp.Stat()
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("%s os.rmdirAll(%q), %s", call.CallerLocation(), pathname, err))
-		}
-		result, _ := vm.ToValue(false)
-		if stat.IsDir() == true {
-			err := os.RemoveAll(pathname)
-			if err != nil {
-				return errorObject(nil, fmt.Sprintf("%s os.rmdirAll(%q), %s", call.CallerLocation(), pathname, err))
-			}
-			result, _ = vm.ToValue(true)
-		}
-		return result
-	})
-
-	httpObj, _ := vm.Object(`http = {}`)
-
-	//HttpGet(uri, headers) returns contents recieved (if any)
-	httpObj.Set("get", func(call otto.FunctionCall) otto.Value {
-		//FIXME: Need to optional argument of an array of headers,
-		// [{"Content-Type":"application/json"},{"X-ArchivesSpaceSession":"..."}]
-		var headers []map[string]string
-
-		uri := call.Argument(0).String()
-		if len(call.ArgumentList) > 1 {
-			rawObjs, err := call.Argument(1).Export()
-			if err != nil {
-				return errorObject(nil, fmt.Sprintf("Failed to process headers, %s, %s, %s", call.CallerLocation(), uri, err))
-			}
-			src, _ := json.Marshal(rawObjs)
-			err = json.Unmarshal(src, &headers)
-			if err != nil {
-				return errorObject(nil, fmt.Sprintf("Failed to translate headers, %s, %s, %s", call.CallerLocation(), uri, err))
-			}
-		}
-
-		client := &http.Client{}
-		req, err := http.NewRequest("GET", uri, nil)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("Can't create a GET request for %s, %s, %s", uri, call.CallerLocation(), err))
-		}
-		for _, header := range headers {
-			for k, v := range header {
-				req.Header.Set(k, v)
-			}
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("Can't connect to %s, %s, %s", uri, call.CallerLocation(), err))
-		}
-		defer resp.Body.Close()
-		content, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("Can't read response %s, %s, %s", uri, call.CallerLocation(), err))
-		}
-		return responseObject(content)
-	})
-
-	// HttpPost(uri, headers, payload) returns contents recieved (if any)
-	httpObj.Set("post", func(call otto.FunctionCall) otto.Value {
-		var headers []map[string]string
-
-		uri := call.Argument(0).String()
-		mimeType := call.Argument(1).String()
-		payload := call.Argument(2).String()
-		buf := strings.NewReader(payload)
-		// Process any additional headers past to HttpPost()
-		if len(call.ArgumentList) > 2 {
-			rawObjs, err := call.Argument(3).Export()
-			if err != nil {
-				return errorObject(nil, fmt.Sprintf("Failed to process headers for %s, %s, %s", uri, call.CallerLocation(), err))
-			}
-			src, _ := json.Marshal(rawObjs)
-			err = json.Unmarshal(src, &headers)
-			if err != nil {
-				return errorObject(nil, fmt.Sprintf("Failed to translate header for %s, %s, %s", uri, call.CallerLocation(), err))
-			}
-		}
-
-		client := &http.Client{}
-		req, err := http.NewRequest("POST", uri, buf)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("Can't create a POST request for %s, %s, %s", uri, call.CallerLocation(), err))
-		}
-		req.Header.Set("Content-Type", mimeType)
-		for _, header := range headers {
-			for k, v := range header {
-				req.Header.Set(k, v)
-			}
-		}
-		resp, err := client.Do(req)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("Can't connect to %s, %s, %s", uri, call.CallerLocation(), err))
-		}
-		defer resp.Body.Close()
-		content, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("Can't read response %s, %s, %s", uri, call.CallerLocation(), err))
-		}
-		result, err := vm.ToValue(fmt.Sprintf("%s", content))
-		if err != nil {
-			return errorObject(nil, fmt.Sprintf("HttpGet(%q) error, %s, %s", uri, call.CallerLocation(), err))
-		}
-		return result
-	})
 
 	apiObj, _ := vm.Object(`api = {}`)
 	// api.login() error if one occurred
@@ -395,7 +119,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.createRepository(repository), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
 		}
 		repo := new(Repository)
-		err = call.Argument(0).ToStruct(&repo)
+		err = ostdlib.ToStruct(call.Argument(0), &repo)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.createRepository() arg error %s, %s", call.CallerLocation(), err))
 		}
@@ -434,7 +158,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.updateRepository(repo), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
 		}
 		repo := new(Repository)
-		err = call.Argument(0).ToStruct(&repo)
+		err = ostdlib.ToStruct(call.Argument(0), &repo)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.updateRepository(repo) arg error %s, %s", call.CallerLocation(), err))
 		}
@@ -453,7 +177,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.deleteRepository(repo), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
 		}
 		repo := new(Repository)
-		err = call.Argument(0).ToStruct(&repo)
+		err = ostdlib.ToStruct(call.Argument(0), &repo)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.deleteRepository(repo) arg error %s, %s", call.CallerLocation(), err))
 		}
@@ -487,7 +211,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 		}
 		agentType := call.Argument(0).String()
 		agent := new(Agent)
-		err = call.Argument(1).ToStruct(&agent)
+		err = ostdlib.ToStruct(call.Argument(1), &agent)
 		if err != nil || agentType == "" {
 			return errorObject(obj, fmt.Sprintf("api.createAgent(agent_type, agent) arg error %s, %s", call.CallerLocation(), err))
 		}
@@ -525,7 +249,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.updateAgent(agent), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
 		}
 		agent := new(Agent)
-		err = call.Argument(0).ToStruct(&agent)
+		err = ostdlib.ToStruct(call.Argument(0), &agent)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.updateAgent(%q) arg error %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
 		}
@@ -543,7 +267,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.deleteAgent(agent), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
 		}
 		agent := new(Agent)
-		err = call.Argument(0).ToStruct(&agent)
+		err = ostdlib.ToStruct(call.Argument(0), &agent)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.deleteAgent(%q) arg error %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
 		}
@@ -580,7 +304,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.createAccession(%s, %s), arg error, %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
 		}
 		accession := new(Accession)
-		err = call.Argument(1).ToStruct(&accession)
+		err = ostdlib.ToStruct(call.Argument(1), &accession)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.createAccession(%s, %s), arg error, %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
 		}
@@ -621,7 +345,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.updateAccession(accession), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
 		}
 		accession := new(Accession)
-		err = call.Argument(0).ToStruct(accession)
+		err = ostdlib.ToStruct(call.Argument(0), accession)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.updateAccession(%s), arg error, %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
 		}
@@ -639,7 +363,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.deleteAccession(accession), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
 		}
 		accession := new(Accession)
-		err = call.Argument(0).ToStruct(accession)
+		err = ostdlib.ToStruct(call.Argument(0), accession)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.deleteAccession(%s), arg error, %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
 		}
@@ -675,7 +399,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.createSubject(subject), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
 		}
 		subject := new(Subject)
-		err = call.Argument(0).ToStruct(subject)
+		err = ostdlib.ToStruct(call.Argument(0), subject)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.createSubject(%s), arg error, %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
 		}
@@ -711,7 +435,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.updateSubject(subject), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
 		}
 		subject := new(Subject)
-		err = call.Argument(0).ToStruct(subject)
+		err = ostdlib.ToStruct(call.Argument(0), subject)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.updateSubject(%s), arg error, %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
 		}
@@ -729,7 +453,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.deleteSubject(subject), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
 		}
 		subject := new(Subject)
-		err = call.Argument(0).ToStruct(subject)
+		err = ostdlib.ToStruct(call.Argument(0), subject)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.deleteSubject(%s), arg error, %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
 		}
@@ -765,7 +489,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.createDigitalObject(%s, %s), arg error, %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
 		}
 		digitalObject := new(DigitalObject)
-		err = call.Argument(1).ToStruct(digitalObject)
+		err = ostdlib.ToStruct(call.Argument(1), digitalObject)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.createDigitalObject(%s, %s), arg error, %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
 		}
@@ -806,7 +530,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.updateDigitalObject(object), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
 		}
 		digitalObject := new(DigitalObject)
-		err = call.Argument(0).ToStruct(digitalObject)
+		err = ostdlib.ToStruct(call.Argument(0), digitalObject)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.updateDigitalObject(%s), arg error, %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
 		}
@@ -824,7 +548,7 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 			return errorObject(obj, fmt.Sprintf("api.deleteDigitalObject(object), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
 		}
 		digitalObject := new(DigitalObject)
-		err = call.Argument(0).ToStruct(digitalObject)
+		err = ostdlib.ToStruct(call.Argument(0), digitalObject)
 		if err != nil {
 			return errorObject(obj, fmt.Sprintf("api.deleteDigitalObject(%s), arg error, %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
 		}
@@ -852,65 +576,17 @@ func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
 		}
 		return responseObject(response)
 	})
+}
 
-	//
-	// Add Polyfills, FIXME: these need to be implemented in Otto...
-	//
-	polyfil := `
-	if (!Date.prototype.now) {
-		Date.prototype.now = function now() {
-			'use strict';
-		 	return new Date().getTime();
-		};
-	}
-	if (!String.prototype.repeat) {
-	  String.prototype.repeat = function(count) {
-	    'use strict';
-	    if (this == null) {
-	      throw new TypeError('can\'t convert ' + this + ' to object');
-	    }
-	    var str = '' + this;
-	    count = +count;
-	    if (count != count) {
-	      count = 0;
-	    }
-	    if (count < 0) {
-	      throw new RangeError('repeat count must be non-negative');
-	    }
-	    if (count == Infinity) {
-	      throw new RangeError('repeat count must be less than infinity');
-	    }
-	    count = Math.floor(count);
-	    if (str.length == 0 || count == 0) {
-	      return '';
-	    }
-	    // Ensuring count is a 31-bit integer allows us to heavily optimize the
-	    // main part. But anyway, most current (August 2014) browsers can't handle
-	    // strings 1 << 28 chars or longer, so:
-	    if (str.length * count >= 1 << 28) {
-	      throw new RangeError('repeat count must not overflow maximum string size');
-	    }
-	    var rpt = '';
-	    for (;;) {
-	      if ((count & 1) == 1) {
-	        rpt += str;
-	      }
-	      count >>>= 1;
-	      if (count == 0) {
-	        break;
-	      }
-	      str += str;
-	    }
-	    // Could we try:
-	    // return Array(count + 1).join(this);
-	    return rpt;
-	  }
-	}
-`
-	script, err := vm.Compile("polyfil", polyfil)
-	if err != nil {
-		log.Fatalf("polyfil compile error: %s\n\n%s\n", err, polyfil)
-	}
-	vm.Eval(script)
+// NewJavaScript creates a *otto.Otto (JavaScript VM) with functions added to integrate
+// the internal cait API.
+func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
+	vm := otto.New()
+	js := ostdlib.New(vm)
+	js.AddHelp()
+	js.AddExtensions()
+	AddExtensions(api, js)
+	AddHelp(api, js)
+	vm = js.VM
 	return vm
 }

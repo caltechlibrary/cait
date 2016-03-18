@@ -77,7 +77,7 @@ func TestViews(t *testing.T) {
 				t.Errorf("Can't unmarshal accession %s, %s", src, err)
 				return err
 			}
-			accessionView, err := accession.NormalizeView(SubjectMap, digitalObjectMap)
+			accessionView, err := accession.NormalizeView([]*Agent{}, SubjectMap, digitalObjectMap)
 			if err != nil {
 				t.Errorf("Can't make a normalized view for %s, %s", p, err)
 				return err

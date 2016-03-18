@@ -30,8 +30,11 @@ import (
 	"strings"
 	"time"
 
-	"../../../cait"
+	// 3rd Party Packages
 	"github.com/blevesearch/bleve"
+
+	// Caltech Library Packages
+	"github.com/caltechlibrary/cait"
 )
 
 var (

@@ -31,7 +31,8 @@ import (
 	//"html/template"
 	"text/template"
 
-	"../../../cait"
+	// Caltech Library packages
+	"github.com/caltechlibrary/cait"
 )
 
 var (

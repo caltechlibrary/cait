@@ -31,8 +31,8 @@ import (
 	// 3rd Party packages
 	"github.com/chzyer/readline"
 
-	// Cait specific packages
-	"../../../cait"
+	// Caltech Library Pacakges
+	"github.com/caltechlibrary/cait"
 )
 
 var (
