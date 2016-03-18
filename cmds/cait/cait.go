@@ -901,14 +901,15 @@ func main() {
 	if jsRunner == true || jsInteractive == true {
 		vm := otto.New()
 		js := ostdlib.New(vm)
-		js.AddHelp()
 		js.AddExtensions()
 		cait.AddExtensions(api, js)
-		cait.AddHelp(api, js)
 		if jsRunner == true {
 			js.Runner(flag.Args())
 		}
 		if jsInteractive == true {
+			js.AddHelp()
+			cait.AddHelp(api, js)
+			js.SetupAutoComplete()
 			js.Repl()
 		}
 		os.Exit(0)
