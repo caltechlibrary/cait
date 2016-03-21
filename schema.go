@@ -21,6 +21,7 @@ package cait
 
 import (
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"net/url"
 	"strconv"
@@ -228,8 +229,11 @@ type Accession struct {
 	AccessRestrictionsNote string                   `json:"access_restrictions_note"`
 	UseRestrictions        bool                     `json:"use_restrictions"`
 	UseRestrictionsNote    string                   `json:"use_restrictions_note"`
-	LinkedAgents           []map[string]interface{} `json:"linked_agents"`
-	Instances              []map[string]interface{} `json:"instances"`
+
+	//	LinkedAgents           []*Agent                 `json:"linked_agents"`
+
+	LinkedAgents []map[string]interface{} `json:"linked_agents"`
+	Instances    []map[string]interface{} `json:"instances"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type"`
@@ -318,8 +322,10 @@ type Agent struct {
 	AgentContacts             []*AgentContact          `json:"agent_contacts,omitempty"`
 	LinkedAgentRoles          []interface{}            `json:"linked_agent_roles,omitempty"`
 	ExternalDocuments         []map[string]interface{} `json:"external_documents"`
-	RightsStatements          []interface{}            `json:"rights_statements"`
-	Notes                     []*NoteBiogHist          `json:"notes"`
+
+	//	RightsStatements          []*RightsStatement       `json:"rights_statements"`
+	RightsStatements []interface{}   `json:"rights_statements"`
+	Notes            []*NoteBiogHist `json:"notes"`
 
 	LockVersion    json.Number `json:"lock_version,Number"`
 	JSONModelType  string      `json:"jsonmodel_type,omitempty"`
@@ -1925,6 +1931,7 @@ type RepositoryWithAgent struct {
 
 // Resource JSONModel(:resource)
 type Resource struct {
+	XMLName           xml.Name                 `json:"-"`
 	URI               string                   `json:"uri,omitempty"`
 	ExternalIDs       []*ExternalID            `json:"external_ids,omitemtpy"`
 	Title             string                   `json:"title,omitemtpy"`
@@ -1933,11 +1940,13 @@ type Resource struct {
 	Subjects          []map[string]interface{} `json:"subjects"`
 	LinkedEvents      []map[string]interface{} `json:"linked_events"`
 	Extents           []*Extent                `json:"extents"`
-	Dates             *Date                    `json:"dates"`
+	Dates             []*Date                  `json:"dates"`
 	ExternalDocuments []map[string]interface{} `json:"external_documents"`
-	RightsStatements  *RightsStatement         `json:"rights_statement"`
-	LinkedAgents      map[string]interface{}   `json:"linked_agents"`
-	Suppressed        bool                     `json:"suppressed"`
+
+	//	RightsStatements  []*RightsStatement       `json:"rights_statement"`
+	RightsStatements []interface{} `json:"rights_statements"`
+	LinkedAgents     []*Agent      `json:"linked_agents"`
+	Suppressed       bool          `json:"suppressed"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1948,38 +1957,41 @@ type Resource struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	ID0                         string                 `json:"id_0,omitempty"`
-	ID1                         string                 `json:"id_1,omitempty"`
-	ID2                         string                 `json:"id_2,omitempty"`
-	ID3                         string                 `json:"id_3,omitempty"`
-	Level                       string                 `json:"level,omitempty"`
-	OtherLevel                  string                 `json:"other_level,omitempty"`
-	ResourceType                string                 `json:"resource_type,omitempty"`
-	Tree                        map[string]interface{} `json:"tree,omitempty"`
-	Restrictions                bool                   `json:"restrictioons,omitempty"`
-	RepositoryProcessingNote    string                 `json:"repository_processing_note,omitempty"`
-	EADID                       string                 `json:"ead_id,omitempty"`
-	EADLocation                 string                 `json:"ead_location,omitempty"`
-	FindingAidTitle             string                 `json:"finding_aid_title,omitempty"`
-	FindingAidSubtitle          string                 `json:"finding_aid_subtitle,omitempty"`
-	FindingAidFileTitle         string                 `json:"find_aid_filing_title,omitempty"`
-	FindingAidDate              string                 `json:"finding_aid_date,omitempty"`
-	FindingAidAuthor            string                 `json:"finding_aid_author,omitempty"`
-	FindingAidDescriptionRultes string                 `json:"finding_aid_decription_rules,omitempty"`
-	FindingAidLanguage          string                 `json:"finding_aid_language,omitempty"`
-	FindingAidSponsor           string                 `json:"finding_aid_spansor,omitempty"`
-	FindingAidEditionStatement  string                 `json:"finding_aid_edition_statement,omitempty"`
-	FindingAidSeriesStatement   string                 `json:"finding_aid_series_statement,omitempty"`
-	FindingAidStatus            string                 `json:"finging_aid_status,omitempty"`
-	FindingAidNote              string                 `json:"finding_aid_note,omitempty"`
-	RevisionStatements          []*RevisionStatement   `json:"revision_statements,omitempty"`
-	Instances                   []*Instance            `json:"instances,omitempty"`
-	Deaccessions                []*Deaccession         `json:"deaccession,omitempty"`
-	CollectionManagement        *CollectionManagement  `json:"collection_management"`
-	UserDefined                 *UserDefined           `json:"user_defined,omitempty"`
-	ReleatedAccessions          map[string]interface{} `json:"related_accessions,omitempty"`
-	Classification              map[string]interface{} `json:"classifications,omitempty"`
-	Notes                       map[string]interface{} `json:"notes"`
+	ID0          string `json:"id_0,omitempty"`
+	ID1          string `json:"id_1,omitempty"`
+	ID2          string `json:"id_2,omitempty"`
+	ID3          string `json:"id_3,omitempty"`
+	Level        string `json:"level,omitempty"`
+	OtherLevel   string `json:"other_level,omitempty"`
+	ResourceType string `json:"resource_type,omitempty"`
+
+	//	Tree                        map[string]interface{}                `json:"tree,omitempty"`
+	Tree *Object `json:"tree,omitempty"`
+
+	Restrictions                bool                     `json:"restrictioons,omitempty"`
+	RepositoryProcessingNote    string                   `json:"repository_processing_note,omitempty"`
+	EADID                       string                   `xml:"control>recordid" json:"ead_id,omitempty"`
+	EADLocation                 string                   `xml:"control>location" json:"ead_location,omitempty"`
+	FindingAidTitle             string                   `xml:"control>filedesc>titlestmt>titleproper" json:"finding_aid_title,omitempty"`
+	FindingAidSubtitle          string                   `xml:"control>filedesc>titlestmt>subtitle" json:"finding_aid_subtitle,omitempty"`
+	FindingAidFileTitle         string                   `xml:"control>filedesc>titlestmt>filing_title" json:"find_aid_filing_title,omitempty"`
+	FindingAidDate              string                   `json:"finding_aid_date,omitempty"`
+	FindingAidAuthor            string                   `xml:"control>filedesc>titlestmt>author" json:"finding_aid_author,omitempty"`
+	FindingAidDescriptionRultes string                   `json:"finding_aid_decription_rules,omitempty"`
+	FindingAidLanguage          string                   `json:"finding_aid_language,omitempty"`
+	FindingAidSponsor           string                   `xml:"control>filedesc>titlestmt>sponsor" json:"finding_aid_sponsor,omitempty"`
+	FindingAidEditionStatement  string                   `json:"finding_aid_edition_statement,omitempty"`
+	FindingAidSeriesStatement   string                   `json:"finding_aid_series_statement,omitempty"`
+	FindingAidStatus            string                   `json:"finging_aid_status,omitempty"`
+	FindingAidNote              string                   `json:"finding_aid_note,omitempty"`
+	RevisionStatements          []*RevisionStatement     `json:"revision_statements,omitempty"`
+	Instances                   []*Instance              `json:"instances,omitempty"`
+	Deaccessions                []*Deaccession           `json:"deaccession,omitempty"`
+	CollectionManagement        *CollectionManagement    `json:"collection_management"`
+	UserDefined                 *UserDefined             `json:"user_defined,omitempty"`
+	ReleatedAccessions          []map[string]interface{} `json:"related_accessions,omitempty"`
+	Classifications             []map[string]interface{} `json:"classifications,omitempty"`
+	Notes                       []map[string]interface{} `json:"notes"`
 }
 
 // ResourceTree JSONModel(:resource_tree)

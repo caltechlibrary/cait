@@ -61,6 +61,7 @@ var (
 		"term",
 		"location",
 		"digital_object",
+		"resource",
 	}
 	actions = []string{
 		"create",
@@ -828,6 +829,85 @@ func runDigitalObjectCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, erro
 	return "", fmt.Errorf("runDigitalObjectCmd() action %s not implemented for %s", cmd.Action, cmd.Subject)
 }
 
+func runResourceCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
+	if err := api.Login(); err != nil {
+		return "", err
+	}
+	obj := new(cait.Resource)
+	if cmd.Payload != "" {
+		err := json.Unmarshal([]byte(cmd.Payload), &obj)
+		if err != nil {
+			return "", fmt.Errorf("Could not decode %s, error: %s", cmd.Payload, err)
+		}
+	}
+	objID := cait.URIToID(obj.URI)
+	repoID := cait.URIToRepoID(obj.URI)
+	if repoID == 0 {
+		return "", fmt.Errorf(`Can't determine repository ID from uri, e.g. {"uri":"/repositories/2/resources"} or {"uri":"/repositories/2/resources/3"}`)
+	}
+	switch cmd.Action {
+	case "create":
+		response, err := api.CreateResource(repoID, obj)
+		if err != nil {
+			return "", fmt.Errorf("Create resource fialed %s, %s", obj.URI, err)
+		}
+		if response.Status != "Created" {
+			return "", fmt.Errorf("Create resource status %s, %s", obj.URI, response)
+		}
+		src, err := json.Marshal(response)
+		if err != nil {
+			return "", fmt.Errorf("Create resource response %s, %s", obj.URI, err)
+		}
+		return string(src), nil
+	case "list":
+		if objID == 0 {
+			objs, err := api.ListResources(repoID)
+			if err != nil {
+				return "", fmt.Errorf(`{"error": %q, "uri": "/repositories/%d/resources"}`, err, repoID)
+			}
+			src, err := json.Marshal(objs)
+			if err != nil {
+				return "", fmt.Errorf(`{"error": "Cannot JSON encode %s %s"}`, cmd.Payload, err)
+			}
+			return string(src), nil
+		}
+		obj, err := api.GetResource(repoID, objID)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": %q}`, err)
+		}
+		src, err := json.Marshal(obj)
+		if err != nil {
+			return "", fmt.Errorf(`{"error": "Cannot find %s %s"}`, cmd.Payload, err)
+		}
+		return string(src), nil
+	case "update":
+		responseMsg, err := api.UpdateResource(obj)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	case "delete":
+		obj, err := api.GetResource(repoID, objID)
+		if err != nil {
+			return "", err
+		}
+		responseMsg, err := api.DeleteResource(obj)
+		if err != nil {
+			return "", err
+		}
+		src, err := json.Marshal(responseMsg)
+		return string(src), err
+	case "export":
+		err := api.ExportResources(repoID)
+		if err != nil {
+			return "", fmt.Errorf("Exporting repositories/%d/resources, %s", repoID, err)
+		}
+		return `{"status": "ok"}`, nil
+	}
+	return "", fmt.Errorf("runResourceCMd() action %s not implemented for %s", cmd.Action, cmd.Subject)
+}
+
 func runCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	switch cmd.Subject {
 	case "archivesspace":
@@ -848,6 +928,8 @@ func runCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		return runTermCmd(api, cmd)
 	case "digital_object":
 		return runDigitalObjectCmd(api, cmd)
+	case "resource":
+		return runResourceCmd(api, cmd)
 	}
 	return "", fmt.Errorf("%s %s not implemented", cmd.Subject, cmd.Action)
 }

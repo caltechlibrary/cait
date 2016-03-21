@@ -220,6 +220,27 @@ func (api *ArchivesSpaceAPI) ExportDigitalObjects(repoID int) error {
 	return nil
 }
 
+// ExportResources export all resources by id to JSON files.
+func (api *ArchivesSpaceAPI) ExportResources(repoID int) error {
+	ids, err := api.ListResources(repoID)
+	if err != nil {
+		return fmt.Errorf("Can't list resource ids, %s", err)
+	}
+	for _, id := range ids {
+		data, err := api.GetResource(repoID, id)
+		if err != nil {
+			return fmt.Errorf("Can't get /repositories/%d/resources/%d, %s", repoID, id, err)
+		}
+		dir := path.Join(api.Dataset, "repositories", fmt.Sprintf("%d", repoID), "resources")
+		fname := fmt.Sprintf("%d.json", id)
+		err = WriteJSON(&data, dir, fname)
+		if err != nil {
+			return fmt.Errorf("Can't write %s/%d.json, %s", dir, id, err)
+		}
+	}
+	return nil
+}
+
 // ExportArchivesSpace exports all content currently support by the Golang API implementation
 func (api *ArchivesSpaceAPI) ExportArchivesSpace() error {
 	var err error

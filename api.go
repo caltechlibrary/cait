@@ -732,3 +732,61 @@ func (api *ArchivesSpaceAPI) ListDigitalObjects(repoID int) ([]int, error) {
 	u.RawQuery = q.Encode()
 	return api.ListAPI(u.String())
 }
+
+// CreateResource - return a new resource
+func (api *ArchivesSpaceAPI) CreateResource(repoID int, obj *Resource) (*ResponseMsg, error) {
+	// NOTE: attempt extract accession ID for the edge of importing a digital object as opposed to a clean create
+	uriPrefix := fmt.Sprintf("/repositories/%d/digital_objects", repoID)
+	obj.JSONModelType = "digital_object"
+	obj.LockVersion = "0"
+	u := *api.URL
+	u.Path = uriPrefix
+	// We need to create the object
+	responseMsg, responseErr := api.CreateAPI(u.String(), obj)
+	if responseErr != nil || responseMsg.Status != "created" {
+		return responseMsg, responseErr
+	}
+	// NOTE: In the case we're importing a digital_object from another ArchivesSpace instance.
+	// We need to correct the URI assignment, lock version info and attach to the accession of necessary
+	obj.URI = responseMsg.URI
+	obj.LockVersion = responseMsg.LockVersion
+	return responseMsg, responseErr
+}
+
+// GetResource - return a given resource
+func (api *ArchivesSpaceAPI) GetResource(repoID, objID int) (*Resource, error) {
+	u := *api.URL
+	u.Path = fmt.Sprintf("/repositories/%d/resources/%d", repoID, objID)
+
+	obj := new(Resource)
+	err := api.GetAPI(u.String(), obj)
+	if err != nil {
+		return nil, fmt.Errorf("GetResource() %s, error, %s", u.String(), err)
+	}
+	//obj.ID = URIToID(obj.URI)
+	return obj, nil
+}
+
+// UpdateResource - returns an updated resource
+func (api *ArchivesSpaceAPI) UpdateResource(obj *Resource) (*ResponseMsg, error) {
+	u := api.URL
+	u.Path = obj.URI
+	return api.UpdateAPI(u.String(), obj)
+}
+
+// DeleteResource - return the results of deleting a resource
+func (api *ArchivesSpaceAPI) DeleteResource(obj *Resource) (*ResponseMsg, error) {
+	u := api.URL
+	u.Path = obj.URI
+	return api.DeleteAPI(u.String(), obj)
+}
+
+// ListResources - return a list of resource ids
+func (api *ArchivesSpaceAPI) ListResources(repoID int) ([]int, error) {
+	u := api.URL
+	u.Path = fmt.Sprintf(`/repositories/%d/resources`, repoID)
+	q := u.Query()
+	q.Set("all_ids", "true")
+	u.RawQuery = q.Encode()
+	return api.ListAPI(u.String())
+}
