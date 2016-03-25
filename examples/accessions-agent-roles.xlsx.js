@@ -14,7 +14,7 @@
 
     // Setup empty workbook
     workbook = {
-        "Accession Agent Roles": [
+        "Accession Agents Roles": [
             [
                 "Accession URI",
                 "Accession Title",
@@ -29,7 +29,7 @@
 
 
     function appendRow(wk, uri, title, ca_uri, ca_names, sa_uri, sa_names) {
-            var table = wk["Accession Agent Roles"];
+            var table = wk["Accession Agents Roles"];
             table.push([uri, title, ca_uri, ca_names, sa_uri, sa_names, ""]);
     }
 
