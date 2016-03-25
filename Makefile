@@ -1,7 +1,7 @@
 #
 # Simple Makefile for conviently testing, building and deploying experiment.
 #
-build: api.go cait.go export.go models.go search.go views.go js.go
+build: api.go cait.go export.go schema.go search.go views.go js.go
 	go build
 	go build -o bin/cait cmds/cait/cait.go
 	go build -o bin/caitjs cmds/caitjs/caitjs.go
