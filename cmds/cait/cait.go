@@ -991,7 +991,7 @@ func main() {
 		if jsInteractive == true {
 			js.AddHelp()
 			cait.AddHelp(api, js)
-			js.SetupAutoComplete()
+			js.AddAutoComplete()
 			js.Repl()
 		}
 		os.Exit(0)
