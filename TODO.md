@@ -3,7 +3,7 @@
 
 ## Action Item
 
-+ Create xlsx2ead3 to convert container spreadsheets to ead by merging Accession information with the container information
++ Create _xlsx2ead_ to convert container spreadsheets to ead by merging Accession information with the container information
 
 ### Bugs
 
