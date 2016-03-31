@@ -11,9 +11,7 @@ All tools can be configured through environment variables. Some have additional 
 
 _cait_ command line utility is the workhorse for getting content out of ArchivesSpace and onto your local file system in a useful static form (JSON blobs).  _cait_ can be used to put some content back into ArchivesSpace. This gives you options for batch editing content with more general tools like R, Open Refine, etc.
 
-### caitjs
-
-[caitjs](CAITJS-README.md) a shell (repl) and JavaScript file runner for working with [ArchicesSpace REST API](http://archivesspace.github.io/archivesspace/). It provides access to the same API provided internal to _cait_. Helpful for data migrations and fixes.
+[cait](CAIT-JAVASCRIPT-README.md) also provides a JavaScript shell (repl) and script runner for working with [ArchicesSpace REST API](http://archivesspace.github.io/archivesspace/). It provides access to the same API provided internal to _cait_. Helpful for data migrations and fixes.
 
 ### genpages
 
@@ -54,7 +52,7 @@ _searchdataset_ is a utility for searching the content in the dataset directory 
 + Export ArchivesSpace content as needed with _cait_
 + Index the exported data with _indexdataset_
 + Explore dataset with _searchdataset_
-+ Write a JavaScript program to make corrections or use _caitjs_ interactively to fix/update data
++ Write a JavaScript program to make corrections or use _cait_ interactively to fix/update data
 
 ## Workflow for importing data from Excel
 

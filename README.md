@@ -4,7 +4,7 @@
 [cait](https://github.com/caltechlibrary/cait) is a set of utilities written in the [Go](http://golang.org) language that work with and augment the [ArchivesSpace](http://archivesspace.org) API.
 
 + cait - a command line utility for ArchivesSpace interaction (basic CRUD operations and export)
-+ [caitjs](CAITJS-README.md) - a command line utility for ArchivesSpace which will run JavaScript files providing access the ArchivesSpace API
+    + [cait](CAIT-JAVASCRIPT-README.md) also supports scripting ArchivesSpace API actions with JavaScript either via a file containing JavaScript or interactive.
 + genpages - a simple static page generator based on exported ArchivesSpace content
 + indexpages - for indexing exported JSON structures with [Bleve](https://github.com/blevesearch/bleve)
 + servepages - a web service providing public search services and content browsing
@@ -19,9 +19,12 @@
 + Golang 1.6 or better to compile
 + Three 3rd party Go packages
     + [Bleve](https://github.com/blevesearch/bleve) by [Blevesearch](http://blevesearch.com), Apache License, Version 2.0
-    + [Otto](https://github.com/rsdoiel/otto) a fork of [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
+    + [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
     + [xlsx](https://github.com/tealeg/xlsx) by Tealeg, BSD license
     + [readline](https://github.com/chzyer/readline) Chzyer, MIT License, a go native readline implementation by
++ Caltech Library's Go packages
+    + [ostdlib](https://github.com/caltechlibrary/ostdlib), an otto standard library package used for JavaScript integration
+    + [cait](https://github.com/caltechlibrary/cait), Caltech Library's ArchivesSpace integration tools
 
 ## Compiling
 
@@ -35,14 +38,15 @@ If you already have [Go](https://golang.org) setup and installed compiling the u
 Here's a typical example of setting things up.
 
 ```
+    go get github.com/blevesearch/bleve/...
+    go get github.com/rsdoiel/otto
+    go get github.com/tealeg/xlsx
+    go get github.com/chzyer/readline
+    go get github.com/caltechlibrary/ostdlib
     git clone git@github.com:caltechlibrary/cait.git
     cd cait
-    go get -u github.com/blevesearch/bleve/...
-    go get -u github.com/rsdoiel/otto # I am using a modified fork of Robert Krimen's Otto
-    go get -u github.com/tealeg/xlsx
     mkdir bin
     go build -o bin/cait cmds/cait/cait.go
-    go build -o bin/caitjs cmds/cait/caitjs.go
     go build -o bin/genpages  cmds/genpages/genpages.go
     go build -o bin/indexpages cmds/indexpages/indexpages.go
     go build -o bin/servepages cmds/servepages/servepages.go
