@@ -64,7 +64,7 @@ func main() {
 
   -h          display help information
   -v          display version information
-  -i          run an interactive JavaScript shell after import
+  -i          run an interactive JavaScript shell
 
  EXAMPLES
 
@@ -87,14 +87,6 @@ func main() {
 		log.Fatalf("Missing excel filename")
 	}
 
-	var (
-		xlFile *xlsx.File
-	)
-	// Read from the given file path
-	xlFile, err := xlsx.OpenFile(args[0])
-	if err != nil {
-		log.Fatalf("Can't open %s, %s", args[0], err)
-	}
 	api := cait.New(os.Getenv("CAIT_URL"), os.Getenv("CAIT_USERNAME"), os.Getenv("CAIT_PASSWORD"))
 
 	vm := otto.New()
@@ -103,14 +95,69 @@ func main() {
 	cait.AddExtensions(api, js)
 
 	var resources []*cait.Resource
-	// We need to adjust i by 1 since Humans tend to count from one rather than zero
-	for i, sheet := range xlFile.Sheets {
-		fmt.Printf("DEBUG processing %d %+v\n", i, sheet.Name)
-	}
 	if jsInteractive == true {
 		js.AddHelp()
 		cait.AddHelp(api, js)
+		js.PrintDefaultWelcome()
+		// We need to adjust i by 1 since Humans tend to count from one rather than zero
+		js.VM.Eval(fmt.Sprintf(`
+function MakeWorkbook() {
+	return {
+		__fname: "",
+		__sheets: {},
+		accessionInfo: function () {
+			var accession_info = {},
+				repo_id = 0,
+				accession_id = 0;
+
+			if (this.__sheets.Accession === undefined) {
+				return {};
+			}
+			repo_id = parseInt(this.__sheets.Accession[0][1], 10);
+			accession_id = parseInt(this.__sheets.Accession[1][1], 10);
+			return {
+				repo_id: repo_id,
+				accession_id: accession_id
+			};
+		},
+		getSheet: function(name) {
+			if (this.__sheets[name] === undefined) {
+				return {};
+			}
+			return this.__sheets[name];
+		},
+		read: function(fname) {
+			this.__fname = fname;
+			return (this.__sheets = xlsx.read(fname));
+		},
+		write: function(fname) {
+			return xlsx.write(fname, this.__sheets);
+		},
+		sheetNames: function () {
+			return Object.keys(this.__sheets);
+		}
+	};
+};
+var Workbook = MakeWorkbook();
+Workbook.read(%q);
+console.log("Available spreadsheets in 'Workbook' object by name");
+console.log("\n  " + Workbook.sheetNames().join("\n  "));
+console.log("\n");
+`, args[0]))
 		js.Repl()
+	}
+
+	var (
+		xlFile *xlsx.File
+	)
+	// Read from the given file path
+	xlFile, err := xlsx.OpenFile(args[0])
+	if err != nil {
+		log.Fatalf("Can't open %s, %s", args[0], err)
+	}
+	fmt.Println(" Available spreadsheets")
+	for i, sheet := range xlFile.Sheets {
+		fmt.Printf(" %0.2d %s\n", i, sheet.Name)
 	}
 	for _, record := range resources {
 		src, err := xml.Marshal(record)

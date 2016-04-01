@@ -7,6 +7,7 @@ build: api.go cait.go export.go schema.go search.go views.go js.go
 	go build -o bin/servepages cmds/servepages/servepages.go
 	go build -o bin/genpages cmds/genpages/genpages.go
 	go build -o bin/indexpages cmds/indexpages/indexpages.go
+	go build -o bin/xlsx2ead cmds/xlsx2ead/xlsx2ead.go
 	go build -o bin/xlsximporter cmds/xlsximporter/xlsximporter.go
 	go build -o bin/sitemapper cmds/sitemapper/sitemapper.go
 	go build -o bin/indexdataset cmds/indexdataset/indexdataset.go

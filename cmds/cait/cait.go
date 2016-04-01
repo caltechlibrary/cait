@@ -992,6 +992,7 @@ func main() {
 			js.AddHelp()
 			cait.AddHelp(api, js)
 			js.AddAutoComplete()
+			js.PrintDefaultWelcome()
 			js.Repl()
 		}
 		os.Exit(0)
