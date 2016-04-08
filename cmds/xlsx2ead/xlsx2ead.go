@@ -98,6 +98,7 @@ func main() {
 	if jsInteractive == true {
 		js.AddHelp()
 		cait.AddHelp(api, js)
+		js.AddAutoComplete()
 		js.PrintDefaultWelcome()
 		// We need to adjust i by 1 since Humans tend to count from one rather than zero
 		js.VM.Eval(fmt.Sprintf(`
