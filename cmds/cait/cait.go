@@ -984,13 +984,13 @@ func main() {
 		vm := otto.New()
 		js := ostdlib.New(vm)
 		js.AddExtensions()
-		cait.AddExtensions(api, js)
+		api.AddExtensions(js)
 		if jsRunner == true {
 			js.Runner(flag.Args())
 		}
 		if jsInteractive == true {
 			js.AddHelp()
-			cait.AddHelp(api, js)
+			api.AddHelp(js)
 			js.AddAutoComplete()
 			js.PrintDefaultWelcome()
 			js.Repl()

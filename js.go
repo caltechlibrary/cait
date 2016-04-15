@@ -38,7 +38,7 @@ import (
 )
 
 // AddHelp adds cait API help for the JavaScript Repl
-func AddHelp(api *ArchivesSpaceAPI, js *ostdlib.JavaScriptVM) {
+func (api *ArchivesSpaceAPI) AddHelp(js *ostdlib.JavaScriptVM) {
 	js.SetHelp("api", "login", []string{}, "Using environment variables authenticate with the ArchivesSpace REST API")
 	js.SetHelp("api", "logout", []string{}, "Logout of the ArchivesSpace REST API")
 	js.SetHelp("api", "createRepostiory", []string{"repo object"}, "Create an repository based on the respoistory describe by the repo object")
@@ -69,7 +69,7 @@ func AddHelp(api *ArchivesSpaceAPI, js *ostdlib.JavaScriptVM) {
 }
 
 // AddExtensions add cait API to a JavaScript environment along with the
-func AddExtensions(api *ArchivesSpaceAPI, js *ostdlib.JavaScriptVM) {
+func (api *ArchivesSpaceAPI) AddExtensions(js *ostdlib.JavaScriptVM) *otto.Otto {
 	vm := js.VM
 	errorObject := func(obj *otto.Object, msg string) otto.Value {
 		if obj == nil {
@@ -576,17 +576,6 @@ func AddExtensions(api *ArchivesSpaceAPI, js *ostdlib.JavaScriptVM) {
 		}
 		return responseObject(response)
 	})
-}
 
-// NewJavaScript creates a *otto.Otto (JavaScript VM) with functions added to integrate
-// the internal cait API.
-func NewJavaScript(api *ArchivesSpaceAPI, jsArgs []string) *otto.Otto {
-	vm := otto.New()
-	js := ostdlib.New(vm)
-	js.AddHelp()
-	js.AddExtensions()
-	AddExtensions(api, js)
-	AddHelp(api, js)
-	vm = js.VM
 	return vm
 }

@@ -23,8 +23,10 @@ import (
 	"encoding/xml"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 
 	// 3rd Party packages
 	"github.com/robertkrimen/otto"
@@ -38,6 +40,7 @@ import (
 var (
 	showHelp      bool
 	showVersion   bool
+	runJavaScript bool
 	jsInteractive bool
 )
 
@@ -45,6 +48,7 @@ func init() {
 	flag.BoolVar(&showHelp, "h", false, "display this help information")
 	flag.BoolVar(&showVersion, "v", false, "display version information")
 	flag.BoolVar(&jsInteractive, "i", false, "run a JavaScript Repl after loading spreadsheet")
+	flag.BoolVar(&runJavaScript, "js", false, "run JavaScript files, can be combiled with -i")
 }
 
 func main() {
@@ -53,7 +57,7 @@ func main() {
 
 	if showHelp == true {
 		fmt.Printf(`
- USAGE: xlsx2ead [OPTIONS] EXCEL_FILENAME
+ USAGE: xlsx2ead [OPTIONS] EXCEL_FILENAME [JAVASCRIPT_FILES]
 
  OVERVIEW
 
@@ -65,10 +69,12 @@ func main() {
   -h          display help information
   -v          display version information
   -i          run an interactive JavaScript shell
+  -js         run JavaScript files, can be combiled with -i
 
  EXAMPLES
 
     xlsx2ead myFindingAid.xlsx
+	xlsx2ead -js preprocessor.js myFindingAid.xlsx
     xlsx2ead -i myFindingAid.xlsx
     xlsx2ead -h
     xlsx2ead -v
@@ -92,59 +98,41 @@ func main() {
 	vm := otto.New()
 	js := ostdlib.New(vm)
 	js.AddExtensions()
-	cait.AddExtensions(api, js)
+	api.AddExtensions(js)
+	// Load the spreadsheets or JavaScript files into JavaScript VM
+	for _, fname := range args {
+		switch {
+		case strings.HasSuffix(fname, ".js") == true:
+			src, err := ioutil.ReadFile(fname)
+			if err != nil {
+				log.Fatalf("%s, %s", fname, err)
+			}
+			if script, err := js.VM.Compile(fname, src); err != nil {
+				log.Fatalf("%s, %s", fname, err)
+			} else {
+				if _, err := js.VM.Run(script); err != nil {
+					log.Fatalf("%s, %s", fname, err)
+				}
+			}
+		case strings.HasSuffix(fname, ".xlsx"):
+			js.VM.Eval(fmt.Sprintf(`Workbook.read(%q);`, fname))
+		default:
+			log.Fatalf("Do not known what to do with %s", fname)
+		}
+	}
 
 	var resources []*cait.Resource
 	if jsInteractive == true {
 		js.AddHelp()
-		cait.AddHelp(api, js)
+		api.AddHelp(js)
 		js.AddAutoComplete()
 		js.PrintDefaultWelcome()
 		// We need to adjust i by 1 since Humans tend to count from one rather than zero
 		js.VM.Eval(fmt.Sprintf(`
-function MakeWorkbook() {
-	return {
-		__fname: "",
-		__sheets: {},
-		accessionInfo: function () {
-			var accession_info = {},
-				repo_id = 0,
-				accession_id = 0;
-
-			if (this.__sheets.Accession === undefined) {
-				return {};
-			}
-			repo_id = parseInt(this.__sheets.Accession[0][1], 10);
-			accession_id = parseInt(this.__sheets.Accession[1][1], 10);
-			return {
-				repo_id: repo_id,
-				accession_id: accession_id
-			};
-		},
-		getSheet: function(name) {
-			if (this.__sheets[name] === undefined) {
-				return {};
-			}
-			return this.__sheets[name];
-		},
-		read: function(fname) {
-			this.__fname = fname;
-			return (this.__sheets = xlsx.read(fname));
-		},
-		write: function(fname) {
-			return xlsx.write(fname, this.__sheets);
-		},
-		sheetNames: function () {
-			return Object.keys(this.__sheets);
-		}
-	};
-};
-var Workbook = MakeWorkbook();
-Workbook.read(%q);
 console.log("Available spreadsheets in 'Workbook' object by name");
-console.log("\n  " + Workbook.sheetNames().join("\n  "));
+console.log("\n  " + Workbook.getSheetNames().join("\n  "));
 console.log("\n");
-`, args[0]))
+`))
 		js.Repl()
 	}
 

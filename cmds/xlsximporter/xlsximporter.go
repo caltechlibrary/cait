@@ -287,10 +287,11 @@ func main() {
 
 	// Initialize the API and setup the JavaScript Environment
 	api := cait.New(os.Getenv("CAIT_URL"), os.Getenv("CAIT_USERNAME"), os.Getenv("CAIT_PASSWORD"))
-	vm := cait.NewJavaScript(api, args)
+	vm := otto.New()
+	//cait.NewJavaScript(api, args)
 	js := ostdlib.New(vm)
 	js.AddExtensions()
-	cait.AddExtensions(api, js)
+	api.AddExtensions(js)
 
 	// Read from the given file path
 	xlFile, err := xlsx.OpenFile(*inputFilename)
@@ -319,7 +320,7 @@ func main() {
 
 	if interactiveRepl == true {
 		js.AddHelp()
-		cait.AddHelp(api, js)
+		api.AddHelp(js)
 		js.AddAutoComplete()
 		js.PrintDefaultWelcome()
 		if err := loadWorkbook(xlFile, js); err != nil {
