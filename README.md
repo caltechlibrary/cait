@@ -96,7 +96,7 @@ Assuming Bash and that you've named the file _setup.sh_ you could
 source the file from your shell prompt by typing
 
 ```
-    . setup.sh
+    . etc/setup.sh
 ```
 
 ### Setting up a dev box
@@ -217,3 +217,11 @@ _sitemapper_ generates a sitemap.xml file based on the arguments you envoke. It 
 ```
 
 This will generate a site map of the HTML files found in *htdocs* with the results saved in *htdocs/sitemap.xml*. For more informaiton about sitemaps see the [sitemaps.org](http://sitemaps.org) website.
+
+## Setting up a production box
+
+The basic production environment would export the contents of ArchivesSpace nightly, regenerate the webpages, re-index the webpages and finally restart _servepages_ service.
+
+The script in *bin/nightly-update.sh* shows these steps based on the configuration in *etc/setup.sh*. This script is suitable for running form a cronjob under Linux/Unix/Mac OS X.
+
+ 
