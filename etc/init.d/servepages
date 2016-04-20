@@ -57,5 +57,5 @@ case "$1" in
     fi
     ;;
   *)
-    echo 'usage: '$PROGNAME' [start|stop|status]'
+    echo 'usage: '$PROGNAME' [start|stop|restart|status]'
 esac

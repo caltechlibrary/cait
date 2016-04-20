@@ -92,8 +92,8 @@ func getenv(envvar, defaultValue string) string {
 func init() {
 	htdocsDir = getenv("CAIT_HTDOCS", "htdocs")
 	indexName = getenv("CAIT_HTDOCS_INDEX", "htdocs.bleve")
-	flag.StringVar(&htdocsDir, "htdocs", "htdocs", "The document root for the website")
-	flag.StringVar(&indexName, "index", "htdocs.bleve", "The name of the Bleve index")
+	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "The document root for the website")
+	flag.StringVar(&indexName, "index", indexName, "The name of the Bleve index")
 	flag.BoolVar(&replaceIndex, "r", false, "Replace the index if it exists")
 	flag.BoolVar(&help, "h", false, "this help message")
 	flag.BoolVar(&help, "help", false, "this help message")
