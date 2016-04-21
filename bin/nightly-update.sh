@@ -22,12 +22,15 @@ fi
 ./bin/cait archivesspace export
 # Generate webpages
 ./bin/genpages
+if [ "$USER" = "root" ]; then
+    /etc/init.d/servepages stop
+fi
 # Index webpages
 ./bin/indexpages
 
 # You should now be ready to reload the search engine/servepage service
 if [ "$USER" = "root" ]; then
-    /etc/init.d/servepages restart
+    /etc/init.d/servepages start
 else
     ./bin/servepages
 fi
