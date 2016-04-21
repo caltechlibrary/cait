@@ -12,6 +12,10 @@ LOGPATH=$LOGDIR/$PROGNAME.log
 # Read in local configuration
 . /archivesspace/cait/etc/setup.conf
 
+function consolelog {
+    echo $(date +"%Y/%m/%d %H:%M:%S")" $@"
+}
+
 # Set place for log
 mkdir -p $LOGDIR
 touch $LOGPATH
@@ -20,7 +24,7 @@ function startService() {
     $PROGPATH &>> $LOGPATH &
     PID="$!"
     echo "$PID" >> /var/run/$PROGNAME.pid
-    echo "Started $PROGNAME $PID"
+    consolelog "Started $PROGNAME $PID"
     echo "Started $PROGNAME $PID" >> $LOGPATH
     echo "Using templates $CAIT_TEMPLATES">> $LOGPATH
 }
@@ -28,7 +32,7 @@ function startService() {
 function stopService() {
     cat /var/run/$PROGNAME.pid | while read PID; do
 	    if [ "$PID" != "" ]; then
-            echo "Stopping $PROGNAME $PID"
+            consolelog "Stopping $PROGNAME $PID"
     	    echo "Stopping $PROGNAME $PID" >> $LOGPATH
             kill $PID
         fi
@@ -51,9 +55,9 @@ case "$1" in
      ;;
   status)
     if [ -f /var/run/$PROGNAME.pid ]; then
-        echo "$PROGNAME running as $(cat /var/run/$PROGNAME.pid)"
+        consolelog "$PROGNAME running as $(cat /var/run/$PROGNAME.pid)"
     else
-        echo "$PROGNAME not running"
+        consolelog "$PROGNAME not running"
     fi
     ;;
   *)
