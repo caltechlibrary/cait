@@ -43,3 +43,4 @@ htdocs/*
 html/*
 ~\$*
 *.xlsx
+testoutput/*
