@@ -356,8 +356,11 @@ func requestLogger(next http.Handler) http.Handler {
 // isMultiViewPath checks to see if the path requested behaves like an Apache MultiView request
 func isMultiViewPath(p string) bool {
 	// check to see if p plus .html extension exists
-	_, err := os.Stat(path.Join(htdocsDir, fmt.Sprintf("%s.html")))
-	return os.IsExist(err)
+	fname := fmt.Sprintf("%s.html", p)
+	if _, err := os.Stat(path.Join(htdocsDir, fname)); err == nil {
+		return true
+	}
+	return false
 }
 
 func multiViewPath(p string) string {
@@ -375,13 +378,13 @@ func searchRoutes(next http.Handler) http.Handler {
 			searchHandler(w, r)
 			return
 		}
+		// If it is not a search request send it on to the next handler...
 		//FIXME: Should really make the path exists at the API level and update the filesystem if needed
 		// If this is a MultiViews style request (i.e. missing .html) then update r.URL.Path
 		if isMultiViewPath(r.URL.Path) == true {
 			p := multiViewPath(r.URL.Path)
 			r.URL.Path = p
 		}
-		// If it is not a search request send it on to the next handler...
 		next.ServeHTTP(w, r)
 	})
 }

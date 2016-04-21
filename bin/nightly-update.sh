@@ -2,16 +2,19 @@
 #
 
 # This is an example cronjob to be run from the root account.
+function consolelog {
+    echo $(date +"%Y/%m/%d %H:%M:%S")" $@"
+}
 
 # Change directory to where cait is installed
-echo "$(date +'%Y-%M-%D %H:%I:%S') Running as $USER"
+consolelog  "Running as $USER"
 if [ "$USER" = "root" ]; then
     cd /archivesspace/cait
 fi
-echo "$(date +'%Y-%M-%D %H:%I:%S') Working path $(pwd)"
+consolelog "Working path $(pwd)"
 # Load the cait configuration
 if [ -f etc/setup.conf ]; then
-    echo "$(date +'%Y-%M-%D %H:%I:%S') Configuration $(pwd)/etc/setup.conf"
+    consolelog "Configuration $(pwd)/etc/setup.conf"
     . etc/setup.conf
 fi
 
