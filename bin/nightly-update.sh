@@ -29,5 +29,5 @@ fi
 if [ "$USER" = "root" ]; then
     /etc/init.d/servepages restart
 else
-    etc/init.d/servepages restart
+    ./bin/servepages
 fi
