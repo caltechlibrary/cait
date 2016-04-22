@@ -70,7 +70,9 @@ var (
 
 func usage() {
 	fmt.Println(description)
-	flag.PrintDefaults()
+	flag.VisitAll(func(f *flag.Flag) {
+		fmt.Printf("\t-%s\t(defaults to %s) %s\n", f.Name, f.DefValue, f.Usage)
+	})
 	fmt.Println(configuration)
 	os.Exit(0)
 }

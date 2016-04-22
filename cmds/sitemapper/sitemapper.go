@@ -47,7 +47,9 @@ func usage() {
  Generates a sitemap for the accession pages.
 
 `)
-	flag.PrintDefaults()
+	flag.VisitAll(func(f *flag.Flag) {
+		fmt.Printf("\t-%s\t(defaults to %s) %s\n", f.Name, f.DefValue, f.Usage)
+	})
 	fmt.Println(`
  EXAMPLE
 

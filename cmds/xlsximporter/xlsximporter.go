@@ -45,15 +45,16 @@ import (
 )
 
 var (
-	help            bool
-	asArray         bool
-	inputFilename   *string
-	jsFilename      *string
-	jsCallback      *string
-	sheetNo         int
-	showHelp        bool
-	showVersion     bool
-	interactiveRepl bool
+	help                    bool
+	asArray                 bool
+	inputFilename           *string
+	jsFilename              *string
+	jsCallback              *string
+	sheetNo                 int
+	showHelp                bool
+	showVersion             bool
+	interactiveRepl         bool
+	workbookAsContainerList bool
 )
 
 type jsResponse struct {
@@ -127,8 +128,12 @@ func usage(exitCode int) {
 
 
  OPTIONS
+
 `)
-	flag.PrintDefaults()
+
+	flag.VisitAll(func(f *flag.Flag) {
+		fmt.Printf("\t-%s\t(defaults to %s) %s\n", f.Name, f.DefValue, f.Usage)
+	})
 	fmt.Printf(`
 
  Examples

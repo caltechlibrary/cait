@@ -138,7 +138,9 @@ func usage() {
 	fmt.Printf(description,
 		strings.Join(subjects, ", "),
 		strings.Join(actions, ", "))
-	flag.PrintDefaults()
+	flag.VisitAll(func(f *flag.Flag) {
+		fmt.Printf("\t-%s\t(defaults to %s) %s\n", f.Name, f.DefValue, f.Usage)
+	})
 	fmt.Println(configuration)
 	os.Exit(0)
 }

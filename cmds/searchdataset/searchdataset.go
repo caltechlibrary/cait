@@ -71,7 +71,9 @@ var (
 
 func usage() {
 	fmt.Println(description)
-	flag.PrintDefaults()
+	flag.VisitAll(func(f *flag.Flag) {
+		fmt.Printf("\t-%s\t(defaults to %s) %s\n", f.Name, f.DefValue, f.Usage)
+	})
 	fmt.Println(configuration)
 	os.Exit(0)
 }
@@ -88,7 +90,7 @@ func init() {
 	from = 0
 	indexName = getenv("CAIT_DATASET_INDEX", "dataset.bleve")
 	size = 10
-	flag.StringVar(&indexName, "-i", indexName, "use this index")
+	flag.StringVar(&indexName, "i", indexName, "use this index")
 	flag.BoolVar(&help, "h", false, "display this message")
 	flag.BoolVar(&explain, "e", false, "explain the query")
 	flag.IntVar(&size, "s", size, "display n results for per response")
