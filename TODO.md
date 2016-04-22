@@ -3,9 +3,8 @@
 
 ## Action Item
 
-+ Create _xlsx2ead_ to convert container spreadsheets to ead by merging Accession information with the container information
++ Update _xlsximporter_ to convert container spreadsheets to ArchivesSpace resources
 
 ### Bugs
 
 # some day maybe list
-

@@ -64,6 +64,11 @@ with your arrow keys.
 + api.updateDigitalObject(),  updates a digital object
 + api.deleteDigitalObject(),  deletes a digital object
 + api.listDigitalObjects(),  lists all the digital object ids
++ api.createResource(),  creates a resource
++ api.getResource(), gets a resource by id
++ api.updateResource(),  updates a resource
++ api.deleteResource(),  deletes a resource
++ api.listResources(),  lists all the resource ids
 
 ## Object and methods for working with the file system and environment
 

@@ -10,8 +10,6 @@
 + servepages - a web service providing public search services and content browsing
 + xlsximporter - a tool for turning Excel spreadsheets in .xlsx format into JSON files suitable for importing into ArchivesSpace
 + sitemapper - a simple tool to generate a sitemap.xml file from pages rendered with genpages
-+ indexdataset - a command line tool to index the dataset directory generated with `cait_ archivesspace export`
-+ searchdataset - a command line tool to search the dataset index
 
 ## Requirements
 
@@ -52,8 +50,6 @@ Here's a typical example of setting things up.
     go build -o bin/servepages cmds/servepages/servepages.go
     go build -o bin/xlsximporter cmds/xlsximporter/xlsximporter.go
     go build -o bin/sitemapper cmds/sitemapper/sitemapper.go
-    go build -o bin/indexdataset cmds/indexdataset/indexdataset.go
-    go build -o bin/searchdataset cmds/searchdataset/searchdataset.go
 ```
 
 At this point you should have your command line utilities ready to go in the *bin* directory. You are now ready to setup your environment variables.
@@ -77,7 +73,6 @@ The command line tools and services are configured via environment variables. Be
     export CAIT_USERNAME=admin
     export CAIT_PASSWORD=admin
     export CAIT_DATASET=dataset
-    export CAIT_DATASET_INDEX=dataset.bleve
     export CAIT_SITE_URL=http://localhost:8501
     export CAIT_HTDOCS=htdocs
     export CAIT_HTDOCS_INDEX=htdocs.bleve
@@ -223,5 +218,3 @@ This will generate a site map of the HTML files found in *htdocs* with the resul
 The basic production environment would export the contents of ArchivesSpace nightly, regenerate the webpages, re-index the webpages and finally restart _servepages_ service.
 
 The script in *bin/nightly-update.sh* shows these steps based on the configuration in *etc/setup.sh*. This script is suitable for running form a cronjob under Linux/Unix/Mac OS X.
-
- 

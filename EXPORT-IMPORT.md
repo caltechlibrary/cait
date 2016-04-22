@@ -26,7 +26,6 @@ The following environment variables not note used in the export process
 + CAIT_HTDOCS
 + CAIT_HTDOCS_INDEX
 + CAIT_TEMPLATES
-+ CAIT_DATASET_INDEX
 
 I am also assuming you have installed the _cait_ utility in *./bin/cait*
 
@@ -74,7 +73,6 @@ The following environment variables not note used in the import process
 + CAIT_HTDOCS
 + CAIT_HTDOCS_INDEX
 + CAIT_TEMPLATES
-+ CAIT_DATASET_INDEX
 
 Here's the stops to populate your local development ArchivesSpace. In this example I am assuming you're importing
 into repository id of 2.
@@ -117,7 +115,6 @@ installed in *./bin*.
 ### Environment required
 
 + CAIT_DATASET
-+ CAIT_DATASET_INDEX
 + CAIT_HTDOCS
 + CAIT_HTDOCS_INDEX
 + CAIT_SITE_URL

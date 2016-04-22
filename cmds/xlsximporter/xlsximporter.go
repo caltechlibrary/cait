@@ -47,13 +47,12 @@ import (
 var (
 	help                    bool
 	asArray                 bool
-	inputFilename           *string
-	jsFilename              *string
-	jsCallback              *string
+	jsCallback              string
 	sheetNo                 int
 	showHelp                bool
 	showVersion             bool
-	interactiveRepl         bool
+	jsInteractive           bool
+	runJavaScript           bool
 	workbookAsContainerList bool
 )
 
@@ -66,7 +65,7 @@ type jsResponse struct {
 func usage(exitCode int) {
 	fmt.Printf(`
 
- USAGE: xlsximporter [OPTIONS] EXCEL_FILENAME
+ USAGE: xlsximporter [OPTIONS] [JAVA_SCRIPT_FILENAMES] EXCEL_FILENAME
 
  OVERVIEW
 
@@ -109,23 +108,9 @@ func usage(exitCode int) {
         }
     }
 
- Three functions are available to enhance your import. They are
-
- + os.Getenv() this get an environment variable as a string.
- + http.get() this performs a HTTP GET operation returning content retrieved.
- + http.post() this perform a HTTP POST operation returning content retrieved.
- + api.*() functions are wrappers for the cait API
-
- os.getEnv() takes one argument, a string, matching the environment variable
- you will to retreive. E.g. Getenv("CAIT_API_URL")
-
- http.get() accepts a URL (including an parameters), optional headers and
- returns the response body. E.g.
-
-	 // content is the text handed back unaltered from the API call
-     content = http.get("http://localhost:8089/repositories?all_ids=true",
-		 [{'X-ArchivesSpace-Session':apiToken}]);
-
+ In additional to the standard REPL objects and methods a cait api object
+ is available with create, update, delete, get and list methods for various
+ schema and resources.
 
  OPTIONS
 
@@ -139,8 +124,7 @@ func usage(exitCode int) {
  Examples
 
     xlsximporter -as-array myfile.xlsx
-
-    xlsximporter -js row2obj.js -callback row2obj myfile.xlsx
+    xlsximporter -js -callback row2obj myfile.xlsx row2obj.js
 
  Version %s, repl %s
 `, cait.Version, ostdlib.Version)
@@ -216,10 +200,10 @@ func processSheet(sheet *xlsx.Sheet, asArray, jsMap bool, vm *otto.Otto) {
 			}
 			if jsMap == true {
 				// We need to eval the callback from inside a closure to be safer
-				js := fmt.Sprintf("(function(){ return %s(%s);}())", *jsCallback, src)
+				js := fmt.Sprintf("(function(){ return %s(%s);}())", jsCallback, src)
 				jsValue, err := vm.Eval(js)
 				if err != nil {
-					log.Fatalf("row: %d, Can't run %s, %s", rowNo, *jsFilename, err)
+					log.Fatalf("row: %d, Can't run %s, %s", rowNo, jsCallback, err)
 				}
 				response := new(jsResponse)
 				err = ostdlib.ToStruct(jsValue, &response)
@@ -255,20 +239,21 @@ func processSheet(sheet *xlsx.Sheet, asArray, jsMap bool, vm *otto.Otto) {
 
 func init() {
 	sheetNo = 0
-	flag.BoolVar(&showHelp, "h", false, "display help")
-	flag.BoolVar(&showVersion, "v", false, "display version")
-	flag.BoolVar(&interactiveRepl, "i", false, "run in interactive mode")
+	flag.BoolVar(&showHelp, "h", false, "display this help information")
+	flag.BoolVar(&showVersion, "v", false, "display version information")
+	flag.BoolVar(&jsInteractive, "i", false, "run a JavaScript Repl after loading spreadsheet")
+	flag.BoolVar(&runJavaScript, "js", false, "run JavaScript files, can be combiled with -i or -callback")
 	flag.BoolVar(&asArray, "as-array", false, "Write the JSON blobs output as an array")
+	flag.StringVar(&jsCallback, "callback", "callback", "Use this callback name to process spreadsheet")
 	flag.IntVar(&sheetNo, "sheet", sheetNo, "Process a specific sheet number, index starts at 1, zero means process all sheets")
-	inputFilename = flag.String("x", "", "Read the Excel file from this name")
-	jsFilename = flag.String("js", "", "The name of the JavaScript file containing callback function")
-	jsCallback = flag.String("callback", "callback", "The name of the JavaScript function to use as a callback")
 }
 
 func main() {
 	var (
-		xlFile   *xlsx.File
-		jsSource []byte
+		xlFilename string
+		xlFile     *xlsx.File
+		err        error
+		jsSource   []byte
 	)
 	flag.Parse()
 
@@ -281,15 +266,6 @@ func main() {
 	}
 
 	args := flag.Args()
-	if len(args) > 0 {
-		*inputFilename = args[0]
-	}
-	if *inputFilename == "" {
-		// Read Excel file from standard
-		fmt.Println("Need to provide an xlsx file for input, x")
-		usage(1)
-	}
-
 	// Initialize the API and setup the JavaScript Environment
 	api := cait.New(os.Getenv("CAIT_URL"), os.Getenv("CAIT_USERNAME"), os.Getenv("CAIT_PASSWORD"))
 	vm := otto.New()
@@ -298,38 +274,45 @@ func main() {
 	js.AddExtensions()
 	api.AddExtensions(js)
 
-	// Read from the given file path
-	xlFile, err := xlsx.OpenFile(*inputFilename)
-	if err != nil {
-		log.Fatalf("Can't open %s, %s", *inputFilename, err)
-	}
 	jsMap := false
-	if *jsFilename != "" {
-		jsMap = true
-		fname := fmt.Sprintf("%s", *jsFilename)
-		jsSource, err = ioutil.ReadFile(fname)
-		if err != nil {
-			log.Fatalf("Can't read JavaScript file %s, %s", fname, err)
+	for _, fname := range args {
+		if strings.HasSuffix(fname, ".xlsx") == true {
+			// Read from the given file path
+			xlFilename = fname
+			xlFile, err = xlsx.OpenFile(fname)
+			if err != nil {
+				log.Fatalf("Can't open %s, %s", fname, err)
+			}
 		}
-		script, err := vm.Compile(fname, jsSource)
-		if err != nil {
-			log.Fatalf("JavaScript compile error %s, %s", fname, err)
-		}
-
-		// Define any functions, will evaluate each row with vm.Eval()
-		_, err = vm.Run(script)
-		if err != nil {
-			log.Fatalf("Error %s", err)
+		if strings.HasSuffix(fname, ".js") == true {
+			jsMap = true
+			jsSource, err = ioutil.ReadFile(fname)
+			if err != nil {
+				log.Fatalf("Can't read JavaScript file %s, %s", fname, err)
+			}
+			script, err := vm.Compile(fname, jsSource)
+			if err != nil {
+				log.Fatalf("JavaScript compile error %s, %s", fname, err)
+			}
+			// Define any functions, will evaluate each row with vm.Eval()
+			_, err = js.VM.Run(script)
+			if err != nil {
+				log.Fatalf("Error %s", err)
+			}
 		}
 	}
-
-	if interactiveRepl == true {
+	if xlFile == nil {
+		// Read Excel file from standard
+		fmt.Println("Need to provide an xlsx file for input, x")
+		usage(1)
+	}
+	if jsInteractive == true {
 		js.AddHelp()
 		api.AddHelp(js)
 		js.AddAutoComplete()
 		js.PrintDefaultWelcome()
 		if err := loadWorkbook(xlFile, js); err != nil {
-			fmt.Printf("Error loading %s, %s\n", *inputFilename, err)
+			fmt.Printf("Error loading %s, %s\n", xlFilename, err)
 		}
 		js.Repl()
 	} else {
@@ -337,7 +320,7 @@ func main() {
 		sheetNo = sheetNo - 1
 		for i, sheet := range xlFile.Sheets {
 			if sheetNo < 0 || sheetNo == i {
-				processSheet(sheet, asArray, jsMap, vm)
+				processSheet(sheet, asArray, jsMap, js.VM)
 			}
 		}
 	}

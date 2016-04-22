@@ -31,14 +31,6 @@ _servepages_ can be started manually but more typically would be brought up by y
 
 _xlsximporter_ is a utility that reads an Excel file in xlsx format and turns each row of a spreadsheet into a JSON object. By default the properties correspond to the column names but you can also provide a JavaScript file and callback that let's you customize the objects produced. This latter capability is useful when migrating content into ArchivesSpace.
 
-### indexdataset
-
-_indexdataset_ is a utility that crawls the dataset directory (the raw content exported from ArchivesSpace) for use by _searchdataset_.
-
-### searchdataset
-
-_searchdataset_ is a utility for searching the content in the dataset directory (the raw content exported from ArchivesSpace).  Helpful in debugging problems with specific records.
-
 
 ## Workflow for website
 
@@ -50,8 +42,6 @@ _searchdataset_ is a utility for searching the content in the dataset directory 
 ## Workflow for data fixes
 
 + Export ArchivesSpace content as needed with _cait_
-+ Index the exported data with _indexdataset_
-+ Explore dataset with _searchdataset_
 + Write a JavaScript program to make corrections or use _cait_ interactively to fix/update data
 
 ## Workflow for importing data from Excel
