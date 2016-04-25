@@ -293,6 +293,11 @@ func (api *ArchivesSpaceAPI) ExportArchivesSpace() error {
 		if err != nil {
 			return fmt.Errorf("Can't export repositories/%d/digital_objects, %s", id, err)
 		}
+		log.Printf("Exporting repositories/%d/resources\n", id)
+		err = api.ExportResources(id)
+		if err != nil {
+			return fmt.Errorf("Can't export repositories/%d/accessions, %s", id, err)
+		}
 		log.Printf("Exporting repositories/%d/accessions\n", id)
 		err = api.ExportAccessions(id)
 		if err != nil {

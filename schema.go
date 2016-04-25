@@ -339,19 +339,19 @@ type Agent struct {
 // AgentContact JSONModel(:agent_contact)
 type AgentContact struct {
 	Name           string       `json:"name,omitempty"`
-	Salutation     string       `json:"salutation,omitemtpy"`
-	Address1       string       `json:"address_1,omitemtpy"`
-	Address2       string       `json:"address_2,omitemtpy"`
-	Address3       string       `json:"address_3,omitemtpy"`
-	City           string       `json:"city,omitemtpy"`
-	Region         string       `json:"region,omitemtpy"`
-	Country        string       `json:"country,omitemtpy"`
-	PostCode       string       `json:"post_code,omitemtpy"`
-	Telephones     []*Telephone `json:"telephones,omitemtpy"`
-	Fax            string       `json:"fax,omitemtpy"`
-	EMail          string       `json:"email,omitemtpy"`
-	EMailSignature string       `json:"email_signature,omitemtpy"`
-	Note           string       `json:"note,omitemtpy"`
+	Salutation     string       `json:"salutation,omitempty"`
+	Address1       string       `json:"address_1,omitempty"`
+	Address2       string       `json:"address_2,omitempty"`
+	Address3       string       `json:"address_3,omitempty"`
+	City           string       `json:"city,omitempty"`
+	Region         string       `json:"region,omitempty"`
+	Country        string       `json:"country,omitempty"`
+	PostCode       string       `json:"post_code,omitempty"`
+	Telephones     []*Telephone `json:"telephones,omitempty"`
+	Fax            string       `json:"fax,omitempty"`
+	EMail          string       `json:"email,omitempty"`
+	EMailSignature string       `json:"email_signature,omitempty"`
+	Note           string       `json:"note,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -366,17 +366,17 @@ type AgentContact struct {
 // AgentCorporateEntity JSONModel(:agent_corporate_entity)
 type AgentCorporateEntity struct {
 	URI                       string                   `json:"uri,omitempty"`
-	Title                     string                   `json:"title,omitemtpy"`
-	IsLinkedToPublishedRecord bool                     `json:"is_linked_to_published_record,omitemtpy"`
-	AgentType                 string                   `json:"agent_type,omitemtpy"` //Enum: agent_person agent_corporate_entity agent_software agent_family user
-	AgentContacts             []*AgentContact          `json:"agent_contacts,omitemtpy"`
-	LinkedAgentRoles          []string                 `json:"linked_agent_roles,omitemtpy"`
-	ExternalDocuments         []map[string]interface{} `json:"external_documents,omitemtpy"`
-	RightsStatements          []*RightsStatement       `json:"rights_statements,omitemtpy"`
-	SystemGenerated           bool                     `json:"system_generated,omitemtpy"`
-	Notes                     string                   `json:"notes,omitemtpy"`
-	DatesOfExistance          []*Date                  `json:"dates_of_existence,omitemtpy"`
-	Publish                   bool                     `json:"publish,omitemtpy"`
+	Title                     string                   `json:"title,omitempty"`
+	IsLinkedToPublishedRecord bool                     `json:"is_linked_to_published_record,omitempty"`
+	AgentType                 string                   `json:"agent_type,omitempty"` //Enum: agent_person agent_corporate_entity agent_software agent_family user
+	AgentContacts             []*AgentContact          `json:"agent_contacts,omitempty"`
+	LinkedAgentRoles          []string                 `json:"linked_agent_roles,omitempty"`
+	ExternalDocuments         []map[string]interface{} `json:"external_documents,omitempty"`
+	RightsStatements          []*RightsStatement       `json:"rights_statements,omitempty"`
+	SystemGenerated           bool                     `json:"system_generated,omitempty"`
+	Notes                     string                   `json:"notes,omitempty"`
+	DatesOfExistance          []*Date                  `json:"dates_of_existence,omitempty"`
+	Publish                   bool                     `json:"publish,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -387,25 +387,25 @@ type AgentCorporateEntity struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Names         []*NameCorporateEntity `json:"names,omitemtpy"`
-	DisplayName   *NameCorporateEntity   `json:"display_name,omitemtpy"`
-	RelatedAgents map[string]interface{} `json:"related_agents,omitemtpy"`
+	Names         []*NameCorporateEntity `json:"names,omitempty"`
+	DisplayName   *NameCorporateEntity   `json:"display_name,omitempty"`
+	RelatedAgents map[string]interface{} `json:"related_agents,omitempty"`
 }
 
 // AgentFamily JSONModel(:agent_family)
 type AgentFamily struct {
 	URI                       string              `json:"uri,omitempty"`
-	Title                     string              `json:"title,omitemtpy"`
-	IsLinkedToPublishedRecord bool                `json:"is_linked_to_published_record,omitemtpy"`
-	AgentType                 string              `json:"agent_type,omitemtpy"` //Enum: agent_person agent_corporate_entity agent_software agent_family user
-	AgentContacts             []*AgentContact     `json:"agent_contacts,omitemtpy"`
-	LinkedAgentRoles          []string            `json:"linked_agent_roles,omitemtpy"`
-	ExternalDocuments         []*ExternalDocument `json:"external_documents,omitemtpy"`
-	RightsStatements          []*RightsStatement  `json:"rights_statements,omitemtpy"`
-	SystemGenerated           bool                `json:"system_generated,omitemtpy"`
-	Notes                     string              `json:"notes,omitemtpy"`
-	DatesOfExistance          []*Date             `json:"dates_of_existence,omitemtpy"`
-	Publish                   bool                `json:"publish,omitemtpy"`
+	Title                     string              `json:"title,omitempty"`
+	IsLinkedToPublishedRecord bool                `json:"is_linked_to_published_record,omitempty"`
+	AgentType                 string              `json:"agent_type,omitempty"` //Enum: agent_person agent_corporate_entity agent_software agent_family user
+	AgentContacts             []*AgentContact     `json:"agent_contacts,omitempty"`
+	LinkedAgentRoles          []string            `json:"linked_agent_roles,omitempty"`
+	ExternalDocuments         []*ExternalDocument `json:"external_documents,omitempty"`
+	RightsStatements          []*RightsStatement  `json:"rights_statements,omitempty"`
+	SystemGenerated           bool                `json:"system_generated,omitempty"`
+	Notes                     string              `json:"notes,omitempty"`
+	DatesOfExistance          []*Date             `json:"dates_of_existence,omitempty"`
+	Publish                   bool                `json:"publish,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -416,25 +416,25 @@ type AgentFamily struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Names         []*NameFamily          `json:"names,omitemtpy"`
-	DisplayName   *NameFamily            `json:"display_name,omitemtpy"`
-	RelatedAgents map[string]interface{} `json:"related_agents,omitemtpy"`
+	Names         []*NameFamily          `json:"names,omitempty"`
+	DisplayName   *NameFamily            `json:"display_name,omitempty"`
+	RelatedAgents map[string]interface{} `json:"related_agents,omitempty"`
 }
 
 // AgentPerson JSONModel(:agent_person)
 type AgentPerson struct {
 	URI                       string                   `json:"uri,omitempty"`
-	Title                     string                   `json:"title,omitemtpy"`
-	IsLinkedToPublishedRecord bool                     `json:"is_linked_to_published_record,omitemtpy"`
-	AgentType                 string                   `json:"agent_type,omitemtpy"` //Enum: agent_person agent_corporate_entity agent_software agent_family user
-	AgentContacts             []*AgentContact          `json:"agent_contacts,omitemtpy"`
-	LinkedAgentRoles          []string                 `json:"linked_agent_roles,omitemtpy"`
-	ExternalDocuments         []map[string]interface{} `json:"external_documents,omitemtpy"`
-	RightsStatements          []*RightsStatement       `json:"rights_statements,omitemtpy"`
-	SystemGenerated           bool                     `json:"system_generated,omitemtpy"`
-	Notes                     string                   `json:"notes,omitemtpy"`
-	DatesOfExistance          []*Date                  `json:"dates_of_existence,omitemtpy"`
-	Publish                   bool                     `json:"publish,omitemtpy"`
+	Title                     string                   `json:"title,omitempty"`
+	IsLinkedToPublishedRecord bool                     `json:"is_linked_to_published_record,omitempty"`
+	AgentType                 string                   `json:"agent_type,omitempty"` //Enum: agent_person agent_corporate_entity agent_software agent_family user
+	AgentContacts             []*AgentContact          `json:"agent_contacts,omitempty"`
+	LinkedAgentRoles          []string                 `json:"linked_agent_roles,omitempty"`
+	ExternalDocuments         []map[string]interface{} `json:"external_documents,omitempty"`
+	RightsStatements          []*RightsStatement       `json:"rights_statements,omitempty"`
+	SystemGenerated           bool                     `json:"system_generated,omitempty"`
+	Notes                     string                   `json:"notes,omitempty"`
+	DatesOfExistance          []*Date                  `json:"dates_of_existence,omitempty"`
+	Publish                   bool                     `json:"publish,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -445,9 +445,9 @@ type AgentPerson struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Names         []*NamePerson          `json:"names,omitemtpy"`
-	DisplayName   *NamePerson            `json:"display_name,omitemtpy"`
-	RelatedAgents map[string]interface{} `json:"related_agents,omitemtpy"`
+	Names         []*NamePerson          `json:"names,omitempty"`
+	DisplayName   *NamePerson            `json:"display_name,omitempty"`
+	RelatedAgents map[string]interface{} `json:"related_agents,omitempty"`
 }
 
 // AgentRelationshipAssociative JSONModel(:agent_relationship_associative)
@@ -528,13 +528,13 @@ type AgentRelationshipSubordinatesuperior struct {
 
 // AgentSoftware JSONModel(:agent_software)
 type AgentSoftware struct {
-	URI                       string                   `json:"uri,omitemtpy"`
-	Title                     string                   `json:"title,omitemtpy"`
-	IsLinkedToPublishedRecord bool                     `json:"is_linked_to_published_record,omitemtpy"`
-	AgentType                 string                   `json:"agent_type,omitemtpy"` // ENUM as: agent_person agent_corporate_entity agent_software agent_family user
+	URI                       string                   `json:"uri,omitempty"`
+	Title                     string                   `json:"title,omitempty"`
+	IsLinkedToPublishedRecord bool                     `json:"is_linked_to_published_record,omitempty"`
+	AgentType                 string                   `json:"agent_type,omitempty"` // ENUM as: agent_person agent_corporate_entity agent_software agent_family user
 	AgentContacts             []*AgentContact          `json:"agent_contacts"`
-	LinkedAgentRoles          string                   `json:"linked_agent_roles,omitemtpy"`
-	ExternalDocuments         []map[string]interface{} `json:"external_documents,omitemtpy"`
+	LinkedAgentRoles          string                   `json:"linked_agent_roles,omitempty"`
+	ExternalDocuments         []map[string]interface{} `json:"external_documents,omitempty"`
 	RightsStatements          []*RightsStatement       `json:"rights_statements"`
 	SystemGenerated           bool                     `json:"system_generated,omitempty"`
 	Notes                     []*NoteText              `json:"notes,omitmepty"`
@@ -550,8 +550,8 @@ type AgentSoftware struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	DisplayName *NameSoftware   `json:"display_name,omitemtpy"`
-	Names       []*NameSoftware `json:"names,omitemtpy"`
+	DisplayName *NameSoftware   `json:"display_name,omitempty"`
+	Names       []*NameSoftware `json:"names,omitempty"`
 }
 
 // ArchivalObject JSONModel(:archival_object)
@@ -578,25 +578,25 @@ type ArchivalObject struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	RefID                    string                 `json:"ref_id,omitemtpy"`
-	ConponentID              string                 `json:"component_id,omitemtpy"`
-	Level                    string                 `json:"level,omitemtpy"`
-	OtherLevel               string                 `json:"other_level,omitemtpy"`
-	DisplayString            string                 `json:"display_string,omitemtpy"`
-	RestrictionsApply        bool                   `json:"restrictions_apply,omitemtpy"`
-	RepositoryProcessingNote string                 `json:"repository_processing_note,omitemtpy"`
-	Parent                   map[string]interface{} `json:"parent,omitemtpy"`
-	Resource                 map[string]interface{} `json:"resource,omitemtpy"`
-	Series                   map[string]interface{} `json:"series,omitemtpy"`
-	Position                 int                    `json:"position,omitemtpy"`
-	Instances                []*Instance            `json:"instances,omitemtpy"`
-	Notes                    []*NoteText            `json:"notes,omitemtpy"`
-	HasUnpublishedAncester   bool                   `json:"has_unpublished_ancestor,omitemtpy"`
+	RefID                    string                 `json:"ref_id,omitempty"`
+	ConponentID              string                 `json:"component_id,omitempty"`
+	Level                    string                 `json:"level,omitempty"`
+	OtherLevel               string                 `json:"other_level,omitempty"`
+	DisplayString            string                 `json:"display_string,omitempty"`
+	RestrictionsApply        bool                   `json:"restrictions_apply,omitempty"`
+	RepositoryProcessingNote string                 `json:"repository_processing_note,omitempty"`
+	Parent                   map[string]interface{} `json:"parent,omitempty"`
+	Resource                 map[string]interface{} `json:"resource,omitempty"`
+	Series                   map[string]interface{} `json:"series,omitempty"`
+	Position                 int                    `json:"position,omitempty"`
+	Instances                []*Instance            `json:"instances,omitempty"`
+	Notes                    []*NoteText            `json:"notes,omitempty"`
+	HasUnpublishedAncester   bool                   `json:"has_unpublished_ancestor,omitempty"`
 }
 
 // ArchivalRecordChildren JSONModel(:archival_record_children)
 type ArchivalRecordChildren struct {
-	Children []*ArchivalObject `json:"children,omitemtpy"`
+	Children []*ArchivalObject `json:"children,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -610,8 +610,8 @@ type ArchivalRecordChildren struct {
 
 // BooleanFieldQuery JSONModel(:boolean_field_query)
 type BooleanFieldQuery struct {
-	Field string `json:"field,omitemtpy"`
-	Value bool   `json:"value,omitemtpy"`
+	Field string `json:"field,omitempty"`
+	Value bool   `json:"value,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -625,9 +625,9 @@ type BooleanFieldQuery struct {
 
 // BooleanQuery JSONModel(:boolean_query)
 type BooleanQuery struct {
-	Op string `json:"op,omitemtpy"` // ENUM as: string AND OR NOT
+	Op string `json:"op,omitempty"` // ENUM as: string AND OR NOT
 	//FIXME: this needs to be re-thought, do I use an interface type, a struct?
-	Subqueries map[string]interface{} `json:"subqueries,omitemtpy"` // One of 	JSONModel(:boolean_query) object,JSONModel(:field_query) object,JSONModel(:boolean_field_query) object,JSONModel(:date_field_query) object
+	Subqueries map[string]interface{} `json:"subqueries,omitempty"` // One of 	JSONModel(:boolean_query) object,JSONModel(:field_query) object,JSONModel(:boolean_field_query) object,JSONModel(:date_field_query) object
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -641,14 +641,14 @@ type BooleanQuery struct {
 
 // Classification JSONModel(:classification)
 type Classification struct {
-	URI           string                 `json:"uri,omitemtpy"`
-	Identifier    string                 `json:"identifier,omitemtpy"`
-	Title         string                 `json:"title,omitemtpy"`
-	Description   string                 `json:"description,omitemtpy"`
-	Publish       bool                   `json:"publish,omitemtpy"` //NOTE: default should true
-	PathFromRoot  map[string]interface{} `json:"path_from_root,omitemtpy"`
-	LinkedRecords map[string]interface{} `json:"linked_records,omitemtpy"`
-	Creator       map[string]interface{} `json:"creator,omitemtpy"`
+	URI           string                 `json:"uri,omitempty"`
+	Identifier    string                 `json:"identifier,omitempty"`
+	Title         string                 `json:"title,omitempty"`
+	Description   string                 `json:"description,omitempty"`
+	Publish       bool                   `json:"publish,omitempty"` //NOTE: default should true
+	PathFromRoot  map[string]interface{} `json:"path_from_root,omitempty"`
+	LinkedRecords map[string]interface{} `json:"linked_records,omitempty"`
+	Creator       map[string]interface{} `json:"creator,omitempty"`
 
 	LockVersion    json.Number `json:"lock_version,Number"`
 	JSONModelType  string      `json:"jsonmodel_type,omitempty"`
@@ -661,14 +661,14 @@ type Classification struct {
 
 // ClassificationTerm JSONModel(:classification_term)
 type ClassificationTerm struct {
-	URI           string                 `json:"uri,omitemtpy"`
-	Identifier    string                 `json:"identifier,omitemtpy"`
-	Title         string                 `json:"title,omitemtpy"`
-	Description   string                 `json:"description,omitemtpy"`
-	Publish       bool                   `json:"publish,omitemtpy"` //NOTE: default should true
-	PathFromRoot  map[string]interface{} `json:"path_from_root,omitemtpy"`
-	LinkedRecords map[string]interface{} `json:"linked_records,omitemtpy"`
-	Creator       map[string]interface{} `json:"creator,omitemtpy"`
+	URI           string                 `json:"uri,omitempty"`
+	Identifier    string                 `json:"identifier,omitempty"`
+	Title         string                 `json:"title,omitempty"`
+	Description   string                 `json:"description,omitempty"`
+	Publish       bool                   `json:"publish,omitempty"` //NOTE: default should true
+	PathFromRoot  map[string]interface{} `json:"path_from_root,omitempty"`
+	LinkedRecords map[string]interface{} `json:"linked_records,omitempty"`
+	Creator       map[string]interface{} `json:"creator,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -679,21 +679,21 @@ type ClassificationTerm struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Position       int                    `json:"position,omitemtpy"`
-	Parent         map[string]interface{} `json:"parent,omitemtpy"`
-	Classification map[string]interface{} `json:"classification,omitemtpy"`
+	Position       int                    `json:"position,omitempty"`
+	Parent         map[string]interface{} `json:"parent,omitempty"`
+	Classification map[string]interface{} `json:"classification,omitempty"`
 }
 
 // RecordTree JSONModel(:record_tree)
 type RecordTree struct {
-	URI         string `json:"uri,omitemtpy"`
-	ID          int    `json:"id,omitemtpy"`
-	RecordURI   string `json:"record_uri,omitemtpy"`
-	Title       string `json:"title,omitemtpy"`
-	Suppressed  bool   `json:"suppressed,omitemtpy"`
-	Publish     bool   `json:"publish,omitemtpy"`
-	HasChildren bool   `json:"has_children,omitemtpy"`
-	NodeType    string `json:"node_type,omitemtpy"`
+	URI         string `json:"uri,omitempty"`
+	ID          int    `json:"id,omitempty"`
+	RecordURI   string `json:"record_uri,omitempty"`
+	Title       string `json:"title,omitempty"`
+	Suppressed  bool   `json:"suppressed,omitempty"`
+	Publish     bool   `json:"publish,omitempty"`
+	HasChildren bool   `json:"has_children,omitempty"`
+	NodeType    string `json:"node_type,omitempty"`
 
 	LockVersion    json.Number `json:"lock_version,Number"`
 	JSONModelType  string      `json:"jsonmodel_type,omitempty"`
@@ -706,14 +706,14 @@ type RecordTree struct {
 
 // ClassificationTree JSONModel(:classification_tree)
 type ClassificationTree struct {
-	URI         string `json:"uri,omitemtpy"`
-	ID          int    `json:"id,omitemtpy"`
-	RecordURI   string `json:"record_uri,omitemtpy"`
-	Title       string `json:"title,omitemtpy"`
-	Suppressed  bool   `json:"suppressed,omitemtpy"`
-	Publish     bool   `json:"publish,omitemtpy"`
-	HasChildren bool   `json:"has_children,omitemtpy"`
-	NodeType    string `json:"node_type,omitemtpy"`
+	URI         string `json:"uri,omitempty"`
+	ID          int    `json:"id,omitempty"`
+	RecordURI   string `json:"record_uri,omitempty"`
+	Title       string `json:"title,omitempty"`
+	Suppressed  bool   `json:"suppressed,omitempty"`
+	Publish     bool   `json:"publish,omitempty"`
+	HasChildren bool   `json:"has_children,omitempty"`
+	NodeType    string `json:"node_type,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -724,8 +724,8 @@ type ClassificationTree struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Identifier string                `json:"identifier,omitemtpy"`
-	Children   []*ClassificationTree `json:"children,omitemtpy"`
+	Identifier string                `json:"identifier,omitempty"`
+	Children   []*ClassificationTree `json:"children,omitempty"`
 }
 
 // CollectionManagement JSONModel(:collection_management)
@@ -754,17 +754,17 @@ type CollectionManagement struct {
 
 // Container JSONModel(:container)
 type Container struct {
-	ContainerProfileKey string               `json:"container_profile_key,omitemtpy"`
-	Type1               string               `json:"type_1,omitemtpy"`
-	Indicator1          string               `json:"indicator_1,omitemtpy"`
-	Barcode1            string               `json:"Barcode_1,omitemtpy"`
-	Type2               string               `json:"type_2,omitemtpy"`
-	Indicator2          string               `json:"indicator_2,omitemtpy"`
-	Type3               string               `json:"type_3,omitemtpy"`
+	ContainerProfileKey string               `json:"container_profile_key,omitempty"`
+	Type1               string               `json:"type_1,omitempty"`
+	Indicator1          string               `json:"indicator_1,omitempty"`
+	Barcode1            string               `json:"Barcode_1,omitempty"`
+	Type2               string               `json:"type_2,omitempty"`
+	Indicator2          string               `json:"indicator_2,omitempty"`
+	Type3               string               `json:"type_3,omitempty"`
 	Indicator3          string               `json:"indicator_3"`
-	ContainerExtent     string               `json:"container_extent,omitemtpy"`
-	ContainerExtentType string               `json:"container_extent_type,omitemtpy"`
-	ContainerLocations  []*ContainerLocation `json:"container_locations,omitemtpy"`
+	ContainerExtent     string               `json:"container_extent,omitempty"`
+	ContainerExtentType string               `json:"container_extent_type,omitempty"`
+	ContainerLocations  []*ContainerLocation `json:"container_locations,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -778,12 +778,12 @@ type Container struct {
 
 // ContainerLocation JSONModel(:container_location)
 type ContainerLocation struct {
-	Status    string                 `json:"status,omitemtpy"`
-	StartDate *Date                  `json:"start_date,omitemtpy"`
-	EndDate   *Date                  `json:"end_date,omitemtpy"`
-	Note      string                 `json:"note,omitemtpy"`
-	Ref       string                 `json:"location,omitemtpy"`
-	Resolved  map[string]interface{} `json:"_resolved,omitemtpy"`
+	Status    string                 `json:"status,omitempty"`
+	StartDate *Date                  `json:"start_date,omitempty"`
+	EndDate   *Date                  `json:"end_date,omitempty"`
+	Note      string                 `json:"note,omitempty"`
+	Ref       string                 `json:"location,omitempty"`
+	Resolved  map[string]interface{} `json:"_resolved,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -797,15 +797,15 @@ type ContainerLocation struct {
 
 // ContainerProfile JSONModel(:container_profile)
 type ContainerProfile struct {
-	URI             string `json:"uri,omitemtpy"`
-	Name            string `json:"name,omitemtpy"`
-	URL             string `json:"url,omitemtpy"`
-	DimensionUnits  string `json:"dimension_units,omitemtpy"`
-	ExtentDimension string `json:"extent_dimension,omitemtpy" ` //ENUM as: height width depth
-	Height          string `json:"height,omitemtpy"`
-	Width           string `json:"width,omitemtpy"`
-	Depth           string `json:"width,omitemtpy"`
-	DisplayString   string `json:"display_string,omitemtpy"`
+	URI             string `json:"uri,omitempty"`
+	Name            string `json:"name,omitempty"`
+	URL             string `json:"url,omitempty"`
+	DimensionUnits  string `json:"dimension_units,omitempty"`
+	ExtentDimension string `json:"extent_dimension,omitempty" ` //ENUM as: height width depth
+	Height          string `json:"height,omitempty"`
+	Width           string `json:"width,omitempty"`
+	Depth           string `json:"width,omitempty"`
+	DisplayString   string `json:"display_string,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -819,13 +819,13 @@ type ContainerProfile struct {
 
 // Date  JSONModel(:date)
 type Date struct {
-	DateType   string `json:"date_type,omitemtpy"`
-	Label      string `json:"label,omitemtpy"`
-	Certainty  string `json:"certainty,omitemtpy"`
+	DateType   string `json:"date_type,omitempty"`
+	Label      string `json:"label,omitempty"`
+	Certainty  string `json:"certainty,omitempty"`
 	Expression string `json:"expression,omitempty"`
 	Begin      string `json:"begin,omitempty"`
 	End        string `json:"end,omitempty"`
-	Era        string `json:"era,omitemtpy"`
+	Era        string `json:"era,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -839,9 +839,9 @@ type Date struct {
 
 // DateFieldQuery JSONModel(:date_field_query)
 type DateFieldQuery struct {
-	Comparator string `json:"comparator,omitemtpy"` // ENUM as: greater_than lesser_than equal
-	Field      string `json:"field,omitemtpy"`
-	Value      *Date  `json:"value,omitemtpy"`
+	Comparator string `json:"comparator,omitempty"` // ENUM as: greater_than lesser_than equal
+	Field      string `json:"field,omitempty"`
+	Value      *Date  `json:"value,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -855,13 +855,13 @@ type DateFieldQuery struct {
 
 // Deaccession JSONModel(:deaccession)
 type Deaccession struct {
-	Scope        string    `json:"scope,omitemtpy"`
-	Description  string    `json:"description,omitemtpy"`
-	Reason       string    `json:"reason,omitemtpy"`
-	Disposition  string    `json:"disposition,omitemtpy"`
-	Notification bool      `json:"notification,omitemtpy"`
-	Date         *Date     `json:"date,omitemtpy"`
-	Extents      []*Extent `json:"extents,omitemtpy"`
+	Scope        string    `json:"scope,omitempty"`
+	Description  string    `json:"description,omitempty"`
+	Reason       string    `json:"reason,omitempty"`
+	Disposition  string    `json:"disposition,omitempty"`
+	Notification bool      `json:"notification,omitempty"`
+	Date         *Date     `json:"date,omitempty"`
+	Extents      []*Extent `json:"extents,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -875,9 +875,9 @@ type Deaccession struct {
 
 // DefaultValues JSONModel(:default_values)
 type DefaultValues struct {
-	URI        string                 `json:"uri,omitemtpy"`
-	RecordType string                 `json:"record_type,omitemtpy"` //ENUM of : archival_object digital_object_component resource accession subject digital_object agent_person agent_family agent_software agent_corporate_entity event location classification classification_term
-	Defaults   map[string]interface{} `json:"defaults,omitemtpy"`
+	URI        string                 `json:"uri,omitempty"`
+	RecordType string                 `json:"record_type,omitempty"` //ENUM of : archival_object digital_object_component resource accession subject digital_object agent_person agent_family agent_software agent_corporate_entity event location classification classification_term
+	Defaults   map[string]interface{} `json:"defaults,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -891,25 +891,25 @@ type DefaultValues struct {
 
 // Defaults JSONModel(:defaults)
 type Defaults struct {
-	ShowSuppressed             bool   `json:"show_suppressed,omitemtpy"`
-	Publish                    bool   `json:"publish,omitemtpy"`
-	AccessionBrowseColumn1     string `json:"accession_browse_column_1,omitemtpy"`      // enum string identifier accession_date acquisition_type resource_type restrictions_apply access_restrictions use_restrictions publish no_value
-	AccessionBrowseColumn2     string `json:"accession_browse_column_2,omitemtpy"`      // enum string identifier accession_date acquisition_type resource_type restrictions_apply access_restrictions use_restrictions publish no_value
-	AccessionBrowseColumn3     string `json:"accession_browse_column_3,omitemtpy"`      // enum string identifier accession_date acquisition_type resource_type restrictions_apply access_restrictions use_restrictions publish no_value
-	AccessionBrowseColumn4     string `json:"accession_browse_column_4,omitemtpy"`      // enum string identifier accession_date acquisition_type resource_type restrictions_apply access_restrictions use_restrictions publish no_value
-	AccessionBrowseColumn5     string `json:"accession_browse_column_5,omitemtpy"`      //  enum string identifier accession_date acquisition_type resource_type restrictions_apply access_restrictions use_restrictions publish no_value
-	ResourceBrowseColumn1      string `json:"resource_browse_column_1,omitemtpy"`       // enum string identifier resource_type level language restrictions ead_id finding_aid_status publish no_value
-	ResourceBrowseColumn2      string `json:"resource_browse_column_2,omitemtpy"`       // enum string identifier resource_type level language restrictions ead_id finding_aid_status publish no_value
-	ResourceBrowseColumn3      string `json:"resource_browse_column_3,omitemtpy"`       // enum string identifier resource_type level language restrictions ead_id finding_aid_status publish no_value
-	ResourceBrowseColumn4      string `json:"resource_browse_column_4,omitemtpy"`       // enum string identifier resource_type level language restrictions ead_id finding_aid_status publish no_value
-	ResourceBrowseColumn5      string `json:"resource_browse_column_5,omitemtpy"`       // enum string identifier resource_type level language restrictions ead_id finding_aid_status publish no_value
-	DigitalObjectBrowseColumn1 string `json:"digital_object_browse_column_1,omitemtpy"` // enum string digital_object_id digital_object_type level restrictions publish no_value
-	DigitalObjectBrowseColumn2 string `json:"digital_object_browse_column_2,omitemtpy"` // enum string digital_object_id digital_object_type level restrictions publish no_value
-	DigitalObjectBrowseColumn3 string `json:"digital_object_browse_column_3,omitemtpy"` // enum string digital_object_id digital_object_type level restrictions publish no_value
-	DigitalObjectBrowseColumn4 string `json:"digital_object_browse_column_4,omitemtpy"` // enum string digital_object_id digital_object_type level restrictions publish no_value
+	ShowSuppressed             bool   `json:"show_suppressed,omitempty"`
+	Publish                    bool   `json:"publish,omitempty"`
+	AccessionBrowseColumn1     string `json:"accession_browse_column_1,omitempty"`      // enum string identifier accession_date acquisition_type resource_type restrictions_apply access_restrictions use_restrictions publish no_value
+	AccessionBrowseColumn2     string `json:"accession_browse_column_2,omitempty"`      // enum string identifier accession_date acquisition_type resource_type restrictions_apply access_restrictions use_restrictions publish no_value
+	AccessionBrowseColumn3     string `json:"accession_browse_column_3,omitempty"`      // enum string identifier accession_date acquisition_type resource_type restrictions_apply access_restrictions use_restrictions publish no_value
+	AccessionBrowseColumn4     string `json:"accession_browse_column_4,omitempty"`      // enum string identifier accession_date acquisition_type resource_type restrictions_apply access_restrictions use_restrictions publish no_value
+	AccessionBrowseColumn5     string `json:"accession_browse_column_5,omitempty"`      //  enum string identifier accession_date acquisition_type resource_type restrictions_apply access_restrictions use_restrictions publish no_value
+	ResourceBrowseColumn1      string `json:"resource_browse_column_1,omitempty"`       // enum string identifier resource_type level language restrictions ead_id finding_aid_status publish no_value
+	ResourceBrowseColumn2      string `json:"resource_browse_column_2,omitempty"`       // enum string identifier resource_type level language restrictions ead_id finding_aid_status publish no_value
+	ResourceBrowseColumn3      string `json:"resource_browse_column_3,omitempty"`       // enum string identifier resource_type level language restrictions ead_id finding_aid_status publish no_value
+	ResourceBrowseColumn4      string `json:"resource_browse_column_4,omitempty"`       // enum string identifier resource_type level language restrictions ead_id finding_aid_status publish no_value
+	ResourceBrowseColumn5      string `json:"resource_browse_column_5,omitempty"`       // enum string identifier resource_type level language restrictions ead_id finding_aid_status publish no_value
+	DigitalObjectBrowseColumn1 string `json:"digital_object_browse_column_1,omitempty"` // enum string digital_object_id digital_object_type level restrictions publish no_value
+	DigitalObjectBrowseColumn2 string `json:"digital_object_browse_column_2,omitempty"` // enum string digital_object_id digital_object_type level restrictions publish no_value
+	DigitalObjectBrowseColumn3 string `json:"digital_object_browse_column_3,omitempty"` // enum string digital_object_id digital_object_type level restrictions publish no_value
+	DigitalObjectBrowseColumn4 string `json:"digital_object_browse_column_4,omitempty"` // enum string digital_object_id digital_object_type level restrictions publish no_value
 	DigitalObjectBrowseColumn5 string `json:"digital_object_browse_column_5,omitempty"` // enum string digital_object_id digital_object_type level restrictions publish no_value
-	DefaultValues              bool   `json:"default_values,omitemtpy"`
-	NoteOrder                  string `json:"note_order,omitemtpy"`
+	DefaultValues              bool   `json:"default_values,omitempty"`
+	NoteOrder                  string `json:"note_order,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -923,7 +923,7 @@ type Defaults struct {
 
 // DigitalObject represents a digital object that will eventually become a EAD at COA
 type DigitalObject struct {
-	ID                int                      `json:"id,omitemtpy"`
+	ID                int                      `json:"id,omitempty"`
 	URI               string                   `json:"uri,omitmepty"`
 	ExternalIDs       []string                 `json:"external_ids"`
 	Title             string                   `json:"title,omitempty"`
@@ -950,30 +950,30 @@ type DigitalObject struct {
 	DigitalObjectID      string                   `json:"digital_object_id,omitmepty"`
 	Level                string                   `json:"level,omitmepty"`
 	DigitalObjectType    string                   `json:"digital_object_type"`
-	FileVersions         []*FileVersion           `json:"file_versions,omitemtpy"`
+	FileVersions         []*FileVersion           `json:"file_versions,omitempty"`
 	Restrictions         bool                     `json:"restrictions,omitmepty"`
 	Tree                 map[string]interface{}   `json:"tree,omitmepty"`
 	Notes                []map[string]interface{} `json:"notes,omitmepty"`
 	CollectionManagement *CollectionManagement    `json:"collection_management,omitempty"`
 	UserDefined          []map[string]interface{} `json:"user_defined,omitmepty"`
-	LinkedInstances      []map[string]interface{} `json:"linked_instances,omitemtpy"`
+	LinkedInstances      []map[string]interface{} `json:"linked_instances,omitempty"`
 }
 
 // DigitalObjectComponent JSONModel(:digital_object_component)
 type DigitalObjectComponent struct {
-	URI               string                   `json:"uri,omitemtpy"`
-	ExternalIDs       []*ExternalID            `json:"external_ids,omitemtpy"`
-	Title             string                   `json:"title,omitemtpy"`
-	Language          string                   `json:"language,omitemtpy"`
+	URI               string                   `json:"uri,omitempty"`
+	ExternalIDs       []*ExternalID            `json:"external_ids,omitempty"`
+	Title             string                   `json:"title,omitempty"`
+	Language          string                   `json:"language,omitempty"`
 	Publish           bool                     `json:"publish"`
 	Subjects          []map[string]interface{} `json:"subjects"`
-	LinkedEvents      []map[string]interface{} `json:"linked_events,omitemtpy"`
-	Extents           []*Extent                `json:"extents,omitemtpy"`
-	Dates             []*Date                  `json:"dates,omitemtpy"`
-	ExternalDocuments []map[string]interface{} `json:"external_documents,omitemtpy"`
-	RightsStatements  []*RightsStatement       `json:"rights_statements,omitemtpy"`
-	LinkedAgents      []*Agent                 `json:"linked_agents,omitemtpy"`
-	Suppressed        bool                     `json:"suppressed,omitemtpy"`
+	LinkedEvents      []map[string]interface{} `json:"linked_events,omitempty"`
+	Extents           []*Extent                `json:"extents,omitempty"`
+	Dates             []*Date                  `json:"dates,omitempty"`
+	ExternalDocuments []map[string]interface{} `json:"external_documents,omitempty"`
+	RightsStatements  []*RightsStatement       `json:"rights_statements,omitempty"`
+	LinkedAgents      []*Agent                 `json:"linked_agents,omitempty"`
+	Suppressed        bool                     `json:"suppressed,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -984,27 +984,27 @@ type DigitalObjectComponent struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	ComponentID            string                 `json:"component_id,omitemtpy"`
-	Label                  string                 `json:"label,omitemtpy"`
-	DisplayString          string                 `json:"display_string,omitemtpy"`
-	FileVersions           []*FileVersion         `json:"file_versions,omitemtpy"`
-	Parent                 map[string]interface{} `json:"parent,omitemtpy"`
-	DigitalObject          *DigitalObject         `json:"digital_object,omitemtpy"`
-	Position               int                    `json:"position,omitemtpy"`
-	Notes                  []*NoteText            `json:"notes,omitemtpy"`
-	HasUnpublishedAncestor bool                   `json:"has_unpublished_ancestor,omitemtpy"`
+	ComponentID            string                 `json:"component_id,omitempty"`
+	Label                  string                 `json:"label,omitempty"`
+	DisplayString          string                 `json:"display_string,omitempty"`
+	FileVersions           []*FileVersion         `json:"file_versions,omitempty"`
+	Parent                 map[string]interface{} `json:"parent,omitempty"`
+	DigitalObject          *DigitalObject         `json:"digital_object,omitempty"`
+	Position               int                    `json:"position,omitempty"`
+	Notes                  []*NoteText            `json:"notes,omitempty"`
+	HasUnpublishedAncestor bool                   `json:"has_unpublished_ancestor,omitempty"`
 }
 
 // DigitalObjectTree JSONModel(:digital_object_tree)
 type DigitalObjectTree struct {
-	URI         string `json:"uri,omitemtpy"`
-	ID          int    `json:"id,omitemtpy"`
-	RecordURI   string `json:"record_uri,omitemtpy"`
-	Title       string `json:"title,omitemtpy"`
-	Suppressed  bool   `json:"suppressed,omitemtpy"`
+	URI         string `json:"uri,omitempty"`
+	ID          int    `json:"id,omitempty"`
+	RecordURI   string `json:"record_uri,omitempty"`
+	Title       string `json:"title,omitempty"`
+	Suppressed  bool   `json:"suppressed,omitempty"`
 	Publish     bool   `json:"publish"`
-	HasChildren bool   `json:"has_children,omitemtpy"`
-	NodeType    string `json:"node_type,omitemtpy"`
+	HasChildren bool   `json:"has_children,omitempty"`
+	NodeType    string `json:"node_type,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1015,15 +1015,15 @@ type DigitalObjectTree struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Level             string               `json:"level,omitemtpy"`
-	DigitalObjectType string               `json:"digital_object_type,omitemtpy"`
-	FileVersions      []*FileVersion       `json:"file_versions,omitemtpy"`
-	Children          []*DigitalObjectTree `json:"children,omitemtpy"`
+	Level             string               `json:"level,omitempty"`
+	DigitalObjectType string               `json:"digital_object_type,omitempty"`
+	FileVersions      []*FileVersion       `json:"file_versions,omitempty"`
+	Children          []*DigitalObjectTree `json:"children,omitempty"`
 }
 
 // DigitalRecordChildren JSONModel(:digital_record_children)
 type DigitalRecordChildren struct {
-	Children []*DigitalObjectComponent `json:"children,omitemtpy"`
+	Children []*DigitalObjectComponent `json:"children,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1037,14 +1037,14 @@ type DigitalRecordChildren struct {
 
 // Enumeration JSONModel(:enumeration)
 type Enumeration struct {
-	URI               string              `json:"uri,omitemtpy"`
-	Name              string              `json:"name,omitemtpy"`
-	DefaultValue      string              `json:"default_value,omitemtpy"`
-	Editable          bool                `json:"editable,omitemtpy"`
-	Relationships     []string            `json:"relationships,omitemtpy"`
-	EnumerationValues []*EnumerationValue `json:"enumeration_values,omitemtpy"`
-	Values            []string            `json:"values,omitemtpy"`
-	ReadonlyValues    []string            `json:"readonly_values,omitemtpy"`
+	URI               string              `json:"uri,omitempty"`
+	Name              string              `json:"name,omitempty"`
+	DefaultValue      string              `json:"default_value,omitempty"`
+	Editable          bool                `json:"editable,omitempty"`
+	Relationships     []string            `json:"relationships,omitempty"`
+	EnumerationValues []*EnumerationValue `json:"enumeration_values,omitempty"`
+	Values            []string            `json:"values,omitempty"`
+	ReadonlyValues    []string            `json:"readonly_values,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1058,10 +1058,10 @@ type Enumeration struct {
 
 // EnumerationMigration JSONModel(:enumeration_migration)
 type EnumerationMigration struct {
-	URI     string       `json:"uri,omitemtpy"`
-	EnumURI *Enumeration `json:"enum_uri,omitemtpy"`
-	From    string       `json:"from,omitemtpy"`
-	To      string       `json:"to,omitemtpy"`
+	URI     string       `json:"uri,omitempty"`
+	EnumURI *Enumeration `json:"enum_uri,omitempty"`
+	From    string       `json:"from,omitempty"`
+	To      string       `json:"to,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1075,10 +1075,10 @@ type EnumerationMigration struct {
 
 // EnumerationValue JSONModel(:enumeration_value)
 type EnumerationValue struct {
-	URI        string `json:"uri,omitemtpy"`
-	Value      string `json:"value,omitemtpy"`
-	Position   int    `json:"position,omitemtpy"`
-	Suppressed bool   `json:"suppressed,omitemtpy"`
+	URI        string `json:"uri,omitempty"`
+	Value      string `json:"value,omitempty"`
+	Position   int    `json:"position,omitempty"`
+	Suppressed bool   `json:"suppressed,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1092,17 +1092,17 @@ type EnumerationValue struct {
 
 // Event JSONModel(:event)
 type Event struct {
-	URI               string                   `json:"uri,omitemtpy"`
-	ExternalIDs       []*ExternalID            `json:"external_ids,omitemtpy"`
-	ExternalDocuments []map[string]interface{} `json:"external_documents,omitemtpy"`
-	EventType         string                   `json:"event_type,omitemtpy"`
-	Date              *Date                    `json:"date,omitemtpy"`
-	Timestamp         string                   `json:"timestamp,omitemtpy"`
-	Outcome           string                   `json:"outcome,omitemtpy"`
-	OutcomeNote       string                   `json:"outcome_note,omitemtpy"`
-	Suppressed        bool                     `json:"suppressed,omitemtpy"`
-	LinkedAgents      []*Agent                 `json:"linked_agents,omitemtpy"`
-	LinkedRecords     map[string]interface{}   `json:"linked_records,omitemtpy"`
+	URI               string                   `json:"uri,omitempty"`
+	ExternalIDs       []*ExternalID            `json:"external_ids,omitempty"`
+	ExternalDocuments []map[string]interface{} `json:"external_documents,omitempty"`
+	EventType         string                   `json:"event_type,omitempty"`
+	Date              *Date                    `json:"date,omitempty"`
+	Timestamp         string                   `json:"timestamp,omitempty"`
+	Outcome           string                   `json:"outcome,omitempty"`
+	OutcomeNote       string                   `json:"outcome_note,omitempty"`
+	Suppressed        bool                     `json:"suppressed,omitempty"`
+	LinkedAgents      []*Agent                 `json:"linked_agents,omitempty"`
+	LinkedRecords     map[string]interface{}   `json:"linked_records,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1166,10 +1166,10 @@ type ExternalID struct {
 
 // FieldQuery JSONModel(:field_query)
 type FieldQuery struct {
-	Negated bool   `json:"negated,omitemtpy"`
-	Field   string `json:"field,omitemtpy"`
-	Value   string `json:"value,omitemtpy"`
-	Literal bool   `json:"literal,omitemtpy"`
+	Negated bool   `json:"negated,omitempty"`
+	Field   string `json:"field,omitempty"`
+	Value   string `json:"value,omitempty"`
+	Literal bool   `json:"literal,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1183,17 +1183,17 @@ type FieldQuery struct {
 
 // FileVersion JSONModel(:file_version)
 type FileVersion struct {
-	Identifier            string `json:"identifier,omitemtpy"`
-	FileURI               string `json:"file_uri,omitemtpy"`
+	Identifier            string `json:"identifier,omitempty"`
+	FileURI               string `json:"file_uri,omitempty"`
 	Publish               bool   `json:"publish"`
-	UseStatement          string `json:"use_statement,omitemtpy"`
-	XLinkActuateAttribute string `json:"xlink_actuate_attribute,omitemtpy"`
-	XLinkShowAttribute    string `json:"xlink_show_attribute,omitemtpy"`
-	FileFormatName        string `json:"file_format_name,omitemtpy"`
-	FileFormatVersion     string `json:"file_format_version,omitemtpy"`
-	FileSizeBytes         int    `json:"file_size_bytes,omitemtpy"`
-	Checksum              string `json:"checksum,omitemtpy"`
-	ChecksumMethod        string `json:"checksum_method,omitemtpy"`
+	UseStatement          string `json:"use_statement,omitempty"`
+	XLinkActuateAttribute string `json:"xlink_actuate_attribute,omitempty"`
+	XLinkShowAttribute    string `json:"xlink_show_attribute,omitempty"`
+	FileFormatName        string `json:"file_format_name,omitempty"`
+	FileFormatVersion     string `json:"file_format_version,omitempty"`
+	FileSizeBytes         int    `json:"file_size_bytes,omitempty"`
+	Checksum              string `json:"checksum,omitempty"`
+	ChecksumMethod        string `json:"checksum_method,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1207,11 +1207,11 @@ type FileVersion struct {
 
 // FindAndReplaceJob JSONModel(:find_and_replace_job)
 type FindAndReplaceJob struct {
-	Find          string `json:"find,omitemtpy"`
-	Replace       string `json:"replace,omitemtpy"`
-	RecordType    string `json:"record_type,omitemtpy"`
-	Property      string `json:"property,omitemtpy"`
-	BaseRecordURI string `json:"base_record_uri,omitemtpy"`
+	Find          string `json:"find,omitempty"`
+	Replace       string `json:"replace,omitempty"`
+	RecordType    string `json:"record_type,omitempty"`
+	Property      string `json:"property,omitempty"`
+	BaseRecordURI string `json:"base_record_uri,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1225,11 +1225,11 @@ type FindAndReplaceJob struct {
 
 // Group JSONModel(:group)
 type Group struct {
-	URI               string   `json:"uri,omitemtpy"`
-	GroupCode         string   `json:"group_code,omitemtpy"`
-	Description       string   `json:"description,omitemtpy"`
-	MemberUsernames   []string `json:"member_usernames,omitemtpy"`
-	GrantsPermissions []string `json:"grants_permissions,omitemtpy"`
+	URI               string   `json:"uri,omitempty"`
+	GroupCode         string   `json:"group_code,omitempty"`
+	Description       string   `json:"description,omitempty"`
+	MemberUsernames   []string `json:"member_usernames,omitempty"`
+	GrantsPermissions []string `json:"grants_permissions,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1243,8 +1243,8 @@ type Group struct {
 
 // ImportJob JSONModel(:import_job)
 type ImportJob struct {
-	Filenames  []string `json:"filenames,omitemtpy"`
-	ImportType string   `json:"import_type,omitemtpy"`
+	Filenames  []string `json:"filenames,omitempty"`
+	ImportType string   `json:"import_type,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1258,10 +1258,10 @@ type ImportJob struct {
 
 // Instance JSONModel(:instance)
 type Instance struct {
-	InstanceType  string                 `json:"instance_type,omitemtpy"`
-	Container     *Container             `json:"container,omitemtpy"`
-	SubContainer  *SubContainer          `json:"sub_container,omitemtpy"`
-	DigitalObject map[string]interface{} `json:"digital_object,omitemtpy"`
+	InstanceType  string                 `json:"instance_type,omitempty"`
+	Container     *Container             `json:"container,omitempty"`
+	SubContainer  *SubContainer          `json:"sub_container,omitempty"`
+	DigitalObject map[string]interface{} `json:"digital_object,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1275,16 +1275,16 @@ type Instance struct {
 
 // Job JSONModel(:job)
 type Job struct {
-	URI           string                 `json:"uri,omitemtpy"`
-	JobType       string                 `json:"job_type,omitemtpy"`
-	Job           map[string]interface{} `json:"job,omitemtpy"`
-	JobParams     string                 `json:"job_params,omitemtpy"`
-	TimeSubmitted string                 `json:"time_submitted,omitemtpy"`
-	TimeStarted   string                 `json:"time_started,omitemtpy"`
-	TimeFinished  string                 `json:"time_finished,omitemtpy"`
+	URI           string                 `json:"uri,omitempty"`
+	JobType       string                 `json:"job_type,omitempty"`
+	Job           map[string]interface{} `json:"job,omitempty"`
+	JobParams     string                 `json:"job_params,omitempty"`
+	TimeSubmitted string                 `json:"time_submitted,omitempty"`
+	TimeStarted   string                 `json:"time_started,omitempty"`
+	TimeFinished  string                 `json:"time_finished,omitempty"`
 	Owner         string                 `json:"owner"`
 	Status        string                 `json:"status"` // enum string running completed canceled queued failed default queued
-	QueuePosition int                    `json:"queue_position,omitemtpy"`
+	QueuePosition int                    `json:"queue_position,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1299,22 +1299,22 @@ type Job struct {
 // Location JSONModel(:location)
 type Location struct {
 	ID                   int           `json:"id,omitempty"`
-	URI                  string        `json:"uri,omitemtpy"`
-	Title                string        `json:"title,omitemtpy"`
-	ExternalIDs          []*ExternalID `json:"external_ids,omitemtpy"`
-	Building             string        `json:"building,omitemtpy"`
-	Floor                string        `json:"Floor,omitemtpy"`
-	Room                 string        `json:"Room,omitemtpy"`
-	Area                 string        `json:"area,omitemtpy"`
-	Barcode              string        `json:"barcode,omitemtpy"`
-	Classification       `json:"string,omitemtpy"`
+	URI                  string        `json:"uri,omitempty"`
+	Title                string        `json:"title,omitempty"`
+	ExternalIDs          []*ExternalID `json:"external_ids,omitempty"`
+	Building             string        `json:"building,omitempty"`
+	Floor                string        `json:"Floor,omitempty"`
+	Room                 string        `json:"Room,omitempty"`
+	Area                 string        `json:"area,omitempty"`
+	Barcode              string        `json:"barcode,omitempty"`
+	Classification       `json:"string,omitempty"`
 	Coordinate1Label     string `json:"coordinatel_1_label"`
-	Coordinate1Indicator string `json:"coordinate_1_indicator,omitemtpy"`
-	Coordinate2Label     string `json:"coordinate_2_label,omitemtpy"`
-	Coordinate2Indicator string `json:"coordinate_2_indicator,omitemtpy"`
-	Coordinate3Label     string `json:"coordinate_3_label,omitemtpy"`
-	Coordinate3Indicator string `json:"coordinate_3_indicator,omitemtpy"`
-	Temporary            string `json:"temporary,omitemtpy"`
+	Coordinate1Indicator string `json:"coordinate_1_indicator,omitempty"`
+	Coordinate2Label     string `json:"coordinate_2_label,omitempty"`
+	Coordinate2Indicator string `json:"coordinate_2_indicator,omitempty"`
+	Coordinate3Label     string `json:"coordinate_3_label,omitempty"`
+	Coordinate3Indicator string `json:"coordinate_3_indicator,omitempty"`
+	Temporary            string `json:"temporary,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1328,22 +1328,22 @@ type Location struct {
 
 // LocationBatch JSONModel(:location_batch)
 type LocationBatch struct {
-	URI                  string        `json:"uri,omitemtpy"`
-	Title                string        `json:"title,omitemtpy"`
-	ExternalIDs          []*ExternalID `json:"external_ids,omitemtpy"`
-	Building             string        `json:"building,omitemtpy"`
-	Floor                string        `json:"Floor,omitemtpy"`
-	Room                 string        `json:"Room,omitemtpy"`
-	Area                 string        `json:"area,omitemtpy"`
-	Barcode              string        `json:"barcode,omitemtpy"`
-	Classification       `json:"string,omitemtpy"`
+	URI                  string        `json:"uri,omitempty"`
+	Title                string        `json:"title,omitempty"`
+	ExternalIDs          []*ExternalID `json:"external_ids,omitempty"`
+	Building             string        `json:"building,omitempty"`
+	Floor                string        `json:"Floor,omitempty"`
+	Room                 string        `json:"Room,omitempty"`
+	Area                 string        `json:"area,omitempty"`
+	Barcode              string        `json:"barcode,omitempty"`
+	Classification       `json:"string,omitempty"`
 	Coordinate1Label     string `json:"coordinatel_1_label"`
-	Coordinate1Indicator string `json:"coordinate_1_indicator,omitemtpy"`
-	Coordinate2Label     string `json:"coordinate_2_label,omitemtpy"`
-	Coordinate2Indicator string `json:"coordinate_2_indicator,omitemtpy"`
-	Coordinate3Label     string `json:"coordinate_3_label,omitemtpy"`
-	Coordinate3Indicator string `json:"coordinate_3_indicator,omitemtpy"`
-	Temporary            string `json:"temporary,omitemtpy"`
+	Coordinate1Indicator string `json:"coordinate_1_indicator,omitempty"`
+	Coordinate2Label     string `json:"coordinate_2_label,omitempty"`
+	Coordinate2Indicator string `json:"coordinate_2_indicator,omitempty"`
+	Coordinate3Label     string `json:"coordinate_3_label,omitempty"`
+	Coordinate3Indicator string `json:"coordinate_3_indicator,omitempty"`
+	Temporary            string `json:"temporary,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1354,30 +1354,30 @@ type LocationBatch struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Locations        []*Location            `json:"locations,omitemtpy"`
-	Coordinate1Range map[string]interface{} `json:"coordinate_1_range,omitemtpy"`
-	Coordinate2Range map[string]interface{} `json:"coordinate_2_range,omitemtpy"`
-	Coordinate3Range map[string]interface{} `json:"coordinate_3_range,omitemtpy"`
+	Locations        []*Location            `json:"locations,omitempty"`
+	Coordinate1Range map[string]interface{} `json:"coordinate_1_range,omitempty"`
+	Coordinate2Range map[string]interface{} `json:"coordinate_2_range,omitempty"`
+	Coordinate3Range map[string]interface{} `json:"coordinate_3_range,omitempty"`
 }
 
 // LocationBatchUpdate JSONModel(:location_batch_update)
 type LocationBatchUpdate struct {
-	URI                  string        `json:"uri,omitemtpy"`
-	Title                string        `json:"title,omitemtpy"`
-	ExternalIDs          []*ExternalID `json:"external_ids,omitemtpy"`
-	Building             string        `json:"building,omitemtpy"`
-	Floor                string        `json:"Floor,omitemtpy"`
-	Room                 string        `json:"Room,omitemtpy"`
-	Area                 string        `json:"area,omitemtpy"`
-	Barcode              string        `json:"barcode,omitemtpy"`
-	Classification       `json:"string,omitemtpy"`
+	URI                  string        `json:"uri,omitempty"`
+	Title                string        `json:"title,omitempty"`
+	ExternalIDs          []*ExternalID `json:"external_ids,omitempty"`
+	Building             string        `json:"building,omitempty"`
+	Floor                string        `json:"Floor,omitempty"`
+	Room                 string        `json:"Room,omitempty"`
+	Area                 string        `json:"area,omitempty"`
+	Barcode              string        `json:"barcode,omitempty"`
+	Classification       `json:"string,omitempty"`
 	Coordinate1Label     string `json:"coordinatel_1_label"`
-	Coordinate1Indicator string `json:"coordinate_1_indicator,omitemtpy"`
-	Coordinate2Label     string `json:"coordinate_2_label,omitemtpy"`
-	Coordinate2Indicator string `json:"coordinate_2_indicator,omitemtpy"`
-	Coordinate3Label     string `json:"coordinate_3_label,omitemtpy"`
-	Coordinate3Indicator string `json:"coordinate_3_indicator,omitemtpy"`
-	Temporary            string `json:"temporary,omitemtpy"`
+	Coordinate1Indicator string `json:"coordinate_1_indicator,omitempty"`
+	Coordinate2Label     string `json:"coordinate_2_label,omitempty"`
+	Coordinate2Indicator string `json:"coordinate_2_indicator,omitempty"`
+	Coordinate3Label     string `json:"coordinate_3_label,omitempty"`
+	Coordinate3Indicator string `json:"coordinate_3_indicator,omitempty"`
+	Temporary            string `json:"temporary,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1388,14 +1388,14 @@ type LocationBatchUpdate struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	RecordURIs []*Location `json:"record_uris,omitemtpy"`
+	RecordURIs []*Location `json:"record_uris,omitempty"`
 }
 
 // MergeRequest JSONModel(:merge_request)
 type MergeRequest struct {
-	URI     string                 `json:"uri,omitemtpy"`
-	Target  map[string]interface{} `json:"target,omitemtpy"`
-	Victims map[string]interface{} `json:"victims,omitemtpy"`
+	URI     string                 `json:"uri,omitempty"`
+	Target  map[string]interface{} `json:"target,omitempty"`
+	Victims map[string]interface{} `json:"victims,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1409,16 +1409,16 @@ type MergeRequest struct {
 
 // NameCorporateEntity JSONModel(:name_corporate_entity)
 type NameCorporateEntity struct {
-	AuthorityID          string  `json:"authority_id,omitemtpy"`
-	Dates                string  `json:"dates,omitemtpy"`
-	UseDates             []*Date `json:"use_dates,omitemtpy"`
-	Qualifier            string  `json:"qualifier,omitemtpy"`
-	Source               string  `json:"source,omitemtpy"`
-	Rules                string  `json:"rules,omitemtpy"`
-	Authorized           bool    `json:"authorized,omitemtpy"`
-	IsDisplayName        bool    `json:"is_display_name,omitemtpy"`
-	SortName             string  `json:"sort_name,omitemtpy"`
-	SortNameAutoGenerate bool    `json:"sort_name_auto_generate,omitemtpy"`
+	AuthorityID          string  `json:"authority_id,omitempty"`
+	Dates                string  `json:"dates,omitempty"`
+	UseDates             []*Date `json:"use_dates,omitempty"`
+	Qualifier            string  `json:"qualifier,omitempty"`
+	Source               string  `json:"source,omitempty"`
+	Rules                string  `json:"rules,omitempty"`
+	Authorized           bool    `json:"authorized,omitempty"`
+	IsDisplayName        bool    `json:"is_display_name,omitempty"`
+	SortName             string  `json:"sort_name,omitempty"`
+	SortNameAutoGenerate bool    `json:"sort_name_auto_generate,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1429,24 +1429,24 @@ type NameCorporateEntity struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	PrimaryName      string `json:"primary_name,omitemtpy"`
-	SubordinateName1 string `json:"subordinate_name_1,omitemtpy"`
-	SubordinateName2 string `json:"subordinate_name_2,omitemtpy"`
-	Number           string `json:"number,omitemtpy"`
+	PrimaryName      string `json:"primary_name,omitempty"`
+	SubordinateName1 string `json:"subordinate_name_1,omitempty"`
+	SubordinateName2 string `json:"subordinate_name_2,omitempty"`
+	Number           string `json:"number,omitempty"`
 }
 
 // NameFamily JSONModel(:name_family)
 type NameFamily struct {
-	AuthorityID          string  `json:"authority_id,omitemtpy"`
-	Dates                string  `json:"dates,omitemtpy"`
-	UseDates             []*Date `json:"use_dates,omitemtpy"`
-	Qualifier            string  `json:"qualifier,omitemtpy"`
-	Source               string  `json:"source,omitemtpy"`
-	Rules                string  `json:"rules,omitemtpy"`
-	Authorized           bool    `json:"authorized,omitemtpy"`
-	IsDisplayName        bool    `json:"is_display_name,omitemtpy"`
-	SortName             string  `json:"sort_name,omitemtpy"`
-	SortNameAutoGenerate bool    `json:"sort_name_auto_generate,omitemtpy"`
+	AuthorityID          string  `json:"authority_id,omitempty"`
+	Dates                string  `json:"dates,omitempty"`
+	UseDates             []*Date `json:"use_dates,omitempty"`
+	Qualifier            string  `json:"qualifier,omitempty"`
+	Source               string  `json:"source,omitempty"`
+	Rules                string  `json:"rules,omitempty"`
+	Authorized           bool    `json:"authorized,omitempty"`
+	IsDisplayName        bool    `json:"is_display_name,omitempty"`
+	SortName             string  `json:"sort_name,omitempty"`
+	SortNameAutoGenerate bool    `json:"sort_name_auto_generate,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1457,15 +1457,15 @@ type NameFamily struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	FamilyName string `json:"family_name,omitemtpy"`
-	Prefix     string `json:"prefix,omitemtpy"`
+	FamilyName string `json:"family_name,omitempty"`
+	Prefix     string `json:"prefix,omitempty"`
 }
 
 // NameForm JSONModel(:name_form)
 type NameForm struct {
-	URI      string `json:"uri,omitemtpy"`
-	Kind     string `json:"kind,omitemtpy"`
-	SortName string `json:"sort_name,omitemtpy"`
+	URI      string `json:"uri,omitempty"`
+	Kind     string `json:"kind,omitempty"`
+	SortName string `json:"sort_name,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1479,16 +1479,16 @@ type NameForm struct {
 
 // NamePerson JSONModel(:name_person)
 type NamePerson struct {
-	AuthorityID          string  `json:"authority_id,omitemtpy"`
-	Dates                string  `json:"dates,omitemtpy"`
-	UseDates             []*Date `json:"use_dates,omitemtpy"`
-	Qualifier            string  `json:"qualifier,omitemtpy"`
-	Source               string  `json:"source,omitemtpy"`
-	Rules                string  `json:"rules,omitemtpy"`
-	Authorized           bool    `json:"authorized,omitemtpy"`
-	IsDisplayName        bool    `json:"is_display_name,omitemtpy"`
-	SortName             string  `json:"sort_name,omitemtpy"`
-	SortNameAutoGenerate bool    `json:"sort_name_auto_generate,omitemtpy"` //NOTE: default should be true
+	AuthorityID          string  `json:"authority_id,omitempty"`
+	Dates                string  `json:"dates,omitempty"`
+	UseDates             []*Date `json:"use_dates,omitempty"`
+	Qualifier            string  `json:"qualifier,omitempty"`
+	Source               string  `json:"source,omitempty"`
+	Rules                string  `json:"rules,omitempty"`
+	Authorized           bool    `json:"authorized,omitempty"`
+	IsDisplayName        bool    `json:"is_display_name,omitempty"`
+	SortName             string  `json:"sort_name,omitempty"`
+	SortNameAutoGenerate bool    `json:"sort_name_auto_generate,omitempty"` //NOTE: default should be true
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1499,28 +1499,28 @@ type NamePerson struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	PrimaryName string `json:"primary_name,omitemtpy"`
-	Title       string `json:"title,omitemtpy"`
-	NameOrder   string `json:"name_order,omitemtpy"`
-	Prefix      string `json:"prefix,omitemtpy"`
-	RestOfName  string `json:"rest_of_name,omitemtpy"`
-	Suffix      string `json:"suffix,omitemtpy"`
-	FullerForm  string `json:"fuller_form,omitemtpy"`
-	Number      string `json:"number,omitemtpy"`
+	PrimaryName string `json:"primary_name,omitempty"`
+	Title       string `json:"title,omitempty"`
+	NameOrder   string `json:"name_order,omitempty"`
+	Prefix      string `json:"prefix,omitempty"`
+	RestOfName  string `json:"rest_of_name,omitempty"`
+	Suffix      string `json:"suffix,omitempty"`
+	FullerForm  string `json:"fuller_form,omitempty"`
+	Number      string `json:"number,omitempty"`
 }
 
 // NameSoftware JSONModel(:name_software)
 type NameSoftware struct {
-	AuthorityID          string  `json:"authority_id,omitemtpy"`
-	Dates                string  `json:"dates,omitemtpy"`
-	UseDates             []*Date `json:"use_dates,omitemtpy"`
-	Qualifier            string  `json:"qualifier,omitemtpy"`
-	Source               string  `json:"source,omitemtpy"`
-	Rules                string  `json:"rules,omitemtpy"`
-	Authorized           bool    `json:"authorized,omitemtpy"`
-	IsDisplayName        bool    `json:"is_display_name,omitemtpy"`
-	SortName             string  `json:"sort_name,omitemtpy"`
-	SortNameAutoGenerate bool    `json:"sort_name_auto_generate,omitemtpy"` //NOTE: default should be true
+	AuthorityID          string  `json:"authority_id,omitempty"`
+	Dates                string  `json:"dates,omitempty"`
+	UseDates             []*Date `json:"use_dates,omitempty"`
+	Qualifier            string  `json:"qualifier,omitempty"`
+	Source               string  `json:"source,omitempty"`
+	Rules                string  `json:"rules,omitempty"`
+	Authorized           bool    `json:"authorized,omitempty"`
+	IsDisplayName        bool    `json:"is_display_name,omitempty"`
+	SortName             string  `json:"sort_name,omitempty"`
+	SortNameAutoGenerate bool    `json:"sort_name_auto_generate,omitempty"` //NOTE: default should be true
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1531,17 +1531,17 @@ type NameSoftware struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	SoftwareName string `json:"software_name,omitemtpy"`
-	Version      string `json:"version,omitemtpy"`
-	Manufacturer string `json:"manufacturer,omitemtpy"`
+	SoftwareName string `json:"software_name,omitempty"`
+	Version      string `json:"version,omitempty"`
+	Manufacturer string `json:"manufacturer,omitempty"`
 }
 
 // NoteAbstract JSONModel(:note_abstract)
 type NoteAbstract struct {
-	Label         string `json:"label,omitemtpy"`
+	Label         string `json:"label,omitempty"`
 	Publish       bool   `json:"publish"`
-	PersistentID  string `json:"persistent_id,omitemtpy"`
-	IngestProblem string `json:"ingest_problem,omitemtpy"`
+	PersistentID  string `json:"persistent_id,omitempty"`
+	IngestProblem string `json:"ingest_problem,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1552,15 +1552,15 @@ type NoteAbstract struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Content []string `json:"content,omitemtpy"`
+	Content []string `json:"content,omitempty"`
 }
 
 // NoteBibliography JSONModel(:note_bibliography)
 type NoteBibliography struct {
-	Label         string `json:"label,omitemtpy"`
+	Label         string `json:"label,omitempty"`
 	Publish       bool   `json:"publish"`
-	PersistentID  string `json:"persistent_id,omitemtpy"`
-	IngestProblem string `json:"ingest_problem,omitemtpy"`
+	PersistentID  string `json:"persistent_id,omitempty"`
+	IngestProblem string `json:"ingest_problem,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1571,17 +1571,17 @@ type NoteBibliography struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Content []string `json:"content,omitemtpy"`
-	Type    string   `json:"type,omitemtpy"`
-	Items   []string `json:"items,omitemtpy"`
+	Content []string `json:"content,omitempty"`
+	Type    string   `json:"type,omitempty"`
+	Items   []string `json:"items,omitempty"`
 }
 
 // NoteBiogHist JSONModel(:note_bioghist)
 type NoteBiogHist struct {
-	Label         string `json:"label,omitemtpy"`
+	Label         string `json:"label,omitempty"`
 	Publish       bool   `json:"publish"`
-	PersistentID  string `json:"persistent_id,omitemtpy"`
-	IngestProblem string `json:"ingest_problem,omitemtpy"`
+	PersistentID  string `json:"persistent_id,omitempty"`
+	IngestProblem string `json:"ingest_problem,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1597,9 +1597,9 @@ type NoteBiogHist struct {
 
 // NoteChronology JSONModel(:note_chronology)
 type NoteChronology struct {
-	Title   string   `json:"title,omitemtpy"`
+	Title   string   `json:"title,omitempty"`
 	Publish bool     `json:"publish"`
-	Items   []string `json:"items,omitemtpy"`
+	Items   []string `json:"items,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1613,10 +1613,10 @@ type NoteChronology struct {
 
 // NoteCitation JSONModel(:note_citation)
 type NoteCitation struct {
-	Label         string `json:"label,omitemtpy"`
+	Label         string `json:"label,omitempty"`
 	Publish       bool   `json:"publish"`
-	PersistentID  string `json:"persistent_id,omitemtpy"`
-	IngestProblem string `json:"ingest_problem,omitemtpy"`
+	PersistentID  string `json:"persistent_id,omitempty"`
+	IngestProblem string `json:"ingest_problem,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1627,15 +1627,15 @@ type NoteCitation struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Content []string               `json:"content,omitemtpy"`
-	XLink   map[string]interface{} `json:"xlink,omitemtpy"`
+	Content []string               `json:"content,omitempty"`
+	XLink   map[string]interface{} `json:"xlink,omitempty"`
 }
 
 // NoteDefinedlist JSONModel(:note_definedlist)
 type NoteDefinedlist struct {
-	Title   string   `json:"title,omitemtpy"`
+	Title   string   `json:"title,omitempty"`
 	Publish bool     `json:"publish"`
-	Items   []string `json:"items,omitemtpy"`
+	Items   []string `json:"items,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1649,10 +1649,10 @@ type NoteDefinedlist struct {
 
 // NoteDigitalObject JSONModel(:note_digital_object)
 type NoteDigitalObject struct {
-	Label         string `json:"label,omitemtpy"`
+	Label         string `json:"label,omitempty"`
 	Publish       bool   `json:"publish"`
-	PersistentID  string `json:"persistent_id,omitemtpy"`
-	IngestProblem string `json:"ingest_problem,omitemtpy"`
+	PersistentID  string `json:"persistent_id,omitempty"`
+	IngestProblem string `json:"ingest_problem,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1663,16 +1663,16 @@ type NoteDigitalObject struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Content []string `json:"content,omitemtpy"`
-	Type    string   `json:"type,omitemtpy"`
+	Content []string `json:"content,omitempty"`
+	Type    string   `json:"type,omitempty"`
 }
 
 // NoteIndex JSONModel(:note_index)
 type NoteIndex struct {
-	Label         string `json:"label,omitemtpy"`
+	Label         string `json:"label,omitempty"`
 	Publish       bool   `json:"publish"`
-	PersistentID  string `json:"persistent_id,omitemtpy"`
-	IngestProblem string `json:"ingest_problem,omitemtpy"`
+	PersistentID  string `json:"persistent_id,omitempty"`
+	IngestProblem string `json:"ingest_problem,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1683,18 +1683,18 @@ type NoteIndex struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Content []string               `json:"content,omitemtpy"`
-	Type    string                 `json:"type,omitemtpy"`
-	Items   map[string]interface{} `json:"items,omitemtpy"`
+	Content []string               `json:"content,omitempty"`
+	Type    string                 `json:"type,omitempty"`
+	Items   map[string]interface{} `json:"items,omitempty"`
 }
 
 // NoteIndexItem JSONModel(:note_index_item)
 type NoteIndexItem struct {
-	Value         string                 `json:"value,omitemtpy"`
-	Type          string                 `json:"type,omitemtpy"`
-	Reference     string                 `json:"reference,omitemtpy"`
-	ReferenceText string                 `json:"reference_text,omitemtpy"`
-	ReferenceRef  map[string]interface{} `json:"reference_ref,omitemtpy"`
+	Value         string                 `json:"value,omitempty"`
+	Type          string                 `json:"type,omitempty"`
+	Reference     string                 `json:"reference,omitempty"`
+	ReferenceText string                 `json:"reference_text,omitempty"`
+	ReferenceRef  map[string]interface{} `json:"reference_ref,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1708,10 +1708,10 @@ type NoteIndexItem struct {
 
 // NoteMultipart JSONModel(:note_multipart)
 type NoteMultipart struct {
-	Label         string `json:"label,omitemtpy"`
+	Label         string `json:"label,omitempty"`
 	Publish       bool   `json:"publish"`
-	PersistentID  string `json:"persistent_id,omitemtpy"`
-	IngestProblem string `json:"ingest_problem,omitemtpy"`
+	PersistentID  string `json:"persistent_id,omitempty"`
+	IngestProblem string `json:"ingest_problem,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1722,17 +1722,17 @@ type NoteMultipart struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Type              string             `json:"type,omitemtpy"`
-	RightsRestriction *RightsRestriction `json:"rights_restriction,omitemtpy"`
+	Type              string             `json:"type,omitempty"`
+	RightsRestriction *RightsRestriction `json:"rights_restriction,omitempty"`
 	Subnotes          map[string]interface{}
 }
 
 // NoteOrderedlist JSONModel(:note_orderedlist)
 type NoteOrderedlist struct {
-	Title       string   `json:"title,omitemtpy"`
+	Title       string   `json:"title,omitempty"`
 	Publish     bool     `json:"publish"`
-	Enumeration string   `json:"enumeration,omitemtpy"`
-	Items       []string `json:"items,omitemtpy"`
+	Enumeration string   `json:"enumeration,omitempty"`
+	Items       []string `json:"items,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1747,7 +1747,7 @@ type NoteOrderedlist struct {
 // NoteOutline JSONModel(:note_outline)
 type NoteOutline struct {
 	Publish bool                `json:"publish"`
-	Levels  []*NoteOutlineLevel `json:"levels,omitemtpy"`
+	Levels  []*NoteOutlineLevel `json:"levels,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1761,7 +1761,7 @@ type NoteOutline struct {
 
 // NoteOutlineLevel JSONModel(:note_outline_level)
 type NoteOutlineLevel struct {
-	Items map[string]interface{} `json:"items,omitemtpy"`
+	Items map[string]interface{} `json:"items,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1775,10 +1775,10 @@ type NoteOutlineLevel struct {
 
 // NoteSinglepart JSONModel(:note_singlepart)
 type NoteSinglepart struct {
-	Label         string `json:"label,omitemtpy"`
+	Label         string `json:"label,omitempty"`
 	Publish       bool   `json:"publish"`
-	PersistentID  string `json:"persistent_id,omitemtpy"`
-	IngestProblem string `json:"ingest_problem,omitemtpy"`
+	PersistentID  string `json:"persistent_id,omitempty"`
+	IngestProblem string `json:"ingest_problem,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1789,8 +1789,8 @@ type NoteSinglepart struct {
 	CreateTime     string            `json:"create_time,omitempty,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	Content []string `json:"content,omitemtpy"`
-	Type    string   `json:"type,omitemtpy"`
+	Content []string `json:"content,omitempty"`
+	Type    string   `json:"type,omitempty"`
 }
 
 // NoteText JSONModel(:note_text)
@@ -1811,9 +1811,9 @@ type NoteText struct {
 // Permission JSONModel(:permission)
 type Permission struct {
 	URI            string `json:"uri,omitempty"`
-	PermissionCode string `json:"permission_code,omitemtpy"`
-	Description    string `json:"description,omitemtpy"`
-	Level          string `json:"level,omitemtpy"` // enum string repository global
+	PermissionCode string `json:"permission_code,omitempty"`
+	Description    string `json:"description,omitempty"`
+	Level          string `json:"level,omitempty"` // enum string repository global
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1827,9 +1827,9 @@ type Permission struct {
 
 // Preference JSONModel(:preference)
 type Preference struct {
-	URI      string    `json:"uri,omitemtpy"`
-	UserID   int       `json:"user_id,omitemtpy"`
-	Defaults *Defaults `json:"defaults,omitemtpy"`
+	URI      string    `json:"uri,omitempty"`
+	UserID   int       `json:"user_id,omitempty"`
+	Defaults *Defaults `json:"defaults,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1843,7 +1843,7 @@ type Preference struct {
 
 // PrintToPDFJob JSONModel(:print_to_pdf_job)
 type PrintToPDFJob struct {
-	Source string `json:"source,omitemtpy"`
+	Source string `json:"source,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1857,12 +1857,12 @@ type PrintToPDFJob struct {
 
 // RdeTemplate JSONModel(:rde_template)
 type RdeTemplate struct {
-	URI        string                 `json:"uri,omitemtpy"`
-	Name       string                 `json:"name,omitemtpy"`
-	RecordType string                 `json:"record_type,omitemtpy"` // enum string archival_object digital_object_component
-	Order      []string               `json:"order,omitemtpy"`
-	Visible    []string               `json:"visible,omitemtpy"`
-	Defaults   map[string]interface{} `json:"defaults,omitemtpy"`
+	URI        string                 `json:"uri,omitempty"`
+	Name       string                 `json:"name,omitempty"`
+	RecordType string                 `json:"record_type,omitempty"` // enum string archival_object digital_object_component
+	Order      []string               `json:"order,omitempty"`
+	Visible    []string               `json:"visible,omitempty"`
+	Defaults   map[string]interface{} `json:"defaults,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1876,8 +1876,8 @@ type RdeTemplate struct {
 
 // ReportJob JSONModel(:report_job)
 type ReportJob struct {
-	ReportType string `json:"report_type,omitemtpy"`
-	Format     string `json:"format,omitemtpy"`
+	ReportType string `json:"report_type,omitempty"`
+	Format     string `json:"format,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
@@ -1901,7 +1901,7 @@ type Repository struct {
 	ParentInstitutionName string                 `json:"parent_institution_name,omitempty"`
 	URL                   string                 `json:"url,omitempty"`
 	ImageURL              string                 `json:"image_url,omitempty"`
-	ContactPersons        string                 `json:"contact_persons,omitemtpy"`
+	ContactPersons        string                 `json:"contact_persons,omitempty"`
 	AgentRepresentation   map[string]interface{} `json:"agent_representation,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
@@ -1918,7 +1918,7 @@ type Repository struct {
 type RepositoryWithAgent struct {
 	URI                 string                 `json:"uri,omitempty"`
 	Repository          map[string]interface{} `json:"repository,omitempty"`
-	AgentRepresentation *AgentCorporateEntity  `json:"agent_representation,omitemtpy"`
+	AgentRepresentation *AgentCorporateEntity  `json:"agent_representation,omitempty"`
 
 	LockVersion    json.Number `json:"lock_version,Number"`
 	JSONModelType  string      `json:"jsonmodel_type,omitempty"`
@@ -1934,40 +1934,38 @@ type Resource struct {
 	ID                int                      `json:"id,omitempty"`
 	XMLName           xml.Name                 `json:"-"`
 	URI               string                   `json:"uri,omitempty"`
-	ExternalIDs       []*ExternalID            `json:"external_ids,omitemtpy"`
-	Title             string                   `json:"title,omitemtpy"`
-	Language          string                   `json:"language,omitemtpy"`
-	Publish           bool                     `json:"publish"`
-	Subjects          []map[string]interface{} `json:"subjects"`
-	LinkedEvents      []map[string]interface{} `json:"linked_events"`
-	Extents           []*Extent                `json:"extents"`
-	Dates             []*Date                  `json:"dates"`
-	ExternalDocuments []map[string]interface{} `json:"external_documents"`
+	ExternalIDs       []*ExternalID            `json:"external_ids,omitempty"`
+	Title             string                   `json:"title,omitempty"`
+	Language          string                   `json:"language,omitempty"`
+	Publish           bool                     `json:"publish,omitempty"`
+	Subjects          []map[string]interface{} `json:"subjects,omitempty"`
+	LinkedEvents      []map[string]interface{} `json:"linked_events,omitempty"`
+	Extents           []*Extent                `json:"extents,omitempty"`
+	Dates             []*Date                  `json:"dates,omitempty"`
+	ExternalDocuments []map[string]interface{} `json:"external_documents,omitempty"`
 
 	//	RightsStatements  []*RightsStatement       `json:"rights_statement"`
-	RightsStatements []interface{} `json:"rights_statements"`
-	LinkedAgents     []*Agent      `json:"linked_agents"`
-	Suppressed       bool          `json:"suppressed"`
+	RightsStatements []interface{} `json:"rights_statements,omitempty"`
+	LinkedAgents     []*Agent      `json:"linked_agents,ommitempty"`
+	Suppressed       bool          `json:"suppressed,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`
-	CreatedBy      string            `json:"created_by,omitempty,omitempty"`
+	CreatedBy      string            `json:"created_by,omitempty"`
 	LastModifiedBy string            `json:"last_modified_by,omitempty"`
-	UserMTime      string            `json:"user_mtime,omitempty,omitempty"`
-	SystemMTime    string            `json:"system_mtime,omitempty,omitempty"`
-	CreateTime     string            `json:"create_time,omitempty,omitempty"`
+	UserMTime      string            `json:"user_mtime,omitempty"`
+	SystemMTime    string            `json:"system_mtime,omitempty"`
+	CreateTime     string            `json:"create_time,omitempty"`
 	Repository     map[string]string `json:"repository,omitempty"`
 
-	ID0          string `json:"id_0,omitempty"`
-	ID1          string `json:"id_1,omitempty"`
-	ID2          string `json:"id_2,omitempty"`
-	ID3          string `json:"id_3,omitempty"`
-	Level        string `json:"level,omitempty"`
-	OtherLevel   string `json:"other_level,omitempty"`
-	ResourceType string `json:"resource_type,omitempty"`
-
-	//	Tree                        map[string]interface{}                `json:"tree,omitempty"`
-	Tree *Object `json:"tree,omitempty"`
+	ID0          string                 `json:"id_0,omitempty"`
+	ID1          string                 `json:"id_1,omitempty"`
+	ID2          string                 `json:"id_2,omitempty"`
+	ID3          string                 `json:"id_3,omitempty"`
+	Level        string                 `json:"level,omitempty"`
+	OtherLevel   string                 `json:"other_level,omitempty"`
+	ResourceType string                 `json:"resource_type,omitempty"`
+	Tree         map[string]interface{} `json:"tree,omitempty"`
 
 	Restrictions                bool                     `json:"restrictioons,omitempty"`
 	RepositoryProcessingNote    string                   `json:"repository_processing_note,omitempty"`
@@ -1988,11 +1986,11 @@ type Resource struct {
 	RevisionStatements          []*RevisionStatement     `json:"revision_statements,omitempty"`
 	Instances                   []*Instance              `json:"instances,omitempty"`
 	Deaccessions                []*Deaccession           `json:"deaccession,omitempty"`
-	CollectionManagement        *CollectionManagement    `json:"collection_management"`
+	CollectionManagement        *CollectionManagement    `json:"collection_management,omitempty"`
 	UserDefined                 *UserDefined             `json:"user_defined,omitempty"`
 	ReleatedAccessions          []map[string]interface{} `json:"related_accessions,omitempty"`
 	Classifications             []map[string]interface{} `json:"classifications,omitempty"`
-	Notes                       []map[string]interface{} `json:"notes"`
+	Notes                       []map[string]interface{} `json:"notes,omitempty"`
 }
 
 // ResourceTree JSONModel(:resource_tree)
@@ -2065,7 +2063,7 @@ type RightsStatement struct {
 	IPStatus               string                   `json:"ip_status,omitempty"`
 	IPExpirationDate       *Date                    `json:"ip_expieration_date,omitempty"`
 	LicenseIdentifierTerms string                   `json:"license_identifier_terms,omitempty"`
-	StatuteCitation        string                   `json:"statute_citation,omitemtpy"`
+	StatuteCitation        string                   `json:"statute_citation,omitempty"`
 	Jurisdiction           string                   `json:"jurisdiction,omitempty"`
 	TypeNote               string                   `json:"type_note,omitempty"`
 	Permissions            string                   `json:"permissions,omitempty"`

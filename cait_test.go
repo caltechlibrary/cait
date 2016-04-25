@@ -521,33 +521,33 @@ func TestResources(t *testing.T) {
 		resource1.ID0 = fmt.Sprintf("%04d", tm.Year())
 		resource1.ID1 = fmt.Sprintf("%04d", i)
 		resource1.ID2 = "test"
-		//resource1.ResourceDate = fmt.Sprintf("%d-%02d-%02d", tm.Year(), tm.Month(), tm.Day())
 		response, err = cait.CreateResource(repo.ID, resource1)
 		if err != nil {
 			t.Errorf("Can't create resource %v, %s", resource1, err)
 			t.FailNow()
 		}
 		if response.Status != "Created" {
-			t.Errorf(`CreateResource(%s) return unexpected status %s`, resource1, response)
+			t.Errorf(`CreateResource(%s) return unexpected status %+v`, resource1, response)
 			t.FailNow()
 		}
-		resource1.ID = response.ID
 		resource1.URI = response.URI
-		// resource2, err := cait.GetResource(repo.ID, resource1.ID)
-		// if err != nil {
-		// 	t.Errorf("GetResource(%d, %d) error %s", repo.ID, resource1.ID, err)
-		// }
-		// if resource1.ID0 != resource2.ID0 {
-		// 	t.Errorf("Accesion ID0 should be %s, found %s", resource1.ID0, resource2.ID0)
-		// }
-		// if resource1.ID1 != resource2.ID1 {
-		// 	t.Errorf("Accesion ID1 should be %s, found %s", resource1.ID1, resource2.ID1)
-		// }
-		// if resource1.ResourceDate != resource2.ResourceDate {
-		// 	t.Errorf("ResourceDate should be %s, found %s", resource1.ResourceDate, resource2.ResourceDate)
-		// }
+		resource2, err := cait.GetResource(repo.ID, resource1.ID)
+		if err != nil {
+			t.Errorf("GetResource(%d, %d) error %s", repo.ID, resource1.ID, err)
+		}
+		if resource1.ID0 != resource2.ID0 {
+			t.Errorf("Resource ID0 should be %s, found %s", resource1.ID0, resource2.ID0)
+		}
+		if resource1.ID1 != resource2.ID1 {
+			t.Errorf("Resource ID1 should be %s, found %s", resource1.ID1, resource2.ID1)
+		}
+		if resource1.ID2 != resource2.ID2 {
+			t.Errorf("Resource ID1 should be %s, found %s", resource1.ID2, resource2.ID2)
+		}
+		if resource1.Title != resource2.Title {
+			t.Errorf("Resource Title should be %s, found %s", resource1.ID2, resource2.ID2)
+		}
 	}
-	os.Exit(0) // DEBUG
 
 	resourceIDs, err = cait.ListResources(repo.ID)
 	if err != nil {
@@ -574,7 +574,6 @@ func TestResources(t *testing.T) {
 		//FIXME: Need tests for UpdateResource() and DeleteResource()
 		//FIXME: should add more tests for additional fields.
 	}
-	os.Exit(0) // DEBUG
 }
 
 //FIXME: Needs tests for Subject, Term, Vocalary, User, Search

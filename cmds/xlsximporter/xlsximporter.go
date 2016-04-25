@@ -187,16 +187,13 @@ Container.getConfiguration = function (workbook) {
 	};
 	return this.config;
 };
-Container.getAccession = function (config) {
-	if (config === undefined) {
-		config = this.config;
-	}
+Container.getAccession = function (repoID, accessionID) {
 	if (this.isAuth === undefined || this.isAuth === false) {
 		res = api.login();
 		this.isAuth = res.isAuth || false;
 	}
 	if (this.isAuth === true) {
-		res = api.getAccession(config.repoID, config.accessionID);
+		res = api.getAccession(repoID, accessionID);
 		if (res.error !== undefined) {
 			return false;
 		}
@@ -205,16 +202,44 @@ Container.getAccession = function (config) {
 	}
 	return false;
 };
-Container.createResource = function (config, container) {
-	if (config === undefined) {
-		config = this.config;
-	}
+Container.getDigitalObject = function (repoID, digitalObject) {
 	if (this.isAuth === undefined || this.isAuth === false) {
 		res = api.login();
 		this.isAuth = res.isAuth || false;
 	}
-	if (this.isAuth === true || (config.repoID && config.accessionID)) {
-		res = api.createResource(config.repoID, container);
+	if (this.isAuth === true) {
+		res = api.createDigitalObject(repoID, digitalObject);
+		if (res.error !== undefined) {
+			return false;
+		}
+		this.DigitalObject = res;
+		return this.DigitalObject;
+	}
+	return false;
+};
+Container.getDigitalObject = function (repoID, objectID) {
+	if (this.isAuth === undefined || this.isAuth === false) {
+		res = api.login();
+		this.isAuth = res.isAuth || false;
+	}
+	if (this.isAuth === true) {
+		res = api.getDigitalObject(repoID, objectID);
+		if (res.error !== undefined) {
+			return false;
+		}
+		this.DigitalObject = res;
+		return this.DigitalObject;
+	}
+	return false;
+};
+Container.createResource = function (repoID, resource) {
+	if (this.isAuth === undefined || this.isAuth === false) {
+		res = api.login();
+		this.isAuth = res.isAuth || false;
+	}
+	if (this.isAuth === true) {
+		//FIXME: requires title, digital_object_id as minimal fields
+		res = api.createResource(repoID, resource);
 		if (res.error !== undefined) {
 			return false;
 		}
@@ -223,16 +248,13 @@ Container.createResource = function (config, container) {
 	}
 	return false;
 };
-Container.getResource = function (config) {
-	if (config === undefined) {
-		config = this.config;
-	}
+Container.getResource = function (repoID, resourceID) {
 	if (this.isAuth === undefined || this.isAuth === false) {
 		res = api.login();
 		this.isAuth = res.isAuth || false;
 	}
-	if (this.isAuth === true || (config.repoID && config.accessionID)) {
-		res = api.getResource(config.repoID, config.accessionID);
+	if (this.isAuth === true) {
+		res = api.getResource(repoID, resourceID);
 		if (res.error !== undefined) {
 			return false;
 		}
