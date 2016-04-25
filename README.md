@@ -1,4 +1,3 @@
-[![Go Report Card](http://goreportcard.com/badge/caltechlibrary/cait)](http://goreportcard.com/report/caltechlibrary/cait)
 
 # cait
 

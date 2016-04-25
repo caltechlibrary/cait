@@ -39,6 +39,20 @@ import (
 	"github.com/caltechlibrary/ostdlib"
 )
 
+const jsExtension = `
+var Container = {};
+Container.getAccessionInfo = function (workbook) {
+    sheet = workbook.getSheet("Accession");
+    if (sheet[1] == undefined ) {
+        return "";
+    }
+    if (sheet[1][0] == undefined) {
+        return "";
+    }
+    return sheet[1][0];
+};
+`
+
 var (
 	showHelp      bool
 	showVersion   bool
@@ -157,8 +171,13 @@ func main() {
 	vm := otto.New()
 	//cait.NewJavaScript(api, args)
 	js := ostdlib.New(vm)
+	// Add basic extensions
 	js.AddExtensions()
+	// Add general cait extensions
 	api.AddExtensions(js)
+	// Now add this commands specific extensions
+	js.Eval(jsExtension)
+	js.SetHelp("Container", "getAccessionInfo", []string{"Workbook object"}, "Read the contents of a workbook in Workbook and get the Accession URI from the 'Accession' worksheet")
 
 	// Read in each file listed on the command line then apply to the the
 	// JavaScript VM.
