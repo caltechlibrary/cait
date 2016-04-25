@@ -1931,6 +1931,7 @@ type RepositoryWithAgent struct {
 
 // Resource JSONModel(:resource)
 type Resource struct {
+	ID                int                      `json:"id,omitempty"`
 	XMLName           xml.Name                 `json:"-"`
 	URI               string                   `json:"uri,omitempty"`
 	ExternalIDs       []*ExternalID            `json:"external_ids,omitemtpy"`

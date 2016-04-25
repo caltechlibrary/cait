@@ -39,20 +39,6 @@ import (
 	"github.com/caltechlibrary/ostdlib"
 )
 
-const jsExtension = `
-var Container = {};
-Container.getAccessionInfo = function (workbook) {
-    sheet = workbook.getSheet("Accession");
-    if (sheet[1] == undefined ) {
-        return "";
-    }
-    if (sheet[1][0] == undefined) {
-        return "";
-    }
-    return sheet[1][0];
-};
-`
-
 var (
 	showHelp      bool
 	showVersion   bool
@@ -176,8 +162,89 @@ func main() {
 	// Add general cait extensions
 	api.AddExtensions(js)
 	// Now add this commands specific extensions
+	// jsExtension adds additional JavaScript functionality to process the container
+	// Workbook and support pushing it into a resource
+	jsExtension := `
+var Container = {
+	isAuth: false,
+	config: {},
+	Accession: {},
+	Resource: {}
+};
+Container.getConfiguration = function (workbook) {
+	var sheet = workbook.getSheet("Configuration");
+	if (!sheet || sheet[1] === undefined) {
+		return {
+			repoID: 0,
+			accessionID: 0,
+			resourceID: 0
+		};
+	}
+	this.config = {
+		repoID: parseInt(sheet[1][0]) || 0,
+		accessionID: parseInt(sheet[1][1]) || 0,
+		resourceID: parseInt(sheet[1][2]) || 0
+	};
+	return this.config;
+};
+Container.getAccession = function (config) {
+	if (config === undefined) {
+		config = this.config;
+	}
+	if (this.isAuth === undefined || this.isAuth === false) {
+		res = api.login();
+		this.isAuth = res.isAuth || false;
+	}
+	if (this.isAuth === true) {
+		res = api.getAccession(config.repoID, config.accessionID);
+		if (res.error !== undefined) {
+			return false;
+		}
+		this.Accession = res;
+		return this.Accession;
+	}
+	return false;
+};
+Container.createResource = function (config, container) {
+	if (config === undefined) {
+		config = this.config;
+	}
+	if (this.isAuth === undefined || this.isAuth === false) {
+		res = api.login();
+		this.isAuth = res.isAuth || false;
+	}
+	if (this.isAuth === true || (config.repoID && config.accessionID)) {
+		res = api.createResource(config.repoID, container);
+		if (res.error !== undefined) {
+			return false;
+		}
+		this.Resource = res;
+		return this.Resource;
+	}
+	return false;
+};
+Container.getResource = function (config) {
+	if (config === undefined) {
+		config = this.config;
+	}
+	if (this.isAuth === undefined || this.isAuth === false) {
+		res = api.login();
+		this.isAuth = res.isAuth || false;
+	}
+	if (this.isAuth === true || (config.repoID && config.accessionID)) {
+		res = api.getResource(config.repoID, config.accessionID);
+		if (res.error !== undefined) {
+			return false;
+		}
+		this.Resource = res;
+		return this.Resource;
+	}
+	return false;
+};
+`
 	js.Eval(jsExtension)
-	js.SetHelp("Container", "getAccessionInfo", []string{"Workbook object"}, "Read the contents of a workbook in Workbook and get the Accession URI from the 'Accession' worksheet")
+	js.SetHelp("Container", "getConfiguration", []string{"Workbook object"}, "Read the contents for the 'Configuration' worksheet and return it or an empty object")
+	js.SetHelp("Container", "getAccession", []string{"configuration object"}, "With 'Configuration' and fetch the accession from ArchivesSpace")
 
 	// Read in each file listed on the command line then apply to the the
 	// JavaScript VM.
