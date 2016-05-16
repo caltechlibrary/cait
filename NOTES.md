@@ -57,3 +57,4 @@ cait tools is suitable to sending to a log file (e.g. /archivesspace/logs/nightl
 + [General Docs](https://archivesspace.github.io/archivesspace/)
 + [API Docs](http://archivesspace.github.io/archivesspace/api/) (dynamically generated so doesn't show in Google search results)
 + [Wiki](https://archivesspace.atlassian.net/wiki/display/ADC/ArchivesSpace)
++ [Duke's Python scripts for ArchivesSpace](https://github.com/noahgh221/archivesspace-duke-scripts)
