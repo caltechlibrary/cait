@@ -94,12 +94,12 @@ If you have any non-default extent_extent_type create them before proceeding
 
     # If you have non-default extent extent types, create them before proceeding
     # e.g. Multimedia, ProRes Master file, DVD
-    ./bin/cait repository create -i dataset/repositories/2.json
-    find dataset/subjects -type f | while read ITEM; do ./bin/cait subject create -i $ITEM; done
-    find dataset/agents/people -type f | while read ITEM; do ./bin/cait agent create -i $ITEM; done
-    find dataset/agents/corporate_entities -type f | while read ITEM; do ./bin/cait agent create -i $ITEM; done
-    find dataset/repositories/2/digital_objects -type f | while read ITEM; do ./bin/cait digital_object create -i $ITEM; done
-    find dataset/repositories/2/accessions -type f | while read ITEM; do ./bin/cait accession create -i $ITEM; done
+    ./bin/cait repository create -input dataset/repositories/2.json
+    find dataset/subjects -type f | while read ITEM; do ./bin/cait subject create -input $ITEM; done
+    find dataset/agents/people -type f | while read ITEM; do ./bin/cait agent create -input $ITEM; done
+    find dataset/agents/corporate_entities -type f | while read ITEM; do ./bin/cait agent create -input $ITEM; done
+    find dataset/repositories/2/digital_objects -type f | while read ITEM; do ./bin/cait digital_object create -input $ITEM; done
+    find dataset/repositories/2/accessions -type f | while read ITEM; do ./bin/cait accession create -input $ITEM; done
 ```
 
 

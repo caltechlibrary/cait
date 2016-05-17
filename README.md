@@ -114,7 +114,7 @@ These are the common actions that can be performed
 
 + create
 + list (individually or all ids)
-+ update (can use a file instead of the command line, see -i option)
++ update (can use a file instead of the command line, see -input option)
 + delete
 + export (useful with integrating into static websites or batch processing via scripts)
 
@@ -126,7 +126,7 @@ Here's an example session of using the _cait_ command line tool on the repositor
     cait repository list # show a list of archives, for example purposes we'll use archive ID of 3
     cait repository list '{"uri":"/repositories/3"}' # Show only the archive JSON for repository ID equal to 3
     cait repository list '{"uri":"/repositories/3"}' > repo2.json # Save the output to the file repo3.json
-    cait repository update -i repo3.json # Save your changes back to ArchivesSpace
+    cait repository update -input repo3.json # Save your changes back to ArchivesSpace
     cait repository export '{"uri":"/repositories/3"}' # export the repository metadata to data/repositories/3.json
     cait repository delete '{"uri":"/repositories/3"}' # remove repository ID 3
 ```
