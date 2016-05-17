@@ -30,7 +30,7 @@
             {{ range $key, $value := .Fragments }}
                 {{  if (or (eq $key "title") (eq $key "content_description"))}}
                     {{ range $i, $src := $value }}
-                        {{ if $src }}<div>{{ $src | marked }}</div>{{ end }}
+                        {{ if $src }}<div>{{ $src }}</div>{{ end }}
                     {{ end }}
                 {{ end }}
             {{ end }}
