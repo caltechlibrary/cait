@@ -521,6 +521,7 @@ func TestResources(t *testing.T) {
 		resource1.ID0 = fmt.Sprintf("%04d", tm.Year())
 		resource1.ID1 = fmt.Sprintf("%04d", i)
 		resource1.ID2 = "test"
+		//FIXME: I am missing some required fields on create resource, currently failing test
 		response, err = cait.CreateResource(repo.ID, resource1)
 		if err != nil {
 			t.Errorf("Can't create resource %v, %s", resource1, err)
