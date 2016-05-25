@@ -7,3 +7,4 @@ some links to documentation, see if I can sort out what is supported and how for
 + https://github.com/archivesspace/archivesspace/blob/master/ARCHITECTURE.md - architectural overview
 + http://archivesspace.github.io/archivesspace/api/ - actual API docs that seem current and generated from Ruby sources
 + https://github.com/archivesspace/archivesspace/blob/master/README_FEATURES_1.5.0.md - 1.5.0 features
++ https://docs.archivesspace.org/Default.htm#BasicsTemplates.htm - templates docs
