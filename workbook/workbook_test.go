@@ -20,7 +20,6 @@ package workbook
 
 import (
 	"bytes"
-	"fmt"
 	"path"
 	"testing"
 )
@@ -71,5 +70,4 @@ func TestToContainer(t *testing.T) {
 		t.Errorf("workbook.ToContainer(), container is nil, failed")
 		t.FailNow()
 	}
-	fmt.Printf("DEBUG container: %+v\n", container)
 }
