@@ -1,15 +1,56 @@
 
 # cait
 
-## ead import
+## Ead importer
 
-The prior system used Excel spreadsheets in conjunction with SCread to create EADs.  _cait_ supports
-a similar workflow leveraging the _xlsximporter_ tool.  
+### Legacy Workflow
 
-## Excel Spreadsheets
+The prior system used Excel spreadsheets in conjunction with SCread to create EADs.  _cait_ may support
+a similar workflow leveraging the _xlsximporter_ tool.
+
+### Legacy EADs
+
+Caltech EADs hosted at California Online Archives can be downloaded from http://voro.cdlib.org/oac-ead/prime2002/caltech/
+These EADs are in older formats with some not being passing the import process in ArchivesSpace 1.4.2 and 1.5.0.
+
+## Ead notes structures found by viewing a sample at OAC
+
+### EADHeader
+
+#### FileDesc
+
++ FileDesc
+    + Titlestmt
+        + []Titleproper (Example: primary title and filing type titles)
+        + []author (Example: a single comma delimited list of who processed the EAD)
+    + Pulbicationstmt
+        + Publisher (Example: Caltech Archives)
+        + Address
+            + []Addressline (multiple lines of official address, Phone, Fax, Email, and URL to website)
+        + Date 
+        + P (Example: California Institute of Technology. All rights reserved.)
+
+#### ProfileDesc
+
++ ProfileDesc
+    + Creation
+    + LangUsage
+
+#### RevisionDesc
+
++ RevisionDesc
+    + []Change
+        + Date
+        + Item
+
+### FrontMatter
+
+### ArchDesc
+
+## CA Excel Workbook Organization
 
 The Excel spreadsheets need to be in the ".xlsx" XML based format (aka. Workbook).  This is file
-is expected to be a series of sheets with the following header row --
+is expected to be a series of sheets with the following header row (winds up be DID in ArchDesc) --
 
 + Box  (int)
 + Folder (int)
