@@ -24,6 +24,7 @@ _testmain.go
 *.prof
 
 # project ignore stuff
+.DS_Store
 aspace
 etc/*.conf
 setup.*
