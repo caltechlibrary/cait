@@ -1,3 +1,5 @@
+[![Go Report Card](http://goreportcard.com/badge/rsdoiel/findfile)](http://goreportcard.com/report/caltechlibrary/cait)
+
 
 # cait
 
