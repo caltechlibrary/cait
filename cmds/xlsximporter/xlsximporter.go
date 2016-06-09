@@ -161,112 +161,112 @@ func main() {
 	js.AddExtensions()
 	// Add general cait extensions
 	api.AddExtensions(js)
-	// 	// Now add this commands specific extensions
-	// 	// jsExtension adds additional JavaScript functionality to process the container
-	// 	// Workbook and support pushing it into a resource
-	// 	jsExtension := `
-	// var Container = {
-	// 	isAuth: false,
-	// 	config: {},
-	// 	Accession: {},
-	// 	Resource: {}
-	// };
-	// Container.getConfiguration = function (workbook) {
-	// 	var sheet = workbook.getSheet("Configuration");
-	// 	if (!sheet || sheet[1] === undefined) {
-	// 		return {
-	// 			repoID: 0,
-	// 			accessionID: 0,
-	// 			resourceID: 0
-	// 		};
-	// 	}
-	// 	this.config = {
-	// 		repoID: parseInt(sheet[1][0]) || 0,
-	// 		accessionID: parseInt(sheet[1][1]) || 0,
-	// 		resourceID: parseInt(sheet[1][2]) || 0
-	// 	};
-	// 	return this.config;
-	// };
-	// Container.getAccession = function (repoID, accessionID) {
-	// 	if (this.isAuth === undefined || this.isAuth === false) {
-	// 		res = api.login();
-	// 		this.isAuth = res.isAuth || false;
-	// 	}
-	// 	if (this.isAuth === true) {
-	// 		res = api.getAccession(repoID, accessionID);
-	// 		if (res.error !== undefined) {
-	// 			return false;
-	// 		}
-	// 		this.Accession = res;
-	// 		return this.Accession;
-	// 	}
-	// 	return false;
-	// };
-	// Container.getDigitalObject = function (repoID, digitalObject) {
-	// 	if (this.isAuth === undefined || this.isAuth === false) {
-	// 		res = api.login();
-	// 		this.isAuth = res.isAuth || false;
-	// 	}
-	// 	if (this.isAuth === true) {
-	// 		res = api.createDigitalObject(repoID, digitalObject);
-	// 		if (res.error !== undefined) {
-	// 			return false;
-	// 		}
-	// 		this.DigitalObject = res;
-	// 		return this.DigitalObject;
-	// 	}
-	// 	return false;
-	// };
-	// Container.getDigitalObject = function (repoID, objectID) {
-	// 	if (this.isAuth === undefined || this.isAuth === false) {
-	// 		res = api.login();
-	// 		this.isAuth = res.isAuth || false;
-	// 	}
-	// 	if (this.isAuth === true) {
-	// 		res = api.getDigitalObject(repoID, objectID);
-	// 		if (res.error !== undefined) {
-	// 			return false;
-	// 		}
-	// 		this.DigitalObject = res;
-	// 		return this.DigitalObject;
-	// 	}
-	// 	return false;
-	// };
-	// Container.createResource = function (repoID, resource) {
-	// 	if (this.isAuth === undefined || this.isAuth === false) {
-	// 		res = api.login();
-	// 		this.isAuth = res.isAuth || false;
-	// 	}
-	// 	if (this.isAuth === true) {
-	// 		//FIXME: requires title, digital_object_id as minimal fields
-	// 		res = api.createResource(repoID, resource);
-	// 		if (res.error !== undefined) {
-	// 			return false;
-	// 		}
-	// 		this.Resource = res;
-	// 		return this.Resource;
-	// 	}
-	// 	return false;
-	// };
-	// Container.getResource = function (repoID, resourceID) {
-	// 	if (this.isAuth === undefined || this.isAuth === false) {
-	// 		res = api.login();
-	// 		this.isAuth = res.isAuth || false;
-	// 	}
-	// 	if (this.isAuth === true) {
-	// 		res = api.getResource(repoID, resourceID);
-	// 		if (res.error !== undefined) {
-	// 			return false;
-	// 		}
-	// 		this.Resource = res;
-	// 		return this.Resource;
-	// 	}
-	// 	return false;
-	// };
-	// `
-	// 	js.Eval(jsExtension)
-	// 	js.SetHelp("Container", "getConfiguration", []string{"Workbook object"}, "Read the contents for the 'Configuration' worksheet and return it or an empty object")
-	// 	js.SetHelp("Container", "getAccession", []string{"configuration object"}, "With 'Configuration' and fetch the accession from ArchivesSpace")
+	// Now add this commands specific extensions
+	// jsExtension adds additional JavaScript functionality to process the container
+	// Workbook and support pushing it into a resource
+	jsExtension := `
+	var Container = {
+		isAuth: false,
+		config: {},
+		Accession: {},
+		Resource: {}
+	};
+	Container.getConfiguration = function (workbook) {
+		var sheet = workbook.getSheet("Configuration");
+		if (!sheet || sheet[1] === undefined) {
+			return {
+				repoID: 0,
+				accessionID: 0,
+				resourceID: 0
+			};
+		}
+		this.config = {
+			repoID: parseInt(sheet[1][0]) || 0,
+			accessionID: parseInt(sheet[1][1]) || 0,
+			resourceID: parseInt(sheet[1][2]) || 0
+		};
+		return this.config;
+	};
+	Container.getAccession = function (repoID, accessionID) {
+		if (this.isAuth === undefined || this.isAuth === false) {
+			res = api.login();
+			this.isAuth = res.isAuth || false;
+		}
+		if (this.isAuth === true) {
+			res = api.getAccession(repoID, accessionID);
+			if (res.error !== undefined) {
+				return false;
+			}
+			this.Accession = res;
+			return this.Accession;
+		}
+		return false;
+	};
+	Container.getDigitalObject = function (repoID, digitalObject) {
+		if (this.isAuth === undefined || this.isAuth === false) {
+			res = api.login();
+			this.isAuth = res.isAuth || false;
+		}
+		if (this.isAuth === true) {
+			res = api.createDigitalObject(repoID, digitalObject);
+			if (res.error !== undefined) {
+				return false;
+			}
+			this.DigitalObject = res;
+			return this.DigitalObject;
+		}
+		return false;
+	};
+	Container.getDigitalObject = function (repoID, objectID) {
+		if (this.isAuth === undefined || this.isAuth === false) {
+			res = api.login();
+			this.isAuth = res.isAuth || false;
+		}
+		if (this.isAuth === true) {
+			res = api.getDigitalObject(repoID, objectID);
+			if (res.error !== undefined) {
+				return false;
+			}
+			this.DigitalObject = res;
+			return this.DigitalObject;
+		}
+		return false;
+	};
+	Container.createResource = function (repoID, resource) {
+		if (this.isAuth === undefined || this.isAuth === false) {
+			res = api.login();
+			this.isAuth = res.isAuth || false;
+		}
+		if (this.isAuth === true) {
+			//FIXME: requires title, digital_object_id as minimal fields
+			res = api.createResource(repoID, resource);
+			if (res.error !== undefined) {
+				return false;
+			}
+			this.Resource = res;
+			return this.Resource;
+		}
+		return false;
+	};
+	Container.getResource = function (repoID, resourceID) {
+		if (this.isAuth === undefined || this.isAuth === false) {
+			res = api.login();
+			this.isAuth = res.isAuth || false;
+		}
+		if (this.isAuth === true) {
+			res = api.getResource(repoID, resourceID);
+			if (res.error !== undefined) {
+				return false;
+			}
+			this.Resource = res;
+			return this.Resource;
+		}
+		return false;
+	};
+	`
+	js.Eval(jsExtension)
+	js.SetHelp("Container", "getConfiguration", []string{"Workbook object"}, "Read the contents for the 'Configuration' worksheet and return it or an empty object")
+	js.SetHelp("Container", "getAccession", []string{"configuration object"}, "With 'Configuration' and fetch the accession from ArchivesSpace")
 
 	// Read in each file listed on the command line then apply to the the
 	// JavaScript VM.

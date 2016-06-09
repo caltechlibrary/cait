@@ -61,7 +61,7 @@ var (
 		"term",
 		"location",
 		"digital_object",
-		// "resource",
+		"resource",
 	}
 	actions = []string{
 		"create",
@@ -930,8 +930,8 @@ func runCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		return runTermCmd(api, cmd)
 	case "digital_object":
 		return runDigitalObjectCmd(api, cmd)
-		// case "resource":
-		// 	return runResourceCmd(api, cmd)
+	case "resource":
+		return runResourceCmd(api, cmd)
 	}
 	return "", fmt.Errorf("%s %s not implemented", cmd.Subject, cmd.Action)
 }
