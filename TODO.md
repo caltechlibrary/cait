@@ -3,8 +3,9 @@
 
 ## Action Item
 
-+ Update _xlsximporter_ to convert container spreadsheets to ArchivesSpace resources
-
 ### Bugs
 
-# some day maybe list
+# Some day, Maybe list
+
++ Add support to core cait for resource objects, archival_objects, etc.
++ Update _xlsximporter_ to inguesting resource objects

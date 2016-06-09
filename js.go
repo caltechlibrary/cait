@@ -66,11 +66,11 @@ func (api *ArchivesSpaceAPI) AddHelp(js *ostdlib.JavaScriptVM) {
 	js.SetHelp("api", "updateDigitalObject", []string{"digital_object object"}, "Update a digital object in ArchivesSpace from digital_object")
 	js.SetHelp("api", "deleteDigitalObject", []string{"digital_object object"}, "Delete a digital object form ArchivesSpace using digital_object")
 	js.SetHelp("api", "listDigitalObjects", []string{"repo_id int"}, "get a list of digital object ids from repository with matching id")
-	js.SetHelp("api", "createResource", []string{"repo_id int", "resource object"}, "Create a resource in a repository")
-	js.SetHelp("api", "updateResource", []string{"resource object"}, "Update a resource")
-	js.SetHelp("api", "deleteResource", []string{"resource object"}, "Delete a resource from a repository")
-	js.SetHelp("api", "getResource", []string{"repo_id int", "object_id int"}, "Get a resoource from a repository")
-	js.SetHelp("api", "listResources", []string{"repo_id int"}, "List resource ids in a repository")
+	// js.SetHelp("api", "createResource", []string{"repo_id int", "resource object"}, "Create a resource in a repository")
+	// js.SetHelp("api", "updateResource", []string{"resource object"}, "Update a resource")
+	// js.SetHelp("api", "deleteResource", []string{"resource object"}, "Delete a resource from a repository")
+	// js.SetHelp("api", "getResource", []string{"repo_id int", "object_id int"}, "Get a resoource from a repository")
+	// js.SetHelp("api", "listResources", []string{"repo_id int"}, "List resource ids in a repository")
 }
 
 // AddExtensions add cait API to a JavaScript environment along with the
@@ -582,105 +582,105 @@ func (api *ArchivesSpaceAPI) AddExtensions(js *ostdlib.JavaScriptVM) *otto.Otto 
 		return responseObject(response)
 	})
 
-	//api.createResource(repo_id int, resource object) create a resource in a repository
-	apiObj.Set("createResource", func(call otto.FunctionCall) otto.Value {
-		obj, err := vm.Object(`({})`)
-		if len(call.ArgumentList) != 2 {
-			return errorObject(obj, fmt.Sprintf("api.createResource(repo_id, object), expects two arguments, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
-		}
-		s := call.Argument(0).String()
-		repoID, err := strconv.Atoi(s)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.createResource(%s, %s), arg error, %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
-		}
-		resourceObject := new(Resource)
-		err = ostdlib.ToStruct(call.Argument(1), resourceObject)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.createResource(%s, %s), arg error, %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
-		}
-		response, err := api.CreateResource(repoID, resourceObject)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.createResource(%s, %s) response error %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
-		}
-		return responseObject(response)
-	})
-
-	// api.updateResource(object) update a resource
-	apiObj.Set("updateResource", func(call otto.FunctionCall) otto.Value {
-		obj, err := vm.Object(`({})`)
-		if len(call.ArgumentList) != 1 {
-			return errorObject(obj, fmt.Sprintf("api.updateResource(object), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
-		}
-		updateResource := new(Resource)
-		err = ostdlib.ToStruct(call.Argument(0), updateResource)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.updateResource(%s), arg error, %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
-		}
-		response, err := api.UpdateResource(updateResource)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.updateResource(%s) response error %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
-		}
-		return responseObject(response)
-	})
-
-	// api.deleteResource(object) delete a digital object
-	apiObj.Set("deleteResource", func(call otto.FunctionCall) otto.Value {
-		obj, err := vm.Object(`({})`)
-		if len(call.ArgumentList) != 1 {
-			return errorObject(obj, fmt.Sprintf("api.deleteResource(object), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
-		}
-		deleteResource := new(Resource)
-		err = ostdlib.ToStruct(call.Argument(0), deleteResource)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.deleteResource(%s), arg error, %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
-		}
-		response, err := api.DeleteResource(deleteResource)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.deleteResource(%s) response error %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
-		}
-		return responseObject(response)
-	})
-
-	// api.getResource(repo_id, object_id) get a digital object by repo_id and object_id
-	apiObj.Set("getResource", func(call otto.FunctionCall) otto.Value {
-		obj, err := vm.Object(`({})`)
-		if len(call.ArgumentList) != 2 {
-			return errorObject(obj, fmt.Sprintf("api.getResource(repo_id, object_id), expects two arguments, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
-		}
-		s := call.Argument(0).String()
-		repoID, err := strconv.Atoi(s)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.getResource(%s, %s), arg error, %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
-		}
-		s = call.Argument(1).String()
-		resourceID, err := strconv.Atoi(s)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.getResource(%s, %s), arg error, %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
-		}
-		response, err := api.GetResource(repoID, resourceID)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.getResource(%s, %s) response error %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
-		}
-		return responseObject(response)
-	})
-
-	// api.listResources(repo_id) list a digital objects by repo_id
-	apiObj.Set("listResources", func(call otto.FunctionCall) otto.Value {
-		obj, err := vm.Object(`({})`)
-		if len(call.ArgumentList) != 1 {
-			return errorObject(obj, fmt.Sprintf("api.listResources(repo_id), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
-		}
-		s := call.Argument(0).String()
-		repoID, err := strconv.Atoi(s)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.listResources(%s), arg error, %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
-		}
-		response, err := api.ListResources(repoID)
-		if err != nil {
-			return errorObject(obj, fmt.Sprintf("api.listResources(%s) response error %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
-		}
-		return responseObject(response)
-	})
+	// //api.createResource(repo_id int, resource object) create a resource in a repository
+	// apiObj.Set("createResource", func(call otto.FunctionCall) otto.Value {
+	// 	obj, err := vm.Object(`({})`)
+	// 	if len(call.ArgumentList) != 2 {
+	// 		return errorObject(obj, fmt.Sprintf("api.createResource(repo_id, object), expects two arguments, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
+	// 	}
+	// 	s := call.Argument(0).String()
+	// 	repoID, err := strconv.Atoi(s)
+	// 	if err != nil {
+	// 		return errorObject(obj, fmt.Sprintf("api.createResource(%s, %s), arg error, %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
+	// 	}
+	// 	resourceObject := new(Resource)
+	// 	err = ostdlib.ToStruct(call.Argument(1), resourceObject)
+	// 	if err != nil {
+	// 		return errorObject(obj, fmt.Sprintf("api.createResource(%s, %s), arg error, %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
+	// 	}
+	// 	response, err := api.CreateResource(repoID, resourceObject)
+	// 	if err != nil {
+	// 		return errorObject(obj, fmt.Sprintf("api.createResource(%s, %s) response error %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
+	// 	}
+	// 	return responseObject(response)
+	// })
+	//
+	// // api.updateResource(object) update a resource
+	// apiObj.Set("updateResource", func(call otto.FunctionCall) otto.Value {
+	// 	obj, err := vm.Object(`({})`)
+	// 	if len(call.ArgumentList) != 1 {
+	// 		return errorObject(obj, fmt.Sprintf("api.updateResource(object), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
+	// 	}
+	// 	updateResource := new(Resource)
+	// 	err = ostdlib.ToStruct(call.Argument(0), updateResource)
+	// 	if err != nil {
+	// 		return errorObject(obj, fmt.Sprintf("api.updateResource(%s), arg error, %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
+	// 	}
+	// 	response, err := api.UpdateResource(updateResource)
+	// 	if err != nil {
+	// 		return errorObject(obj, fmt.Sprintf("api.updateResource(%s) response error %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
+	// 	}
+	// 	return responseObject(response)
+	// })
+	//
+	// // api.deleteResource(object) delete a digital object
+	// apiObj.Set("deleteResource", func(call otto.FunctionCall) otto.Value {
+	// 	obj, err := vm.Object(`({})`)
+	// 	if len(call.ArgumentList) != 1 {
+	// 		return errorObject(obj, fmt.Sprintf("api.deleteResource(object), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
+	// 	}
+	// 	deleteResource := new(Resource)
+	// 	err = ostdlib.ToStruct(call.Argument(0), deleteResource)
+	// 	if err != nil {
+	// 		return errorObject(obj, fmt.Sprintf("api.deleteResource(%s), arg error, %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
+	// 	}
+	// 	response, err := api.DeleteResource(deleteResource)
+	// 	if err != nil {
+	// 		return errorObject(obj, fmt.Sprintf("api.deleteResource(%s) response error %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
+	// 	}
+	// 	return responseObject(response)
+	// })
+	//
+	// // api.getResource(repo_id, object_id) get a digital object by repo_id and object_id
+	// apiObj.Set("getResource", func(call otto.FunctionCall) otto.Value {
+	// 	obj, err := vm.Object(`({})`)
+	// 	if len(call.ArgumentList) != 2 {
+	// 		return errorObject(obj, fmt.Sprintf("api.getResource(repo_id, object_id), expects two arguments, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
+	// 	}
+	// 	s := call.Argument(0).String()
+	// 	repoID, err := strconv.Atoi(s)
+	// 	if err != nil {
+	// 		return errorObject(obj, fmt.Sprintf("api.getResource(%s, %s), arg error, %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
+	// 	}
+	// 	s = call.Argument(1).String()
+	// 	resourceID, err := strconv.Atoi(s)
+	// 	if err != nil {
+	// 		return errorObject(obj, fmt.Sprintf("api.getResource(%s, %s), arg error, %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
+	// 	}
+	// 	response, err := api.GetResource(repoID, resourceID)
+	// 	if err != nil {
+	// 		return errorObject(obj, fmt.Sprintf("api.getResource(%s, %s) response error %s, %s", call.Argument(0).String(), call.Argument(1).String(), call.CallerLocation(), err))
+	// 	}
+	// 	return responseObject(response)
+	// })
+	//
+	// // api.listResources(repo_id) list a digital objects by repo_id
+	// apiObj.Set("listResources", func(call otto.FunctionCall) otto.Value {
+	// 	obj, err := vm.Object(`({})`)
+	// 	if len(call.ArgumentList) != 1 {
+	// 		return errorObject(obj, fmt.Sprintf("api.listResources(repo_id), expects one argument, got %d, %s", len(call.ArgumentList), call.CallerLocation()))
+	// 	}
+	// 	s := call.Argument(0).String()
+	// 	repoID, err := strconv.Atoi(s)
+	// 	if err != nil {
+	// 		return errorObject(obj, fmt.Sprintf("api.listResources(%s), arg error, %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
+	// 	}
+	// 	response, err := api.ListResources(repoID)
+	// 	if err != nil {
+	// 		return errorObject(obj, fmt.Sprintf("api.listResources(%s) response error %s, %s", call.Argument(0).String(), call.CallerLocation(), err))
+	// 	}
+	// 	return responseObject(response)
+	// })
 
 	return vm
 }
