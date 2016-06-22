@@ -19,5 +19,5 @@
 //
 package cait
 
-// The library version
+// Version of library
 var Version = "0.0.5"

@@ -136,7 +136,6 @@ var (
 				if strings.Contains(url, "://") {
 					return fmt.Sprintf(`<a href="%s">%s</a>`, url, m["digital_objects.title"])
 				}
-				return ""
 			}
 			return ""
 		},

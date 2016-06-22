@@ -519,6 +519,9 @@ func (api *ArchivesSpaceAPI) ListVocabularies() ([]int, error) {
 		vocabularies []Vocabulary
 	)
 	err = json.Unmarshal([]byte(content), &vocabularies)
+	if err != nil {
+		return nil, fmt.Errorf("ListVocabularies() %s", err)
+	}
 	for _, val := range vocabularies {
 		p := strings.Split(val.URI, "/")
 		id, err := strconv.Atoi(p[len(p)-1])
@@ -619,7 +622,7 @@ func (api *ArchivesSpaceAPI) ListTerms(vocabularyID int) ([]*Term, error) {
 	for _, term := range terms {
 		//FIXME: Get the Term id and set terms[i].ID to that value.
 		p := strings.Split(term.URI, "/")
-		term.ID, err = strconv.Atoi(p[len(p)-1])
+		term.ID, _ = strconv.Atoi(p[len(p)-1])
 	}
 	return terms, nil
 }
