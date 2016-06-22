@@ -244,7 +244,7 @@ func (api *ArchivesSpaceAPI) ListAPI(url string) ([]int, error) {
 	return ids, nil
 }
 
-// CreateRepository will create a respository via the REST API for
+// CreateRepository will create a repository via the REST API for
 // ArchivesSpace defined in the ArchivesSpaceAPI struct.
 // It will return the created record.
 func (api *ArchivesSpaceAPI) CreateRepository(repo *Repository) (*ResponseMsg, error) {
@@ -266,14 +266,14 @@ func (api *ArchivesSpaceAPI) GetRepository(id int) (*Repository, error) {
 	return repo, nil
 }
 
-// UpdateRepository takes a respository structure and sends it to the ArchivesSpace REST API
+// UpdateRepository takes a repository structure and sends it to the ArchivesSpace REST API
 func (api *ArchivesSpaceAPI) UpdateRepository(repo *Repository) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = repo.URI
 	return api.UpdateAPI(u.String(), repo)
 }
 
-// DeleteRepository takes a respository structure and sends it to the ArchivesSpace REST API
+// DeleteRepository takes a repository structure and sends it to the ArchivesSpace REST API
 func (api *ArchivesSpaceAPI) DeleteRepository(repo *Repository) (*ResponseMsg, error) {
 	u := *api.URL
 	u.Path = fmt.Sprintf("/repositories/%d", repo.ID)

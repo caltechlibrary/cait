@@ -282,7 +282,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	pageHTML = "results-search.html"
 	pageInclude = "results-search.include"
 
-	// Load my tempaltes and setup to execute them
+	// Load my templates and setup to execute them
 	tmpl, err := cait.AssembleTemplate(path.Join(templatesDir, pageHTML), path.Join(templatesDir, pageInclude))
 	if err != nil {
 		log.Printf("Template Errors: %s, %s, %s\n", pageHTML, pageInclude, err)
