@@ -42,13 +42,23 @@ var (
 		"contains": func(s, substring string) bool {
 			return strings.Contains(s, substring)
 		},
-		"datefmt": func(dt, inputFmt, outputFmt string) string {
-			// Date formats default to MySQL style date strings
-			if inputFmt == "" {
+		"datefmt": func(dt, outputFmtYMD, outputFmtYM, outputFmtY string) string {
+			var (
+				inputFmt  string
+				outputFmt string
+			)
+			// NOTE: Date input formats can be YYYY, YYYY-MM and YYYY,
+			// we need to define output formats for each
+			switch {
+			case len(dt) == 4:
+				inputFmt = "2006"
+				outputFmt = outputFmtY
+			case len(dt) > 4 && len(dt) <= 7:
+				inputFmt = "2006-01"
+				outputFmt = outputFmtYM
+			default:
 				inputFmt = "2006-01-02"
-			}
-			if outputFmt == "" {
-				outputFmt = "2006-01-02"
+				outputFmt = outputFmtYMD
 			}
 			//intputFmt: 2006-01-02
 			//outputfmt: Jan _2, 2006

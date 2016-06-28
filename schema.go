@@ -826,6 +826,7 @@ type Date struct {
 	Begin      string `json:"begin,omitempty"`
 	End        string `json:"end,omitempty"`
 	Era        string `json:"era,omitempty"`
+	Calendar   string `json:"calendar,omitempty"`
 
 	LockVersion    json.Number       `json:"lock_version,Number"`
 	JSONModelType  string            `json:"jsonmodel_type,omitempty"`

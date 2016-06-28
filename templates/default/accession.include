@@ -23,6 +23,30 @@
     {{ end }}
     {{ if .Dates }}
         Dates:<pre>{{stringify .Dates true}}</pre>
+        <h4>Dates rendered</h4>
+        <dl>
+        {{range .Dates }}
+            {{if .DateType }}<dt>date type</dt><dd>{{.DateType}}</dd>{{end}}
+            {{if .Label}}<dt>label</dt><dd>{{.Label}}</dd>{{end}}
+            {{if .Expression }}<dt>expression</dt><dd>{{.Expression}}</dd>{{end}}
+            {{if .Certainty }}<dt>certainty</dt><dd>{{.Certainty}}</dd>{{end}}
+            {{if .Era }}<dt>era</dt><dd>{{.Era}}</dd>{{end}}
+            {{if .Calendar }}<dt>calendar</dt><dd>{{.Calendar}}</dd>{{end}}
+            {{if eq .DateType "single"}}
+                {{if .Begin }}
+                    <dt>begin</dt><dd>{{datefmt .Begin "Jun _2, 2006" "Jun 2006" "2006"}}</dd>
+                {{end}}
+            {{else}}
+                {{if .Begin }}
+                    <dt>begin</dt><dd>{{datefmt .Begin "Jun _2, 2006" "Jun 2006" "2006"}}</dd>
+                {{end}}
+                {{if .End }}
+                    <dt>end</dt><dd>{{datefmt .End "Jun _2, 2006" "June 2006" "2006"}}</dd>
+                {{end}}
+            {{end}}
+        {{end}}
+        </dl>
+
     {{ end }}
     {{ if .Extents }}
         <div class="accession-extents">
