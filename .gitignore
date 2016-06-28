@@ -29,6 +29,7 @@ aspace
 etc/*.conf
 setup.*
 production.*
+dist/*
 data/*
 dataset/*
 data-export/*
