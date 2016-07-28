@@ -10,16 +10,15 @@ function setupGolang {
     mkdir -p src
     # Build a bootstrap version of Go
     git clone git@github.com:golang/go.git go1.4
-    cd ${BOOTSTRAP:0:5}
-    export GOBIN=$HOME/${BOOTSTRAP:0:5}/bin
+    cd ${BOOTSTRAP:0:5}/src
     git checkout $BOOTSTRAP
-    cd src
+    export GOBIN=$HOME/${BOOTSTRAP:0:5}/bin
     ./all.bash
     # Now build the current version of Go
     cd
     git clone git@github.com:golang/go.git go
-    git checkout $TARGET
     cd go/src
+    git checkout $TARGET
     export GOBIN=$HOME/go/bin
     ./all.bash
     # Update our local environment
