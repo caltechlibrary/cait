@@ -11,3 +11,4 @@
 
 + Add support to core cait for resource objects, archival_objects, etc.
 + Update _xlsximporter_ to inguesting resource objects
++ Evaluate replacing BoltDB with BuntDB or LevelDB for faster writes
