@@ -62,7 +62,8 @@ At this point you should have your command line utilities ready to go in the *bi
 The command line tools and services are configured via environment variables. Below is an example of setting things up under Bash running on your favorite Unix-like system.
 
 
-```
+```bash
+    #!/bin/bash
     #
     # setup.sh - this script sets the environment variables for cait project.
     # You would source file before using cait, indexpages, or servepages.
@@ -80,21 +81,28 @@ The command line tools and services are configured via environment variables. Be
     export CAIT_HTDOCS_INDEX=htdocs.bleve
     export CAIT_TEMPLATES=templates/default
 
+```
+
+One time setup, creat the directories matching your configuration.
+
+
+```bash
+    #!/bin/bash
     #
     # Create the necessary directory structure
     #
     mkdir -p $CAIT_DATASET
     mkdir -p $CAIT_HTDOCS
     mkdir -p $CAIT_TEMPLATES
-
 ```
 
-Assuming Bash and that you've named the file _setup.sh_ you could
+Assuming Bash and that you've named the file _cait.bash_ you could
 source the file from your shell prompt by typing
 
 ```
-    . etc/setup.sh
+    . etc/cait.bash
 ```
+
 
 ### Setting up a dev box
 

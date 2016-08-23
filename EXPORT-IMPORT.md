@@ -29,7 +29,8 @@ The following environment variables not note used in the export process
 
 I am also assuming you have installed the _cait_ utility in *./bin/cait*
 
-```
+```bash
+    #!/bin/bash
     export CAIT_API_URL=http://archives.example.edu:8089
     export CAIT_USERNAME=admin
     export CAIT_PASSWORD=admin
