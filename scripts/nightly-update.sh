@@ -22,7 +22,7 @@ fi
 # Export the current content from ArchivesSpace
 $HOME/bin/cait archivesspace export
 # Generate webpages
-$HOME/genpages
+$HOME/bin/genpages
 if [ "$USER" = "root" ]; then
     /etc/init.d/servepages stop
 fi
