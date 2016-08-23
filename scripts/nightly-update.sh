@@ -12,24 +12,26 @@ cd $HOME
 
 consolelog "Working path $(pwd)"
 # Load the cait configuration
-if [ -f /etc/cait.bash ]; then
+if [ "$USER" = "root" ] && [ -f /etc/cait.bash ]; then
     consolelog "Configuration /etc/cait.bash"
     . /etc/cait.bash
+else [ -f $HOME/etc/cait.bash ]; then
+    . $HOME/etc/cait.bash
 fi
 
 # Export the current content from ArchivesSpace
-cait archivesspace export
+$HOME/bin/cait archivesspace export
 # Generate webpages
-genpages
+$HOME/genpages
 if [ "$USER" = "root" ]; then
     /etc/init.d/servepages stop
 fi
 # Index webpages
-indexpages
+$HOME/bin/indexpages
 
 # You should now be ready to reload the search engine/servepage service
 if [ "$USER" = "root" ]; then
     /etc/init.d/servepages start
 else
-    servepages
+    $HOME/bin/servepages
 fi
