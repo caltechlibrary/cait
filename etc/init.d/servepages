@@ -3,14 +3,15 @@
 # This is an example init.d script for starting servepage service
 #
 
-PROGDIR=/archivesspace/cait/bin
+PROGDIR=$HOME/bin
 PROGNAME=servepages
 PROGPATH=$PROGDIR/$PROGNAME
-LOGDIR=/archivesspace/logs
+LOGDIR=/Sites/archives.caltech.edu/logs
 LOGPATH=$LOGDIR/$PROGNAME.log
+CONFIG=/etc/cait.bash
 
 # Read in local configuration
-. /archivesspace/cait/etc/setup.conf
+. $CONFIG
 
 function consolelog {
     echo $(date +"%Y/%m/%d %H:%M:%S")" $@"
