@@ -14,9 +14,3 @@ export CAIT_HTDOCS_INDEX=htdocs.bleve
 export CAIT_TEMPLATES=templates/default
 export CAIT_SITE_URL=http://localhost:8501
 
-#
-# Create the necessary directory structure
-#
-mkdir -p $CAIT_DATASET
-mkdir -p $CAIT_HTDOCS
-mkdir -p $CAIT_TEMPLATES
