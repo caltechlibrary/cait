@@ -15,7 +15,7 @@ consolelog "Working path $(pwd)"
 if [ "$USER" = "root" ] && [ -f /etc/cait.bash ]; then
     consolelog "Configuration /etc/cait.bash"
     . /etc/cait.bash
-else [ -f $HOME/etc/cait.bash ]; then
+elif [ -f $HOME/etc/cait.bash ]; then
     . $HOME/etc/cait.bash
 fi
 
