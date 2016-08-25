@@ -14,9 +14,30 @@ test:
 	go test
 
 clean:
-	if [ -d bin ]; then rm -fR bin; fi
-	if [ -d dist ]; then rm -fR dist; fi
+	if [ -d bin ]; then /bin/rm -fR bin; fi
+	if [ -d dist ]; then /bin/rm -fR dist; fi
+	if [ -f $(PROG)-binary-release.zip ]; then /bin/rm $(PROG)-binary-release.zip; fi
+
+install:
+	env GOBIN=$(HOME)/bin go install cmds/cait/cait.go
+	env GOBIN=$(HOME)/bin go install cmds/genpages/genpages.go
+	env GOBIN=$(HOME)/bin go install cmds/indexpages/indexpages.go
+	env GOBIN=$(HOME)/bin go install cmds/servepages/servepages.go
+	env GOBIN=$(HOME)/bin go install cmds/sitemapper/sitemapper.go
+	env GOBIN=$(HOME)/bin go install cmds/xlsximporter/xlsximporter.go
+
+website:
+	./mk-website.bash
+
+save:
+	./mk-website.bash
+	git commit -am "Quick save"
+	git push origin master
+
+publish:
+	./mk-website.bash
+	./publish.bash
 
 release:
-	./mk-release.sh
+	./mk-release.bash
 
