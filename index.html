@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Caltech Library's Digital Library Development Sandbox</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<header>
+<a href="http://library.caltech.edu"><img src="assets/liblogo.gif" alt="Caltech Library logo"></a>
+</header>
+<nav>
+<ul>
+<li><a href="/">Home</a></li>
+<li><a href="./">cait</a></li>
+<li><a href="./install.html">INSTALL</a></li>
+<li><a href="./license.html">LICENSE</a></li>
+<li><a href="https://github.com/caltechlibrary/cait">Github</a></li>
+</ul>
+
+</nav>
+
+<section>
+<h1>cait</h1>
+
+<p><a href="https://github.com/caltechlibrary/cait">cait</a> is a set of utilities written in the <a href="http://golang.org">Go</a> language that work with and augment the <a href="http://archivesspace.org">ArchivesSpace</a> API.</p>
+
+<ul>
+<li>cait - a command line utility for ArchivesSpace interaction (basic CRUD operations and export)
+
+<ul>
+<li><a href="CAIT-JAVASCRIPT-README.md">cait</a> also supports scripting ArchivesSpace API actions with JavaScript either via a file containing JavaScript or interactive.</li>
+</ul></li>
+<li>genpages - a simple static page generator based on exported ArchivesSpace content</li>
+<li>indexpages - for indexing exported JSON structures with <a href="https://github.com/blevesearch/bleve">Bleve</a></li>
+<li>servepages - a web service providing public search services and content browsing</li>
+<li>xlsximporter - a tool for turning Excel spreadsheets in .xlsx format into JSON files suitable for importing into ArchivesSpace</li>
+<li>sitemapper - a simple tool to generate a sitemap.xml file from pages rendered with genpages</li>
+</ul>
+
+<h2>Requirements</h2>
+
+<ul>
+<li>A working deployment of ArchivesSpace</li>
+<li>Golang 1.6 or better to compile</li>
+<li>Three 3rd party Go packages
+
+<ul>
+<li><a href="https://github.com/blevesearch/bleve">Bleve</a> by <a href="http://blevesearch.com">Blevesearch</a>, Apache License, Version 2.0</li>
+<li><a href="https://github.com/robertkrimen/otto">Otto</a> by Robert Krimen, MIT license</li>
+<li><a href="https://github.com/tealeg/xlsx">xlsx</a> by Tealeg, BSD license</li>
+<li><a href="https://github.com/chzyer/readline">readline</a> Chzyer, MIT License, a go native readline implementation by</li>
+</ul></li>
+<li>Caltech Library&rsquo;s Go packages
+
+<ul>
+<li><a href="https://github.com/caltechlibrary/ostdlib">ostdlib</a>, an otto standard library package used for JavaScript integration</li>
+<li><a href="https://github.com/caltechlibrary/cait">cait</a>, Caltech Library&rsquo;s ArchivesSpace integration tools</li>
+</ul></li>
+</ul>
+
+<h2>Compiling</h2>
+
+<p>If you already have <a href="https://golang.org">Go</a> setup and installed compiling the utilities are pretty straight forward.</p>
+
+<ol>
+<li>Clone the git repository for the project</li>
+<li>&ldquo;Go get&rdquo; the 3rd party libraries</li>
+<li>Compile</li>
+<li>Setup the necessary environment variables for using the utilities</li>
+</ol>
+
+<p>Here&rsquo;s a typical example of setting things up.</p>
+
+<pre><code>    go get github.com/blevesearch/bleve/...
+    go get github.com/rsdoiel/otto
+    go get github.com/tealeg/xlsx
+    go get github.com/chzyer/readline
+    go get github.com/caltechlibrary/ostdlib
+    git clone git@github.com:caltechlibrary/cait.git
+    cd cait
+    mkdir bin
+    go build -o bin/cait cmds/cait/cait.go
+    go build -o bin/genpages  cmds/genpages/genpages.go
+    go build -o bin/indexpages cmds/indexpages/indexpages.go
+    go build -o bin/servepages cmds/servepages/servepages.go
+    go build -o bin/xlsximporter cmds/xlsximporter/xlsximporter.go
+    go build -o bin/sitemapper cmds/sitemapper/sitemapper.go
+</code></pre>
+
+<p>At this point you should have your command line utilities ready to go in the <em>bin</em> directory. You are now ready to setup your environment variables.</p>
+
+<h2>Setting up your environment</h2>
+
+<p>The command line tools and services are configured via environment variables. Below is an example of setting things up under Bash running on your favorite Unix-like system.</p>
+
+<pre><code class="language-bash">    #!/bin/bash
+    #
+    # setup.sh - this script sets the environment variables for cait project.
+    # You would source file before using cait, indexpages, or servepages.
+    #
+
+    #
+    # Local Development setup
+    #
+    export CAIT_API_URL=http://localhost:8089
+    export CAIT_USERNAME=admin
+    export CAIT_PASSWORD=admin
+    export CAIT_DATASET=dataset
+    export CAIT_SITE_URL=http://localhost:8501
+    export CAIT_HTDOCS=htdocs
+    export CAIT_HTDOCS_INDEX=htdocs.bleve
+    export CAIT_TEMPLATES=templates/default
+
+</code></pre>
+
+<p>One time setup, creat the directories matching your configuration.</p>
+
+<pre><code class="language-bash">    #!/bin/bash
+    #
+    # Create the necessary directory structure
+    #
+    mkdir -p $CAIT_DATASET
+    mkdir -p $CAIT_HTDOCS
+    mkdir -p $CAIT_TEMPLATES
+</code></pre>
+
+<p>Assuming Bash and that you&rsquo;ve named the file <em>cait.bash</em> you could
+source the file from your shell prompt by typing</p>
+
+<pre><code>    . etc/cait.bash
+</code></pre>
+
+<h3>Setting up a dev box</h3>
+
+<p>I run ArchivesSpace in a vagrant box for development use. You can find details to set that up at <a href="https://github.com/caltechlibrary/archivesspace_vagrant">github.com/caltechlibrary/archivesspace_vagrant</a>.
+I usually run the <a href="https://github.com/caltechlibrary/cait">cait</a> tools locally. You can see
+and example workflow in the document <a href="EXPORT-IMPORT.md">EXPORT-IMPORT.md</a>.</p>
+
+<h2>Utilities</h2>
+
+<h3><em>cait</em></h3>
+
+<p>This command is a general purpose tool for fetch ArchivesSpace data from the
+ArchivesSpace REST API, saving or modifying that data as well as querying the
+locally capture output of the API.</p>
+
+<p>Current <em>cait</em> supports operations on repositories, subjects, agents, accessions and digital_objects.</p>
+
+<p>These are the common actions that can be performed</p>
+
+<ul>
+<li>create</li>
+<li>list (individually or all ids)</li>
+<li>update (can use a file instead of the command line, see -input option)</li>
+<li>delete</li>
+<li>export (useful with integrating into static websites or batch processing via scripts)</li>
+</ul>
+
+<p>Here&rsquo;s an example session of using the <em>cait</em> command line tool on the repository object.</p>
+
+<pre><code class="language-shell">    . setup.sh # Source my setup file so I can get access to the API
+    cait repository create '{&quot;uri&quot;:&quot;/repositories/3&quot;,&quot;repo_code&quot;:&quot;My Archive&quot;,&quot;name&quot;:&quot;My Archive&quot;}' # Create an archive called My Archive
+    cait repository list # show a list of archives, for example purposes we'll use archive ID of 3
+    cait repository list '{&quot;uri&quot;:&quot;/repositories/3&quot;}' # Show only the archive JSON for repository ID equal to 3
+    cait repository list '{&quot;uri&quot;:&quot;/repositories/3&quot;}' &gt; repo2.json # Save the output to the file repo3.json
+    cait repository update -input repo3.json # Save your changes back to ArchivesSpace
+    cait repository export '{&quot;uri&quot;:&quot;/repositories/3&quot;}' # export the repository metadata to data/repositories/3.json
+    cait repository delete '{&quot;uri&quot;:&quot;/repositories/3&quot;}' # remove repository ID 3
+</code></pre>
+
+<p>This is the general pattern also used with subject, agent, accession, digital_object.</p>
+
+<p>The <em>cait</em> command uses the following environment variables</p>
+
+<ul>
+<li>CAIT_API_URL, the URL to the ArchivesSpace API (e.g. <a href="http://localhost:8089">http://localhost:8089</a> in v1.4.2)</li>
+<li>CAIT_USERNAME, username to access the ArchivesSpace API</li>
+<li>CAIT_PASSWORD, to access the ArchivesSpace API</li>
+<li>CAIT_DATASET, the directory for exported content</li>
+</ul>
+
+<h3><em>genpages</em></h3>
+
+<p>This command generates static webpages from exported ArchivesSpace content.</p>
+
+<p>It relies on the following environment variables</p>
+
+<ul>
+<li>CAIT_DATASET, where you&rsquo;ve exported your ArchivesSpace content</li>
+<li>CAIT_HTDOCS, where you want to write your static pages</li>
+<li>CAIT_TEMPLATES, the templates to use (this defaults to template/defaults but you probably want custom templates for your site)</li>
+</ul>
+
+<p>The typical process would use <em>cait</em> to export all your content and then run <em>genpages</em> to generate your website content.</p>
+
+<pre><code>    ./bin/cait archivesspace export # this takes a while
+    ./bin/genpages # this is faster
+</code></pre>
+
+<p>Assuming the default settings you&rsquo;ll see new webpages in your local <em>htdocs</em> directory.</p>
+
+<h3><em>indexpages</em></h3>
+
+<p>This command creates <a href="http://blevesearch.com">bleve</a> indexes for use by <em>servepages</em>.</p>
+
+<p>Current <em>indexpages</em> operates on JSON content exported with <em>cait</em>. It expects
+a specific directory structure with each individual JSON blob named after its
+numeric ID and the extension .json. E.g. htdocs/repositories/2/accession/1.json would
+correspond to accession id 1 for repository 2.</p>
+
+<p><em>indexpages</em> depends on four environment variables</p>
+
+<ul>
+<li>CAIT_HTDOCS, the root directory where the JSON blobs and HTML files are saved</li>
+<li>CAIT_HTDOCS_INDEX, the name of the Bleve index (created or maintained)</li>
+</ul>
+
+<h3><em>servepages</em></h3>
+
+<p><em>servepages</em> provides both a static web server as well as web search service.</p>
+
+<p>Current <em>servepages</em> uses the Bleve indexes created with <em>indexpages</em>. It also
+uses the search page and results templates defined in CAIT_TEMPLATES.</p>
+
+<p>It uses the following environment variables</p>
+
+<ul>
+<li>CAIT_HTDOCS, the htdoc root of the website</li>
+<li>CAIT_HTDOCS_INDEX, the Bleve index to use to drive the search service</li>
+<li>CAIT_TEMPLATES, templates for search service as well as browsable static pages</li>
+<li>CAIT_SITE_URL, the url you want to run the search service on (e.g. <a href="http://localhost:8501">http://localhost:8501</a>)</li>
+</ul>
+
+<p>Assuming the default setup, you could start the like</p>
+
+<pre><code>    ./bin/servepages
+</code></pre>
+
+<p>Or you could add a startup script to /etc/init.d/ as appropriate.</p>
+
+<h3><em>xlsximporter</em></h3>
+
+<p><em>xlsximporter</em> is a utilty to transform sheets from an Excel file in xlsx format to JSON blobs suitable for importation into ArchivesSpace (e.g. Digital Objects).  By default it transforms each row in the spreadsheet into an object where the property names correspond to the column headers (in the initial row of the spreadsheet).  You can perform more elaborate mappings using a javascript callback function.  You can see an example of that in the <em>xlsximporter-javascript-example</em> directory.</p>
+
+<p>The general workflow would be to transform you rows to JSON objects on your local disc with <em>xlsximporter</em> then use the <em>cait</em> utility to push the JSON blobs into ArchivesSpace itself.</p>
+
+<h3><em>sitemapper</em></h3>
+
+<p><em>sitemapper</em> generates a sitemap.xml file based on the arguments you envoke. It you&rsquo;re site&rsquo;s URL is <a href="http://archives.example.edu">http://archives.example.edu</a>, your htdocs directory is htdocs and you want to save you sitemap.xml file as htdocs/sitemap.xml you could run the command with</p>
+
+<pre><code>    sitemapper htdocs htdocs/sitemap.xml http://archives.example.edu
+</code></pre>
+
+<p>This will generate a site map of the HTML files found in <em>htdocs</em> with the results saved in <em>htdocs/sitemap.xml</em>. For more informaiton about sitemaps see the <a href="http://sitemaps.org">sitemaps.org</a> website.</p>
+
+<h2>Setting up a production box</h2>
+
+<p>The basic production environment would export the contents of ArchivesSpace nightly, regenerate the webpages, re-index the webpages and finally restart <em>servepages</em> service.</p>
+
+<p>The script in <em>bin/nightly-update.sh</em> shows these steps based on the configuration in <em>etc/setup.sh</em>. This script is suitable for running form a cronjob under Linux/Unix/Mac OS X.</p>
+
+</section>
+
+<footer>
+<span><h1><A href="http://caltech.edu">Caltech</a></h1></span>
+<span>&copy; 2015 - 2016 <a href="http://library.caltech.edu/CLS_Copyright.htm">Caltech library</a></span>
+<address>1200 E California Blvd, Mail Code 1-32, Pasadena, CA 91125-3200</address> 
+<span>Phone: <a href="tel:+1-626-395-3405">(626)395-3405</a></span>
+<span><a href="mailto:library@caltech.edu">Email Us</a></span>
+<a class="cl-hide" href="sitemap.xml">Site Map</a>
+</footer>
+</body>
+</html>
