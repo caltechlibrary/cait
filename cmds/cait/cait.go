@@ -970,7 +970,6 @@ func main() {
 	flag.BoolVar(&jsRunner, "js", false, "Run JavaScript enterpreter")
 	flag.BoolVar(&jsInteractive, "i", false, "Run JavaScript shell")
 
-	log.Printf("DEBUG caitAPIURL: %s\n", caitAPIURL)
 	api := cait.New(caitAPIURL, caitUsername, caitPassword)
 
 	flag.Parse()
