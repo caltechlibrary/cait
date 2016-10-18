@@ -24,7 +24,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -84,7 +83,6 @@ func (api *ArchivesSpaceAPI) Login() error {
 	}
 
 	api.UpdateCallPath(fmt.Sprintf("/users/%s/login", api.Username))
-	log.Printf("DEBUG api.Base.URL -> %s, api.CallURL.Path -> %s\n", api.BaseURL.String(), api.CallURL.String())
 	form := url.Values{}
 	form.Add("password", api.Password)
 
