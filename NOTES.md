@@ -6,7 +6,7 @@
 ### Example nightly update
 
 This is an example script that could be run as a nightly cronjob. Output from the
-cait tools is suitable to sending to a log file (e.g. /archivesspace/logs/nightly-update.log)
+cait tools is suitable to sending to a log file (e.g. /Sites/archives.example.edu/logs/nightly-update.log)
 
 ```shell
     #!/bin/bash
@@ -16,10 +16,10 @@ cait tools is suitable to sending to a log file (e.g. /archivesspace/logs/nightl
 
 
     # Load the cait configuration
-    . /archivesspace/cait/etc/setup.conf
+    . /etc/cait.conf
 
     # Change directory to where cait is installed
-    cd /archivesspace/cait
+    cd /Sites/archives.example.edu/
     # Export the current content from ArchivesSpace
     ./bin/cait archivesspace export
     # Generate webpages
@@ -46,7 +46,7 @@ cait tools is suitable to sending to a log file (e.g. /archivesspace/logs/nightl
     #  day of week   0-7 (0 or 7 is Sun, or use names)
     #
     # Run archives site update everyday at 6:30am.
-    30 6 * * * /archivesspace/cait/bin/nightly-update.sh >> /archivesspace/logs/nightly-update.log 2>&1
+    30 6 * * * /Sites/archives.example.edu/scripts/nightly-update.sh >> /Sites/archives.example.edu/logs/nightly-update.log 2>&1
 ```
 
 

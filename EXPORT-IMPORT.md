@@ -17,7 +17,7 @@ The easiest way to export content from a production ArchivesSpace deployment is 
 
 + CAIT_USERNAME admin
 + CAIT_PASSWORD admin
-+ CAIT_API_URL (for your production system) http://archives.example.edu:8089
++ CAIT_API_URL (for your production system) https://archives.example.edu/api
 + CAIT_DATASET dataset
 
 The following environment variables not note used in the export process
@@ -31,7 +31,7 @@ I am also assuming you have installed the _cait_ utility in *./bin/cait*
 
 ```bash
     #!/bin/bash
-    export CAIT_API_URL=http://archives.example.edu:8089
+    export CAIT_API_URL=https://archives.example.edu/api
     export CAIT_USERNAME=admin
     export CAIT_PASSWORD=admin
     export CAIT_DATASET=dataset
