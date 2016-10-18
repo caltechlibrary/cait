@@ -24,6 +24,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -43,7 +44,8 @@ func getenv(envvar, defaultValue string) string {
 // in the gas package.
 func New(apiURL, username, password string) *ArchivesSpaceAPI {
 	api := new(ArchivesSpaceAPI)
-	api.URL, _ = url.Parse(getenv("CAIT_API_URL", apiURL))
+	api.BaseURL, _ = url.Parse(getenv("CAIT_API_URL", apiURL))
+	api.CallURL, _ = url.Parse(getenv("CAIT_API_URL", apiURL))
 	api.AuthToken = getenv("CAIT_API_TOKEN", "")
 	api.Username = getenv("CAIT_USERNAME", username)
 	api.Password = getenv("CAIT_PASSWORD", password)
@@ -53,6 +55,12 @@ func New(apiURL, username, password string) *ArchivesSpaceAPI {
 	api.HtdocsIndex = getenv("CAIT_HTDOCS_INDEX", "htdocs.bleve")
 	api.Templates = getenv("CAIT_TEMPLATES", "templates/default")
 	return api
+}
+
+// UpdateCallPath takes the BaseURL Path attribute, copies it into CallURL, applies appends a path for next API call
+func (api *ArchivesSpaceAPI) UpdateCallPath(p string) string {
+	api.CallURL.Path = api.BaseURL.Path + p
+	return api.CallURL.Path
 }
 
 // IsAuth returns true if the auth token has been set, false otherwise
@@ -75,12 +83,12 @@ func (api *ArchivesSpaceAPI) Login() error {
 		api.Logout()
 	}
 
-	u := api.URL
-	u.Path = fmt.Sprintf("/users/%s/login", api.Username)
+	api.UpdateCallPath(fmt.Sprintf("/users/%s/login", api.Username))
+	log.Printf("DEBUG api.Base.URL -> %s, api.CallURL.Path -> %s\n", api.BaseURL.String(), api.CallURL.String())
 	form := url.Values{}
 	form.Add("password", api.Password)
 
-	res, err := http.PostForm(u.String(), form)
+	res, err := http.PostForm(api.CallURL.String(), form)
 	if err != nil {
 		return err
 	}
@@ -107,10 +115,9 @@ func (api *ArchivesSpaceAPI) Logout() error {
 	token := api.AuthToken
 	api.AuthToken = ""
 	// Using the copied token try to logout from the service.
-	u := api.URL
-	u.Path = `/logout`
+	api.UpdateCallPath(`/logout`)
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", u.String(), nil)
+	req, err := http.NewRequest("GET", api.CallURL.String(), nil)
 	if err != nil {
 		return err
 	}
@@ -248,17 +255,15 @@ func (api *ArchivesSpaceAPI) ListAPI(url string) ([]int, error) {
 // ArchivesSpace defined in the ArchivesSpaceAPI struct.
 // It will return the created record.
 func (api *ArchivesSpaceAPI) CreateRepository(repo *Repository) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = "/repositories"
-	return api.CreateAPI(u.String(), repo)
+	api.UpdateCallPath("/repositories")
+	return api.CreateAPI(api.CallURL.String(), repo)
 }
 
 // GetRepository returns the repository details based on Id
 func (api *ArchivesSpaceAPI) GetRepository(id int) (*Repository, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf(`/repositories/%d`, id)
+	api.UpdateCallPath(fmt.Sprintf(`/repositories/%d`, id))
 	repo := new(Repository)
-	err := api.GetAPI(u.String(), repo)
+	err := api.GetAPI(api.CallURL.String(), repo)
 	if err != nil {
 		return nil, fmt.Errorf("GetRepostiory(%d) %s", id, err)
 	}
@@ -268,16 +273,14 @@ func (api *ArchivesSpaceAPI) GetRepository(id int) (*Repository, error) {
 
 // UpdateRepository takes a repository structure and sends it to the ArchivesSpace REST API
 func (api *ArchivesSpaceAPI) UpdateRepository(repo *Repository) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = repo.URI
-	return api.UpdateAPI(u.String(), repo)
+	api.UpdateCallPath(repo.URI)
+	return api.UpdateAPI(api.CallURL.String(), repo)
 }
 
 // DeleteRepository takes a repository structure and sends it to the ArchivesSpace REST API
 func (api *ArchivesSpaceAPI) DeleteRepository(repo *Repository) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf("/repositories/%d", repo.ID)
-	return api.DeleteAPI(u.String(), repo)
+	api.UpdateCallPath(fmt.Sprintf("/repositories/%d", repo.ID))
+	return api.DeleteAPI(api.CallURL.String(), repo)
 }
 
 // ListRepositoryIDs returns the numeric ids for all respoistories via the ArchivesSpace REST API
@@ -285,9 +288,8 @@ func (api *ArchivesSpaceAPI) ListRepositoryIDs() ([]int, error) {
 	var ids []int
 	var repos []Repository
 
-	u := *api.URL
-	u.Path = `/repositories`
-	content, err := api.API("GET", u.String(), nil)
+	api.UpdateCallPath(`/repositories`)
+	content, err := api.API("GET", api.CallURL.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("ListRepositoryIDs() %s", err)
 	}
@@ -306,10 +308,9 @@ func (api *ArchivesSpaceAPI) ListRepositoryIDs() ([]int, error) {
 
 // ListRepositories returns a list of repositories available via the ArchivesSpace REST API
 func (api *ArchivesSpaceAPI) ListRepositories() ([]Repository, error) {
-	u := *api.URL
-	u.Path = `/repositories`
+	api.UpdateCallPath(`/repositories`)
 
-	content, err := api.API("GET", u.String(), nil)
+	content, err := api.API("GET", api.CallURL.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("ListRepositories() %s", err)
 	}
@@ -328,19 +329,17 @@ func (api *ArchivesSpaceAPI) ListRepositories() ([]Repository, error) {
 
 // CreateAgent creates a Agent recod via the ArchivesSpace API
 func (api *ArchivesSpaceAPI) CreateAgent(aType string, agent *Agent) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf("/agents/%s", aType)
+	api.UpdateCallPath(fmt.Sprintf("/agents/%s", aType))
 	agent.LockVersion = "0"
-	return api.CreateAPI(u.String(), agent)
+	return api.CreateAPI(api.CallURL.String(), agent)
 }
 
 // GetAgent return an Agent via the ArchivesSpace API
 func (api *ArchivesSpaceAPI) GetAgent(agentType string, agentID int) (*Agent, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf(`/agents/%s/%d`, agentType, agentID)
+	api.UpdateCallPath(fmt.Sprintf(`/agents/%s/%d`, agentType, agentID))
 
 	agent := new(Agent)
-	err := api.GetAPI(u.String(), agent)
+	err := api.GetAPI(api.CallURL.String(), agent)
 	if err != nil {
 		return nil, fmt.Errorf("GetAgent(%s, %d) %s", agentType, agentID, err)
 	}
@@ -350,43 +349,38 @@ func (api *ArchivesSpaceAPI) GetAgent(agentType string, agentID int) (*Agent, er
 
 // UpdateAgent creates a Agent recod via the ArchivesSpace API
 func (api *ArchivesSpaceAPI) UpdateAgent(agent *Agent) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = agent.URI
-	return api.UpdateAPI(u.String(), agent)
+	api.UpdateCallPath(agent.URI)
+	return api.UpdateAPI(api.CallURL.String(), agent)
 }
 
 // DeleteAgent creates a Agent record via the ArchivesSpace API
 func (api *ArchivesSpaceAPI) DeleteAgent(agent *Agent) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = agent.URI
-	return api.DeleteAPI(u.String(), agent)
+	api.UpdateCallPath(agent.URI)
+	return api.DeleteAPI(api.CallURL.String(), agent)
 }
 
 // ListAgents return an array of Agents via the ArchivesSpace API
 func (api *ArchivesSpaceAPI) ListAgents(agentType string) ([]int, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf(`/agents/%s`, agentType)
-	q := u.Query()
+	api.UpdateCallPath(fmt.Sprintf(`/agents/%s`, agentType))
+	q := api.CallURL.Query()
 	q.Set("all_ids", "true")
-	u.RawQuery = q.Encode()
-	return api.ListAPI(u.String())
+	api.CallURL.RawQuery = q.Encode()
+	return api.ListAPI(api.CallURL.String())
 }
 
 // CreateAccession creates a new Accession record in a Repository
 func (api *ArchivesSpaceAPI) CreateAccession(repoID int, accession *Accession) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf("/repositories/%d/accessions", repoID)
+	api.UpdateCallPath(fmt.Sprintf("/repositories/%d/accessions", repoID))
 	accession.LockVersion = "0"
-	return api.CreateAPI(u.String(), accession)
+	return api.CreateAPI(api.CallURL.String(), accession)
 }
 
 // GetAccession retrieves an Accession record from a Repository
 func (api *ArchivesSpaceAPI) GetAccession(repoID, accessionID int) (*Accession, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf("/repositories/%d/accessions/%d", repoID, accessionID)
+	api.UpdateCallPath(fmt.Sprintf("/repositories/%d/accessions/%d", repoID, accessionID))
 
 	accession := new(Accession)
-	err := api.GetAPI(u.String(), accession)
+	err := api.GetAPI(api.CallURL.String(), accession)
 	if err != nil {
 		return nil, fmt.Errorf("GetAccession(%d, %d) %s", repoID, accessionID, err)
 	}
@@ -400,43 +394,38 @@ func (api *ArchivesSpaceAPI) GetAccession(repoID, accessionID int) (*Accession, 
 
 // UpdateAccession updates an existing Accession record in a Repository
 func (api *ArchivesSpaceAPI) UpdateAccession(accession *Accession) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = accession.URI
-	return api.UpdateAPI(u.String(), accession)
+	api.UpdateCallPath(accession.URI)
+	return api.UpdateAPI(api.CallURL.String(), accession)
 }
 
 // DeleteAccession deleted an Accession record from a Repository
 func (api *ArchivesSpaceAPI) DeleteAccession(accession *Accession) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = accession.URI
-	return api.DeleteAPI(u.String(), accession)
+	api.UpdateCallPath(accession.URI)
+	return api.DeleteAPI(api.CallURL.String(), accession)
 }
 
 // ListAccessions return a list of Accession IDs from a Repository
 func (api *ArchivesSpaceAPI) ListAccessions(repositoryID int) ([]int, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf(`/repositories/%d/accessions`, repositoryID)
-	q := u.Query()
+	api.UpdateCallPath(fmt.Sprintf(`/repositories/%d/accessions`, repositoryID))
+	q := api.CallURL.Query()
 	q.Set("all_ids", "true")
-	u.RawQuery = q.Encode()
-	return api.ListAPI(u.String())
+	api.CallURL.RawQuery = q.Encode()
+	return api.ListAPI(api.CallURL.String())
 }
 
 // CreateSubject creates a new Subject in ArchivesSpace
 func (api *ArchivesSpaceAPI) CreateSubject(subject *Subject) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = "/subjects"
+	api.UpdateCallPath("/subjects")
 	subject.LockVersion = "0"
-	return api.CreateAPI(u.String(), subject)
+	return api.CreateAPI(api.CallURL.String(), subject)
 }
 
 // GetSubject retrieves a subject record from ArchivesSpace
 func (api *ArchivesSpaceAPI) GetSubject(subjectID int) (*Subject, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf("/subjects/%d", subjectID)
+	api.UpdateCallPath(fmt.Sprintf("/subjects/%d", subjectID))
 
 	subject := new(Subject)
-	err := api.GetAPI(u.String(), subject)
+	err := api.GetAPI(api.CallURL.String(), subject)
 	p := strings.Split(subject.URI, "/")
 	subject.ID, err = strconv.Atoi(p[len(p)-1])
 	if err != nil {
@@ -447,43 +436,38 @@ func (api *ArchivesSpaceAPI) GetSubject(subjectID int) (*Subject, error) {
 
 // UpdateSubject updates an existing subject record in ArchivesSpace
 func (api *ArchivesSpaceAPI) UpdateSubject(subject *Subject) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = subject.URI
-	return api.UpdateAPI(u.String(), subject)
+	api.UpdateCallPath(subject.URI)
+	return api.UpdateAPI(api.CallURL.String(), subject)
 }
 
 // DeleteSubject deletes a subject from ArchivesSpace
 func (api *ArchivesSpaceAPI) DeleteSubject(subject *Subject) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = subject.URI
-	return api.DeleteAPI(u.String(), subject)
+	api.UpdateCallPath(subject.URI)
+	return api.DeleteAPI(api.CallURL.String(), subject)
 }
 
 // ListSubjects return a list of Subject IDs from ArchivesSpace
 func (api *ArchivesSpaceAPI) ListSubjects() ([]int, error) {
-	u := *api.URL
-	u.Path = `/subjects`
-	q := u.Query()
+	api.UpdateCallPath(`/subjects`)
+	q := api.CallURL.Query()
 	q.Set("all_ids", "true")
-	u.RawQuery = q.Encode()
-	return api.ListAPI(u.String())
+	api.CallURL.RawQuery = q.Encode()
+	return api.ListAPI(api.CallURL.String())
 }
 
 // CreateVocabulary creates a new Vocabulary in ArchivesSpace
 func (api *ArchivesSpaceAPI) CreateVocabulary(vocabulary *Vocabulary) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = "/vocabularies"
+	api.UpdateCallPath("/vocabularies")
 	vocabulary.LockVersion = "0"
-	return api.CreateAPI(u.String(), vocabulary)
+	return api.CreateAPI(api.CallURL.String(), vocabulary)
 }
 
 // GetVocabulary retrieves a vocabulary record from ArchivesSpace
 func (api *ArchivesSpaceAPI) GetVocabulary(vocabularyID int) (*Vocabulary, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf("/vocabularies/%d", vocabularyID)
+	api.UpdateCallPath(fmt.Sprintf("/vocabularies/%d", vocabularyID))
 
 	vocabulary := new(Vocabulary)
-	err := api.GetAPI(u.String(), vocabulary)
+	err := api.GetAPI(api.CallURL.String(), vocabulary)
 	p := strings.Split(vocabulary.URI, "/")
 	vocabulary.ID, err = strconv.Atoi(p[len(p)-1])
 	if err != nil {
@@ -494,23 +478,20 @@ func (api *ArchivesSpaceAPI) GetVocabulary(vocabularyID int) (*Vocabulary, error
 
 // UpdateVocabulary updates an existing vocabulary record in ArchivesSpace
 func (api *ArchivesSpaceAPI) UpdateVocabulary(vocabulary *Vocabulary) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = vocabulary.URI
-	return api.UpdateAPI(u.String(), vocabulary)
+	api.UpdateCallPath(vocabulary.URI)
+	return api.UpdateAPI(api.CallURL.String(), vocabulary)
 }
 
 // DeleteVocabulary deletes a vocabulary from ArchivesSpace
 func (api *ArchivesSpaceAPI) DeleteVocabulary(vocabulary *Vocabulary) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = vocabulary.URI
-	return api.DeleteAPI(u.String(), vocabulary)
+	api.UpdateCallPath(vocabulary.URI)
+	return api.DeleteAPI(api.CallURL.String(), vocabulary)
 }
 
 // ListVocabularies return a list of Vocabulary IDs from ArchivesSpace
 func (api *ArchivesSpaceAPI) ListVocabularies() ([]int, error) {
-	u := *api.URL
-	u.Path = `/vocabularies`
-	content, err := api.API("GET", u.String(), nil)
+	api.UpdateCallPath(`/vocabularies`)
+	content, err := api.API("GET", api.CallURL.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("ListVocabularies() %s", err)
 	}
@@ -535,16 +516,14 @@ func (api *ArchivesSpaceAPI) ListVocabularies() ([]int, error) {
 
 // CreateTerm creates a new Term in ArchivesSpace
 func (api *ArchivesSpaceAPI) CreateTerm(vocabularyID int, term *Term) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf("/vocabularies/%d/terms", vocabularyID)
+	api.UpdateCallPath(fmt.Sprintf("/vocabularies/%d/terms", vocabularyID))
 	term.LockVersion = "0"
-	return api.CreateAPI(u.String(), term)
+	return api.CreateAPI(api.CallURL.String(), term)
 }
 
 // GetTerm retrieves a term record from ArchivesSpace
 func (api *ArchivesSpaceAPI) GetTerm(vocabularyID, termID int) (*Term, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf("/vocabularies/%d/terms", vocabularyID)
+	api.UpdateCallPath(fmt.Sprintf("/vocabularies/%d/terms", vocabularyID))
 
 	terms, err := api.ListTerms(vocabularyID)
 	if err != nil {
@@ -561,26 +540,23 @@ func (api *ArchivesSpaceAPI) GetTerm(vocabularyID, termID int) (*Term, error) {
 
 // UpdateTerm updates an existing term record in ArchivesSpace
 func (api *ArchivesSpaceAPI) UpdateTerm(term *Term) (*ResponseMsg, error) {
-	u := api.URL
-	u.Path = term.URI
-	return api.UpdateAPI(u.String(), term)
+	api.UpdateCallPath(term.URI)
+	return api.UpdateAPI(api.CallURL.String(), term)
 }
 
 // DeleteTerm deletes a term from ArchivesSpace
 func (api *ArchivesSpaceAPI) DeleteTerm(term *Term) (*ResponseMsg, error) {
-	u := api.URL
-	u.Path = term.URI
-	return api.DeleteAPI(u.String(), term)
+	api.UpdateCallPath(term.URI)
+	return api.DeleteAPI(api.CallURL.String(), term)
 }
 
 // ListTermIDs return a list of Term IDs from ArchivesSpace
 func (api *ArchivesSpaceAPI) ListTermIDs(vocabularyID int) ([]int, error) {
-	u := api.URL
-	u.Path = fmt.Sprintf(`/vocabularies/%d/terms`, vocabularyID)
-	q := u.Query()
+	api.UpdateCallPath(fmt.Sprintf(`/vocabularies/%d/terms`, vocabularyID))
+	q := api.CallURL.Query()
 	q.Set("all_ids", "true")
-	u.RawQuery = q.Encode()
-	data, err := api.API("GET", u.String(), nil)
+	api.CallURL.RawQuery = q.Encode()
+	data, err := api.API("GET", api.CallURL.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("Can't get Terms for vocabulary %d, %s", vocabularyID, err)
 	}
@@ -604,12 +580,11 @@ func (api *ArchivesSpaceAPI) ListTermIDs(vocabularyID int) ([]int, error) {
 
 // ListTerms return a list of Term IDs from ArchivesSpace
 func (api *ArchivesSpaceAPI) ListTerms(vocabularyID int) ([]*Term, error) {
-	u := api.URL
-	u.Path = fmt.Sprintf(`/vocabularies/%d/terms`, vocabularyID)
-	q := u.Query()
+	api.UpdateCallPath(fmt.Sprintf(`/vocabularies/%d/terms`, vocabularyID))
+	q := api.CallURL.Query()
 	q.Set("all_ids", "true")
-	u.RawQuery = q.Encode()
-	data, err := api.API("GET", u.String(), nil)
+	api.CallURL.RawQuery = q.Encode()
+	data, err := api.API("GET", api.CallURL.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("Can't get Terms for vocabulary %d, %s", vocabularyID, err)
 	}
@@ -629,19 +604,17 @@ func (api *ArchivesSpaceAPI) ListTerms(vocabularyID int) ([]*Term, error) {
 
 // CreateLocation creates a new Location in ArchivesSpace
 func (api *ArchivesSpaceAPI) CreateLocation(location *Location) (*ResponseMsg, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf("/locations")
+	api.UpdateCallPath(fmt.Sprintf("/locations"))
 	location.LockVersion = "0"
-	return api.CreateAPI(u.String(), location)
+	return api.CreateAPI(api.CallURL.String(), location)
 }
 
 // GetLocation retrieves a location record from ArchivesSpace
 func (api *ArchivesSpaceAPI) GetLocation(ID int) (*Location, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf("/locations/%d", ID)
+	api.UpdateCallPath(fmt.Sprintf("/locations/%d", ID))
 
 	location := new(Location)
-	err := api.GetAPI(u.String(), location)
+	err := api.GetAPI(api.CallURL.String(), location)
 	if err != nil {
 		return nil, fmt.Errorf("GetLocation(%d) %s", ID, err)
 	}
@@ -655,26 +628,23 @@ func (api *ArchivesSpaceAPI) GetLocation(ID int) (*Location, error) {
 
 // UpdateLocation updates an existing location record in ArchivesSpace
 func (api *ArchivesSpaceAPI) UpdateLocation(location *Location) (*ResponseMsg, error) {
-	u := api.URL
-	u.Path = location.URI
-	return api.UpdateAPI(u.String(), location)
+	api.UpdateCallPath(location.URI)
+	return api.UpdateAPI(api.CallURL.String(), location)
 }
 
 // DeleteLocation deletes a location from ArchivesSpace
 func (api *ArchivesSpaceAPI) DeleteLocation(location *Location) (*ResponseMsg, error) {
-	u := api.URL
-	u.Path = location.URI
-	return api.DeleteAPI(u.String(), location)
+	api.UpdateCallPath(location.URI)
+	return api.DeleteAPI(api.CallURL.String(), location)
 }
 
 // ListLocations return a list of Location IDs from ArchivesSpace
 func (api *ArchivesSpaceAPI) ListLocations() ([]int, error) {
-	u := api.URL
-	u.Path = fmt.Sprintf(`/locations`)
-	q := u.Query()
+	api.UpdateCallPath(fmt.Sprintf(`/locations`))
+	q := api.CallURL.Query()
 	q.Set("all_ids", "true")
-	u.RawQuery = q.Encode()
-	return api.ListAPI(u.String())
+	api.CallURL.RawQuery = q.Encode()
+	return api.ListAPI(api.CallURL.String())
 }
 
 // CreateDigitalObject - return a new digital object
@@ -683,10 +653,9 @@ func (api *ArchivesSpaceAPI) CreateDigitalObject(repoID int, obj *DigitalObject)
 	uriPrefix := fmt.Sprintf("/repositories/%d/digital_objects", repoID)
 	obj.JSONModelType = "digital_object"
 	obj.LockVersion = "0"
-	u := *api.URL
-	u.Path = uriPrefix
+	api.UpdateCallPath(uriPrefix)
 	// We need to create the object
-	responseMsg, responseErr := api.CreateAPI(u.String(), obj)
+	responseMsg, responseErr := api.CreateAPI(api.CallURL.String(), obj)
 	if responseErr != nil || responseMsg.Status != "created" {
 		return responseMsg, responseErr
 	}
@@ -699,13 +668,12 @@ func (api *ArchivesSpaceAPI) CreateDigitalObject(repoID int, obj *DigitalObject)
 
 // GetDigitalObject - return a given digital object
 func (api *ArchivesSpaceAPI) GetDigitalObject(repoID, objID int) (*DigitalObject, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf("/repositories/%d/digital_objects/%d", repoID, objID)
+	api.UpdateCallPath(fmt.Sprintf("/repositories/%d/digital_objects/%d", repoID, objID))
 
 	obj := new(DigitalObject)
-	err := api.GetAPI(u.String(), obj)
+	err := api.GetAPI(api.CallURL.String(), obj)
 	if err != nil {
-		return nil, fmt.Errorf("GetDigitalObject() %s, error, %s", u.String(), err)
+		return nil, fmt.Errorf("GetDigitalObject() %s, error, %s", api.CallURL.String(), err)
 	}
 	obj.ID = URIToID(obj.URI)
 	return obj, nil
@@ -713,27 +681,24 @@ func (api *ArchivesSpaceAPI) GetDigitalObject(repoID, objID int) (*DigitalObject
 
 // UpdateDigitalObject - returns an updated digital
 func (api *ArchivesSpaceAPI) UpdateDigitalObject(obj *DigitalObject) (*ResponseMsg, error) {
-	u := api.URL
-	u.Path = obj.URI
-	return api.UpdateAPI(u.String(), obj)
+	api.UpdateCallPath(obj.URI)
+	return api.UpdateAPI(api.CallURL.String(), obj)
 }
 
 // DeleteDigitalObject - return the results of deleting a digital object
 func (api *ArchivesSpaceAPI) DeleteDigitalObject(obj *DigitalObject) (*ResponseMsg, error) {
-	u := api.URL
-	u.Path = obj.URI
+	api.UpdateCallPath(obj.URI)
 	//FIXME: If we're Updating we may need to unlink existing accessions
-	return api.DeleteAPI(u.String(), obj)
+	return api.DeleteAPI(api.CallURL.String(), obj)
 }
 
 // ListDigitalObjects - return a list of digital object ids
 func (api *ArchivesSpaceAPI) ListDigitalObjects(repoID int) ([]int, error) {
-	u := api.URL
-	u.Path = fmt.Sprintf(`/repositories/%d/digital_objects`, repoID)
-	q := u.Query()
+	api.UpdateCallPath(fmt.Sprintf(`/repositories/%d/digital_objects`, repoID))
+	q := api.CallURL.Query()
 	q.Set("all_ids", "true")
-	u.RawQuery = q.Encode()
-	return api.ListAPI(u.String())
+	api.CallURL.RawQuery = q.Encode()
+	return api.ListAPI(api.CallURL.String())
 }
 
 // CreateResource - return a new resource
@@ -742,10 +707,9 @@ func (api *ArchivesSpaceAPI) CreateResource(repoID int, obj *Resource) (*Respons
 	uriPrefix := fmt.Sprintf("/repositories/%d/digital_objects", repoID)
 	obj.JSONModelType = "digital_object"
 	obj.LockVersion = "0"
-	u := *api.URL
-	u.Path = uriPrefix
+	api.UpdateCallPath(uriPrefix)
 	// We need to create the object
-	responseMsg, responseErr := api.CreateAPI(u.String(), obj)
+	responseMsg, responseErr := api.CreateAPI(api.CallURL.String(), obj)
 	if responseErr != nil || responseMsg.Status != "created" {
 		return responseMsg, responseErr
 	}
@@ -758,13 +722,12 @@ func (api *ArchivesSpaceAPI) CreateResource(repoID int, obj *Resource) (*Respons
 
 // GetResource - return a given resource
 func (api *ArchivesSpaceAPI) GetResource(repoID, objID int) (*Resource, error) {
-	u := *api.URL
-	u.Path = fmt.Sprintf("/repositories/%d/resources/%d", repoID, objID)
+	api.UpdateCallPath(fmt.Sprintf("/repositories/%d/resources/%d", repoID, objID))
 
 	obj := new(Resource)
-	err := api.GetAPI(u.String(), obj)
+	err := api.GetAPI(api.CallURL.String(), obj)
 	if err != nil {
-		return nil, fmt.Errorf("GetResource() %s, error, %s", u.String(), err)
+		return nil, fmt.Errorf("GetResource() %s, error, %s", api.CallURL.String(), err)
 	}
 	//obj.ID = URIToID(obj.URI)
 	return obj, nil
@@ -772,24 +735,21 @@ func (api *ArchivesSpaceAPI) GetResource(repoID, objID int) (*Resource, error) {
 
 // UpdateResource - returns an updated resource
 func (api *ArchivesSpaceAPI) UpdateResource(obj *Resource) (*ResponseMsg, error) {
-	u := api.URL
-	u.Path = obj.URI
-	return api.UpdateAPI(u.String(), obj)
+	api.UpdateCallPath(obj.URI)
+	return api.UpdateAPI(api.CallURL.String(), obj)
 }
 
 // DeleteResource - return the results of deleting a resource
 func (api *ArchivesSpaceAPI) DeleteResource(obj *Resource) (*ResponseMsg, error) {
-	u := api.URL
-	u.Path = obj.URI
-	return api.DeleteAPI(u.String(), obj)
+	api.UpdateCallPath(obj.URI)
+	return api.DeleteAPI(api.CallURL.String(), obj)
 }
 
 // ListResources - return a list of resource ids
 func (api *ArchivesSpaceAPI) ListResources(repoID int) ([]int, error) {
-	u := api.URL
-	u.Path = fmt.Sprintf(`/repositories/%d/resources`, repoID)
-	q := u.Query()
+	api.UpdateCallPath(fmt.Sprintf(`/repositories/%d/resources`, repoID))
+	q := api.CallURL.Query()
 	q.Set("all_ids", "true")
-	u.RawQuery = q.Encode()
-	return api.ListAPI(u.String())
+	api.CallURL.RawQuery = q.Encode()
+	return api.ListAPI(api.CallURL.String())
 }

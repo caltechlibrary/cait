@@ -16,8 +16,8 @@ if [ -f etc/setup.conf ]; then
     . etc/setup.conf
 fi
 
-ASPACE_API_TOKEN=$(curl -Fpassword=$CAIT_PASSWORD $CAIT_API_URL/users/$CAIT_USERNAME/login | jq -r '.session')
-if [ "$ASPACE_API_TOKEN" = "" ]; then
+CAIT_API_TOKEN=$(curl -Fpassword=$CAIT_PASSWORD $CAIT_API_URL/users/$CAIT_USERNAME/login | jq -r '.session')
+if [ "$CAIT_API_TOKEN" = "" ]; then
     echo "login $CAIT_API_URL/users/$CAIT_USERNAME/login failed"
     exit 1
 fi
@@ -28,7 +28,7 @@ PID=$!
 echo "Waiting for 5 seconds"
 sleep 5
 echo "Checking for $CAIT_SITE_URL/repositories/2/accession/$ACCESSION_ID"
-DATA=$(curl -H "X-ArchivesSpace-Session: $ASPACE_API_TOKEN" $CAIT_SITE_URL/repositories/2/accessions/$ACCESSION_ID)
+DATA=$(curl -H "X-ArchivesSpace-Session: $CAIT_API_TOKEN" $CAIT_SITE_URL/repositories/2/accessions/$ACCESSION_ID)
 echo "Data: $DATA"
 echo "Stopping servepage"
 kill $PID

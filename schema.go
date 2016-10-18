@@ -37,7 +37,8 @@ import (
 // ArchivesSpaceAPI is a struct holding the essentials for communicating
 // with the ArchicesSpace REST API
 type ArchivesSpaceAPI struct {
-	URL          *url.URL `json:"api_url"`
+	BaseURL      *url.URL `json:"api_url"`
+	CallURL      *url.URL `json:"api_call_url"`
 	AuthToken    string   `json:"token,omitempty"`
 	Username     string   `json:"username,omitempty"`
 	Password     string   `json:"password,omitempty"`

@@ -155,10 +155,10 @@ func containsElement(src []string, elem string) bool {
 }
 
 func exportArchivesSpace(api *cait.ArchivesSpaceAPI) error {
-	log.Println("Logging into ", api.URL)
+	log.Println("Logging into ", api.BaseURL)
 	err := api.Login()
 	if err != nil {
-		return fmt.Errorf("%s, error %s", api.URL, err)
+		return fmt.Errorf("%s, error %s", api.BaseURL, err)
 	}
 	//log.Printf("export TOKEN=%s\n", api.AuthToken)
 	err = api.ExportArchivesSpace()
@@ -970,6 +970,7 @@ func main() {
 	flag.BoolVar(&jsRunner, "js", false, "Run JavaScript enterpreter")
 	flag.BoolVar(&jsInteractive, "i", false, "Run JavaScript shell")
 
+	log.Printf("DEBUG caitAPIURL: %s\n", caitAPIURL)
 	api := cait.New(caitAPIURL, caitUsername, caitPassword)
 
 	flag.Parse()
