@@ -69,9 +69,13 @@ func uInt64ToInt(u uint64) (int, error) {
 
 // AttachSearchResults sets the value os the SearchResults field in SearchQuery structs.
 func (sq *SearchQuery) AttachSearchResults(sr *bleve.SearchResult) {
-	sq.Results = sr
-	sq.Total, _ = uInt64ToInt(sr.Total)
-	sq.Request = sr.Request
+	if sr != nil {
+		sq.Results = sr
+		sq.Total, _ = uInt64ToInt(sr.Total)
+		sq.Request = sr.Request
+	} else {
+		sq.Total = 0
+	}
 
 	v := url.Values{}
 	if sq.AllIDs == true {

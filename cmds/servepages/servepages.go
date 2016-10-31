@@ -269,11 +269,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
-	src, _ := json.Marshal(searchResults.Request.Query)
-	queryTerms := struct {
-		Match string `json:"match,omitempty"`
-	}{}
-	_ = json.Unmarshal(src, &queryTerms)
 
 	// q (ciat.SearchQuery) performs double duty as both the structure for query submission as well
 	// as carring the results to support paging and other types of navigation through

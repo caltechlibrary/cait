@@ -46,3 +46,4 @@ html/*
 ~\$*
 *.xlsx
 testoutput/*
+*.swp
