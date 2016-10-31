@@ -88,11 +88,11 @@ func TestArchiveSpaceAPI(t *testing.T) {
 	}
 
 	cait := New(caitURL, caitUsername, caitPassword)
-	if cait.URL == nil {
-		t.Errorf("%s\t%s", cait.URL.String(), caitURL)
+	if cait.BaseURL == nil {
+		t.Errorf("%s\t%s", cait.BaseURL.String(), caitURL)
 	}
-	if strings.Compare(cait.URL.String(), fmt.Sprintf("%s", caitURL)) != 0 {
-		t.Errorf("%s != %s\n", cait.URL.String(), caitURL)
+	if strings.Compare(cait.BaseURL.String(), fmt.Sprintf("%s", caitURL)) != 0 {
+		t.Errorf("%s != %s\n", cait.BaseURL.String(), caitURL)
 	}
 
 	if cait.IsAuth() == true {
@@ -100,7 +100,7 @@ func TestArchiveSpaceAPI(t *testing.T) {
 	}
 	err := cait.Login()
 	if err != nil {
-		t.Errorf("%s\t%s", err, cait.URL.String())
+		t.Errorf("%s\t%s", err, cait.BaseURL.String())
 		t.FailNow()
 	}
 	if cait.IsAuth() == false {
