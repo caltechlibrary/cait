@@ -29,6 +29,9 @@ fi
 # Index webpages
 $HOME/bin/indexpages
 
+# Generate sitemap
+$HOME/bin/sitemapper htdocs htdocs/sitemap.xml $CAIT_SITE_URL
+
 # You should now be ready to reload the search engine/servepage service
 if [ "$USER" = "root" ]; then
     /etc/init.d/servepages start
