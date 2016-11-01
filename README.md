@@ -8,7 +8,6 @@
 + genpages - a simple static page generator based on exported ArchivesSpace content
 + indexpages - for indexing exported JSON structures with [Bleve](https://github.com/blevesearch/bleve)
 + servepages - a web service providing public search services and content browsing
-+ xlsximporter - a tool for turning Excel spreadsheets in .xlsx format into JSON files suitable for importing into ArchivesSpace
 + sitemapper - a simple tool to generate a sitemap.xml file from pages rendered with genpages
 
 ## Requirements
@@ -17,11 +16,7 @@
 + Golang 1.7.3 or better to compile
 + Three 3rd party Go packages
     + [Bleve](https://github.com/blevesearch/bleve) v0.5.0 by [Blevesearch](http://blevesearch.com), Apache License, Version 2.0
-    + [Otto](https://github.com/robertkrimen/otto) by Robert Krimen, MIT license
-    + [xlsx](https://github.com/tealeg/xlsx) by Tealeg, BSD license
-    + [readline](https://github.com/chzyer/readline) Chzyer, MIT License, a go native readline implementation by
 + Caltech Library's Go packages
-    + [ostdlib](https://github.com/caltechlibrary/ostdlib), an otto standard library package used for JavaScript integration
     + [cait](https://github.com/caltechlibrary/cait), Caltech Library's ArchivesSpace integration tools
 
 ## Compiling
