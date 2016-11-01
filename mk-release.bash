@@ -4,7 +4,7 @@
 #
 RELEASE_NAME=cait
 
-for PROGNAME in cait genpages indexpages servepages sitemapper xlsximporter; do
+for PROGNAME in cait genpages indexpages servepages sitemapper; do
     echo "Compiling $PROGNAME for all architectures"
     env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/$PROGNAME cmds/$PROGNAME/$PROGNAME.go
     env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/$PROGNAME.exe cmds/$PROGNAME/$PROGNAME.go
