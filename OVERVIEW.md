@@ -11,8 +11,6 @@ All tools can be configured through environment variables. Some have additional 
 
 _cait_ command line utility is the workhorse for getting content out of ArchivesSpace and onto your local file system in a useful static form (JSON blobs).  _cait_ can be used to put some content back into ArchivesSpace. This gives you options for batch editing content with more general tools like R, Open Refine, etc.
 
-[cait](CAIT-JAVASCRIPT-README.md) also provides a JavaScript shell (repl) and script runner for working with [ArchicesSpace REST API](http://archivesspace.github.io/archivesspace/). It provides access to the same API provided internal to _cait_. Helpful for data migrations and fixes.
-
 ### genpages
 
 _genpages_ renders the content dumped by _cait_ into a website structure suitable for hosting with _servepages_ search engine and web server.  It does NOT talk directly to ArchivesSpace and as a result does not increase the load on your ArchivesSpace server.
@@ -27,25 +25,11 @@ _servepages_ is a web server and search engine. It is intended to run behind a m
 
 _servepages_ can be started manually but more typically would be brought up by your init process (e.g. /etc/init.d/servepages start). An example init file is provided
 
-### xlsximporter
-
-_xlsximporter_ is a utility that reads an Excel file in xlsx format and turns each row of a spreadsheet into a JSON object. By default the properties correspond to the column names but you can also provide a JavaScript file and callback that let's you customize the objects produced. This latter capability is useful when migrating content into ArchivesSpace.
-
-
 ## Workflow for website
 
 1. Export ArchivesSpace content with _cait_
 2. Generate pages with _genpages_
 3. Index pages with _indexpages_
-4. Serve content and search service with _servepages_
+5. Generate a sitemap with _sitemapper_
+6. Serve content and search service with _servepages_
 
-## Workflow for data fixes
-
-+ Export ArchivesSpace content as needed with _cait_
-+ Write a JavaScript program to make corrections or use _cait_ interactively to fix/update data
-
-## Workflow for importing data from Excel
-
-+ Make your Excel file
-+ Map the column and rows to ArchivesSpace objects in JavaScript
-+ Run _xlsximporter_ invoking the JavaScript mappings along with spreadsheet name and sheet number

@@ -1,9 +1,7 @@
 
 # The Utilities
 
-This document covers some examples of using the _cait_ command line utilities to export
-content from a production ArchivesSpace deployment to a local development ArchivesSpace deployment.
-The most recent version of this document can be found at https://github.com/caltechlibrary/cait.
+This document covers some examples of using the _cait_ command line utilities to export content from a production ArchivesSpace deployment to a local development ArchivesSpace deployment.  The most recent version of this document can be found at https://github.com/caltechlibrary/cait.
 
 
 ## Exporting from a production deployment

@@ -5,8 +5,7 @@
 
 ### Example nightly update
 
-This is an example script that could be run as a nightly cronjob. Output from the
-cait tools is suitable to sending to a log file (e.g. /Sites/archives.example.edu/logs/nightly-update.log)
+This is an example script that could be run as a nightly cronjob. Output from the cait tools is suitable to sending to a log file (e.g. /Sites/archives.example.edu/logs/nightly-update.log)
 
 ```shell
     #!/bin/bash

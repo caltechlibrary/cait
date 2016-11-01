@@ -3,12 +3,9 @@
 
 ## Compiled version
 
-*cait* is a set of command line programs run from a shell like Bash. If you download the
-repository a compiled version is in the dist directory. The compiled binary matching
-your computer type and operating system can be copied to a bin directory in your PATH.
+*cait* is a set of command line programs run from a shell like Bash. If you download the repository a compiled version is in the dist directory. The compiled binary matching your computer type and operating system can be copied to a bin directory in your PATH.
 
-Compiled versions are available for Mac OS X (amd64 processor), Linux (amd64), Windows
-(amd64) and Rapsberry Pi (both ARM6 and ARM7)
+Compiled versions are available for Mac OS X (amd64 processor), Linux (amd64), Windows (amd64) and Rapsberry Pi (both ARM6 and ARM7)
 
 ### Mac OS X
 
