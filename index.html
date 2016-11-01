@@ -26,11 +26,7 @@
 <p><a href="https://github.com/caltechlibrary/cait">cait</a> is a set of utilities written in the <a href="http://golang.org">Go</a> language that work with and augment the <a href="http://archivesspace.org">ArchivesSpace</a> API.</p>
 
 <ul>
-<li>cait - a command line utility for ArchivesSpace interaction (basic CRUD operations and export)
-
-<ul>
-<li><a href="CAIT-JAVASCRIPT-README.md">cait</a> also supports scripting ArchivesSpace API actions with JavaScript either via a file containing JavaScript or interactive.</li>
-</ul></li>
+<li>cait - a command line utility for ArchivesSpace interaction (basic CRUD operations and export)</li>
 <li>genpages - a simple static page generator based on exported ArchivesSpace content</li>
 <li>indexpages - for indexing exported JSON structures with <a href="https://github.com/blevesearch/bleve">Bleve</a></li>
 <li>servepages - a web service providing public search services and content browsing</li>
@@ -68,10 +64,6 @@
 <p>Here&rsquo;s a typical example of setting things up.</p>
 
 <pre><code>    go get github.com/blevesearch/bleve/...
-    go get github.com/rsdoiel/otto
-    go get github.com/tealeg/xlsx
-    go get github.com/chzyer/readline
-    go get github.com/caltechlibrary/ostdlib
     git clone git@github.com:caltechlibrary/cait.git
     cd cait
     mkdir bin
@@ -79,7 +71,6 @@
     go build -o bin/genpages  cmds/genpages/genpages.go
     go build -o bin/indexpages cmds/indexpages/indexpages.go
     go build -o bin/servepages cmds/servepages/servepages.go
-    go build -o bin/xlsximporter cmds/xlsximporter/xlsximporter.go
     go build -o bin/sitemapper cmds/sitemapper/sitemapper.go
 </code></pre>
 
@@ -128,9 +119,7 @@ source the file from your shell prompt by typing</p>
 
 <h3>Setting up a dev box</h3>
 
-<p>I run ArchivesSpace in a vagrant box for development use. You can find details to set that up at <a href="https://github.com/caltechlibrary/archivesspace_vagrant">github.com/caltechlibrary/archivesspace_vagrant</a>.
-I usually run the <a href="https://github.com/caltechlibrary/cait">cait</a> tools locally. You can see
-and example workflow in the document <a href="EXPORT-IMPORT.md">EXPORT-IMPORT.md</a>.</p>
+<p>I run ArchivesSpace in a vagrant box for development use. You can find details to set that up at <a href="https://github.com/caltechlibrary/archivesspace_vagrant">github.com/caltechlibrary/archivesspace_vagrant</a>.  I usually run the <a href="https://github.com/caltechlibrary/cait">cait</a> tools locally. You can see and example workflow in the document <a href="EXPORT-IMPORT.md">EXPORT-IMPORT.md</a>.</p>
 
 <h2>Utilities</h2>
 
@@ -233,12 +222,6 @@ uses the search page and results templates defined in CAIT_TEMPLATES.</p>
 </code></pre>
 
 <p>Or you could add a startup script to /etc/init.d/ as appropriate.</p>
-
-<h3><em>xlsximporter</em></h3>
-
-<p><em>xlsximporter</em> is a utilty to transform sheets from an Excel file in xlsx format to JSON blobs suitable for importation into ArchivesSpace (e.g. Digital Objects).  By default it transforms each row in the spreadsheet into an object where the property names correspond to the column headers (in the initial row of the spreadsheet).  You can perform more elaborate mappings using a javascript callback function.  You can see an example of that in the <em>xlsximporter-javascript-example</em> directory.</p>
-
-<p>The general workflow would be to transform you rows to JSON objects on your local disc with <em>xlsximporter</em> then use the <em>cait</em> utility to push the JSON blobs into ArchivesSpace itself.</p>
 
 <h3><em>sitemapper</em></h3>
 
