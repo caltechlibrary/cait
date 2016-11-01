@@ -1,6 +1,8 @@
 #
 # Simple Makefile for conviently testing, building and deploying experiment.
 #
+PROG = cait
+
 build: api.go cait.go export.go schema.go search.go views.go js.go
 	go build
 	go build -o bin/cait cmds/cait/cait.go
