@@ -33,6 +33,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -496,7 +497,12 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 			body, err := ioutil.ReadAll(r.Body)
 			if err == nil && verifySignature([]byte(webhookSecret), xGithubSignature, body) == true {
 				log.Printf("Webhook validated, running %q", webhookCommand)
-				//FIXME: Execute webhook command
+				out, err := exec.Command(webhookCommand).Output()
+				if err != nil {
+					log.Printf("Webhook error: %s", err)
+					return
+				}
+				log.Printf("Webhook out: %s", out)
 				return
 			}
 		}
