@@ -21,6 +21,9 @@ package main
 
 import (
 	"bytes"
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -51,7 +54,8 @@ var (
 
 	servepages provides search services defined by CAIT_SITE_URL for the
 	website content defined by CAIT_HTDOCS using the index defined
-	by CAIT_HTDOCS_INDEX.
+	by CAIT_HTDOCS_INDEX. Additionally a webhook call can be defined
+	to trigger an action such as pulling new site content.
 
  OPTIONS
 `
@@ -67,12 +71,21 @@ var (
 
    CAIT_TEMPLATES
 
+   CAIT_WEBHOOK_PATH
+   
+   CAIT_WEBHOOK_SECRET
+   
+   CAIT_WEBHOOK_COMMAND
+
 `
-	help         bool
-	indexName    string
-	htdocsDir    string
-	templatesDir string
-	serviceURL   *url.URL
+	help           bool
+	indexName      string
+	htdocsDir      string
+	templatesDir   string
+	serviceURL     *url.URL
+	webhookPath    string
+	webhookSecret  string
+	webhookCommand string
 
 	advancedPage []byte
 	basicPage    []byte
@@ -346,6 +359,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 func requestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//FIXME: add the response status returned.
+		log.Printf("Request: %s Path: %s RemoteAddr: %s UserAgent: %s\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
 		next.ServeHTTP(w, r)
 	})
 }
@@ -367,7 +381,7 @@ func multiViewPath(p string) string {
 func customRoutes(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Handle webhook route
-		if strings.HasPrefix(r.URL.Path, "/z/") == true {
+		if webhookPath != "" && strings.HasPrefix(r.URL.Path, webhookPath) == true {
 			webhookHandler(w, r)
 			return
 		}
@@ -419,6 +433,11 @@ func init() {
 	flag.BoolVar(&help, "h", false, "display this help message")
 	flag.BoolVar(&help, "help", false, "display this help message")
 
+	//NOTE: Webhook routes, secrets and command call
+	flag.StringVar(&webhookPath, "webhook-path", "", "the webhook path, e.g. /my-webhook/something")
+	flag.StringVar(&webhookSecret, "webhook-secret", "", "the secret to validate before executing command")
+	flag.StringVar(&webhookCommand, "webhook-command", "", "the command to execute if webhook validates")
+
 	templateName := path.Join(templatesDir, "advanced-search.html")
 	advancedPage, err = ioutil.ReadFile(templateName)
 	if err != nil {
@@ -438,12 +457,49 @@ func init() {
 	}
 }
 
+// signBody and verifySignature based on Gist https://gist.github.com/rjz/b51dc03061dbcff1c521
+func verifySignature(secret []byte, signature string, body []byte) bool {
+	signBody := func(secret, body []byte) []byte {
+		computed := hmac.New(sha1.New, secret)
+		computed.Write(body)
+		return []byte(computed.Sum(nil))
+	}
+
+	const signaturePrefix = "sha1="
+	const signatureLength = 45 // len(SignaturePrefix) + len(hex(sha1))
+
+	if len(signature) != signatureLength || !strings.HasPrefix(signature, signaturePrefix) {
+		return false
+	}
+
+	actual := make([]byte, 20)
+	hex.Decode(actual, []byte(signature[5:]))
+
+	return hmac.Equal(signBody(secret, body), actual)
+}
+
 func webhookHandler(w http.ResponseWriter, r *http.Request) {
+	// Always reeturn text/plain OK with a 200 to obscure that this actually is.
 	w.Header().Set("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusOK)
-	//FIXME: If secret matches trigger action. Else just ignore it and log
-	log.Printf("%s %s %s %s", r.Method, r.URL.String(), r.RemoteAddr, r.Host)
 	fmt.Fprintf(w, "OK")
+
+	log.Printf("Webhook Request: %s Path: %s RemoteAddr: %s UserAgent: %s\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
+	if strings.Compare(r.Method, "POST") == 0 {
+		header := r.Header
+		contentType := header.Get("Content-Type")
+		xGithubSignature := header.Get("X-Hub-Signature")
+		if strings.Compare(contentType, "application/json") == 0 && xGithubSignature != "" {
+			body, err := ioutil.ReadAll(r.Body)
+			if err == nil && verifySignature([]byte(webhookSecret), xGithubSignature, body) == true {
+				log.Printf("Webhook validated, running %q", webhookCommand)
+				//FIXME: Execute webhook command
+				return
+			}
+		}
+	}
+	log.Printf("Webhook invalid request method.")
+	return
 }
 
 func main() {
