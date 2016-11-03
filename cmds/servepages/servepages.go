@@ -345,7 +345,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 func requestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Printf("Request: %s Path: %s RemoteAddr: %s UserAgent: %s\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
+		//FIXME: add the response status returned.
 		next.ServeHTTP(w, r)
 	})
 }
@@ -364,8 +364,19 @@ func multiViewPath(p string) string {
 	return fmt.Sprintf("%s.html", p)
 }
 
-func searchRoutes(next http.Handler) http.Handler {
+func customRoutes(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Handle webhook route
+		if strings.HasPrefix(r.URL.Path, "/z/") == true {
+			webhookHandler(w, r)
+			return
+		}
+
+		// Treat any .cfm request as a /search/ request.
+		if strings.HasSuffix(r.URL.Path, ".cfm") == true {
+			r.URL.Path = "/search/"
+		}
+
 		// Handler are searches and results
 		if strings.HasPrefix(r.URL.Path, "/search/results/") == true {
 			resultsHandler(w, r)
@@ -375,13 +386,13 @@ func searchRoutes(next http.Handler) http.Handler {
 			searchHandler(w, r)
 			return
 		}
-		// If it is not a search request send it on to the next handler...
-		//FIXME: Should really make the path exists at the API level and update the filesystem if needed
+
 		// If this is a MultiViews style request (i.e. missing .html) then update r.URL.Path
 		if isMultiViewPath(r.URL.Path) == true {
 			p := multiViewPath(r.URL.Path)
 			r.URL.Path = p
 		}
+		// If we make it this far, fall back to the default handler
 		next.ServeHTTP(w, r)
 	})
 }
@@ -427,6 +438,14 @@ func init() {
 	}
 }
 
+func webhookHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	//FIXME: If secret matches trigger action. Else just ignore it and log
+	log.Printf("%s %s %s %s", r.Method, r.URL.String(), r.RemoteAddr, r.Host)
+	fmt.Fprintf(w, "OK")
+}
+
 func main() {
 	var err error
 	flag.Parse()
@@ -442,11 +461,11 @@ func main() {
 	defer index.Close()
 
 	// Send static file request to the default handler,
-	// search routes are handled by middleware searchRoutes()
+	// search routes are handled by middleware customRoutes()
 	http.Handle("/", http.FileServer(http.Dir(htdocsDir)))
 
 	log.Printf("Listening on %s\n", serviceURL.String())
-	err = http.ListenAndServe(serviceURL.Host, requestLogger(searchRoutes(http.DefaultServeMux)))
+	err = http.ListenAndServe(serviceURL.Host, requestLogger(customRoutes(http.DefaultServeMux)))
 	if err != nil {
 		log.Fatal(err)
 	}
