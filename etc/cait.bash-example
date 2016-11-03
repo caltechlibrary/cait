@@ -14,3 +14,9 @@ export CAIT_HTDOCS_INDEX=htdocs.bleve
 export CAIT_TEMPLATES=templates/default
 export CAIT_SITE_URL=http://localhost:8501
 
+#
+# Configure webhook handling
+#
+export CAIT_WEBHOOK_PATH="/my-webhook"
+export CAIT_WEBHOOK_SECRET="!!!SOME LONG SECRET KEY VALUE HERE!!!"
+export CAIT_WEBHOOK_COMMAND="/Sites/archives.example.edu/scripts/do-webhook.bash"

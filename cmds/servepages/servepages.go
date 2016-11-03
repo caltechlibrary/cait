@@ -426,6 +426,10 @@ func init() {
 	htdocsDir = getenv("CAIT_HTDOCS", "htdocs")
 	indexName = getenv("CAIT_HTDOCS_INDEX", "htdocs.bleve")
 	templatesDir = getenv("CAIT_TEMPLATES", "templates/default")
+	webhookPath = getenv("CAIT_WEBHOOK_PATH", "")
+	webhookSecret = getenv("CAIT_WEBHOOK_SECRET", "")
+	webhookCommand = getenv("CAIT_WEBHOOK_COMMAND", "")
+
 	flag.StringVar(&uri, "search", uri, "The URL to listen on for search requests")
 	flag.StringVar(&indexName, "index", indexName, "specify the Bleve index to use")
 	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "specify where to write the HTML files to")
@@ -433,10 +437,9 @@ func init() {
 	flag.BoolVar(&help, "h", false, "display this help message")
 	flag.BoolVar(&help, "help", false, "display this help message")
 
-	//NOTE: Webhook routes, secrets and command call
-	flag.StringVar(&webhookPath, "webhook-path", "", "the webhook path, e.g. /my-webhook/something")
-	flag.StringVar(&webhookSecret, "webhook-secret", "", "the secret to validate before executing command")
-	flag.StringVar(&webhookCommand, "webhook-command", "", "the command to execute if webhook validates")
+	flag.StringVar(&webhookPath, "webhook-path", webhookPath, "the webhook path, e.g. /my-webhook/something")
+	flag.StringVar(&webhookSecret, "webhook-secret", webhookSecret, "the secret to validate before executing command")
+	flag.StringVar(&webhookCommand, "webhook-command", webhookCommand, "the command to execute if webhook validates")
 
 	templateName := path.Join(templatesDir, "advanced-search.html")
 	advancedPage, err = ioutil.ReadFile(templateName)
