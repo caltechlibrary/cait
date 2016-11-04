@@ -29,11 +29,14 @@ Overview steps taken
     mkdir -p /Sites/archives.example.edu/bin
     cp -v dist/linux-amd64/* /Sites/archives.example.edu/bin/
     # Step 4
-    sudo cp -v etc/cait.bash-example /etc/cait.bash
-    sudo vi /etc/cait.bash
-    . /etc/cait.bash
+    cp -v etc/cait.bash-example etc/cait.bash
+    # e.g. setup the value of $HOME to /Sites/archives.example.edu
+    # If needed include /Sites/archives.example.edu in PATH
+    vi etc/cait.bash
+    . etc/cait.bash
     # Step 5
     cp -v scripts/nightly-update.bash /Sites/archives.example.edu/bin/
+    # e.g. Set the value of HOME to /Sites/archives.example.edu
     vi /Sites/archives.example.edu/bin/nightly-update.bash
     # Step 6
     cait -v
