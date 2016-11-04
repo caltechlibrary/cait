@@ -23,6 +23,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -76,14 +77,18 @@ func main() {
 	}
 
 	log.Printf("Starting map of %s\n", args[0])
-	filepath.Walk(args[0], func(path string, info os.FileInfo, err error) error {
-		if strings.HasSuffix(path, ".html") {
-			finfo := new(locInfo)
-			finfo.Loc = fmt.Sprintf("%s%s", args[2], strings.TrimPrefix(path, args[0]))
-			yr, mn, dy := info.ModTime().Date()
-			finfo.LastMod = fmt.Sprintf("%d-%0.2d-%0.2d", yr, mn, dy)
-			log.Printf("Adding %s\n", finfo.Loc)
-			locList = append(locList, finfo)
+	filepath.Walk(args[0], func(p string, info os.FileInfo, err error) error {
+		if strings.HasSuffix(p, ".html") {
+			fname := path.Base(p)
+			//NOTE: You can skip the eror pages in the sitemap
+			if strings.HasPrefix(fname, "50") == false && strings.HasPrefix(p, "40") == false {
+				finfo := new(locInfo)
+				finfo.Loc = fmt.Sprintf("%s%s", args[2], strings.TrimPrefix(p, args[0]))
+				yr, mn, dy := info.ModTime().Date()
+				finfo.LastMod = fmt.Sprintf("%d-%0.2d-%0.2d", yr, mn, dy)
+				log.Printf("Adding %s\n", finfo.Loc)
+				locList = append(locList, finfo)
+			}
 		}
 		return nil
 	})
