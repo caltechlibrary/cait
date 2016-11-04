@@ -228,7 +228,9 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		terms = append(terms, fmt.Sprintf("-%s", strings.TrimSpace(s)))
 	}
 	if len(terms) > 0 {
-		conQry = append(conQry, bleve.NewQueryStringQuery(strings.Join(terms, " ")))
+		qString := strings.Join(terms, " ")
+		fmt.Printf("DEBUG qString: %q\n", qString)
+		conQry = append(conQry, bleve.NewQueryStringQuery(qString))
 	}
 
 	qry := bleve.NewConjunctionQuery(conQry)
