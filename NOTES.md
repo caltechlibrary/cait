@@ -1,12 +1,12 @@
 
-# General development notes
+# General deployment notes
 
 ## Running things in a production setting
 
 For illustration purposes the deployment directory and site URL,
 and release version are
 
-* /Sites/archives.example.edu
++ /Sites/archives.example.edu
 + http://archives.example.edu
 + v0.0.8  
 
@@ -19,6 +19,8 @@ Overview steps taken
 5. copy and modify scripts/nightly-update.bash for running under cron
 6. Test everything works
 7. If everything is OK then setup cronjob
+
+Example shell commands run
 
 ```shell
     # Step 1
@@ -50,35 +52,6 @@ Overview steps taken
     cronjob -l
 ```
 
-
-### Example nightly update
-
-This is an example script that could be run as a nightly cronjob. Output from the cait tools is suitable to sending to a log file (e.g. /Sites/archives.example.edu/logs/nightly-update.log)
-
-```shell
-    #!/bin/bash
-    #
-
-    # This is an example cronjob to be run from the root account.
-
-
-    # Load the cait configuration
-    . /etc/cait.bash
-
-    # Change directory to where cait is installed
-    cd /Sites/archives.example.edu/
-    # Export the current content from ArchivesSpace
-    ./bin/cait archivesspace export
-    # Generate webpages
-    ./bin/genpages
-    # Index webpages
-    ./bin/indexpages
-
-    # You should now be ready to reload the search engine
-    /etc/init.d/servepages stop
-    /etc/init.d/servepages start
-```
-
 ### Example cronjob
 
 ```shell
@@ -93,9 +66,8 @@ This is an example script that could be run as a nightly cronjob. Output from th
     #  day of week   0-7 (0 or 7 is Sun, or use names)
     #
     # Run archives site update everyday at 6:30am.
-    30 6 * * * /Sites/archives.example.edu/scripts/nightly-update.sh >> /Sites/archives.example.edu/logs/nightly-update.log 2>&1
+    30 6 * * * /Sites/archives.example.edu/bin/nightly-update.sh >> /Sites/archives.example.edu/logs/nightly-update.log 2>&1
 ```
-
 
 ## Reference Links
 
