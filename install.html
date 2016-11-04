@@ -23,6 +23,8 @@
 <section>
 <h1>Installation</h1>
 
+<p>This is generalized instructions for a release.  For deployment suggestions see NOTES.md</p>
+
 <h2>Compiled version</h2>
 
 <p><em>cait</em> is a set of command line programs run from a shell like Bash. If you download the repository a compiled version is in the dist directory. The compiled binary matching your computer type and operating system can be copied to a bin directory in your PATH.</p>
@@ -77,16 +79,11 @@
 
 <h2>Compiling from source</h2>
 
-<p>If you have go v1.7 or better installed then should be able to &ldquo;go get&rdquo; to install all the <strong>cait</strong> utilities and
-package. You will need the GOBIN environment variable set. In this example I&rsquo;ve set it to $HOME/bin.</p>
-
-<pre><code>    GOBIN=$HOME/bin
-    go get github.com/caltechlibrary/cait/...
-</code></pre>
-
-<p>or</p>
-
-<pre><code>    git clone https://github.com/caltechlibrary/cait src/github.com/caltechlibrary/cait
+<pre><code class="language-shell">    go get github.com/blevesearch/bleve/...
+    cd src/github.com/blevesearch/belve
+    git checkout v0.5.0
+    cd
+    go get github.com/caltechlibrary/cait
     cd src/github.com/caltechlibrary/cait
     make
     make test
