@@ -3,7 +3,6 @@
 
 ## Action Item
 
-+ Make -h, -v options consistant
 + Improve logging
 
 ### Bugs

@@ -3,6 +3,52 @@
 
 ## Running things in a production setting
 
+For illustration purposes the deployment directory and site URL,
+and release version are
+
+* /Sites/archives.example.edu
++ http://archives.example.edu
++ v0.0.8  
+
+Overview steps taken
+
+1. Get the release zip file from http://github.com/caltechlibrary/cait/releases/latest
+2. unzip the release file
+3. copy the binaries for the appropriate architecture (e.g. linux-amd64) to an appropraite bin directory (e.g. /Sites/archives.example.edu/bin)
+4. copy, modify, and source the example configuration file (e.g. etc/cait.bash-example to /etc/cait.bash)
+5. copy and modify scripts/nightly-update.bash for running under cron
+6. Test everything works
+7. If everything is OK then setup cronjob
+
+```shell
+    # Step 1
+    curl -O https://github.com/caltechlibrary/cait/releases/download/v0.0.8/cait-binary-release.zip
+    # Step 2
+    unzip cait-binary-release.zip
+    # Step 3
+    mkdir -p /Sites/archives.example.edu/bin
+    cp -v dist/linux-amd64/* /Sites/archives.example.edu/bin/
+    # Step 4
+    sudo cp -v etc/cait.bash-example /etc/cait.bash
+    sudo vi /etc/cait.bash
+    . /etc/cait.bash
+    # Step 5
+    cp -v scripts/nightly-update.bash /Sites/archives.example.edu/bin/
+    vi /Sites/archives.example.edu/bin/nightly-update.bash
+    cronjob -e
+    # Step 6
+    cait -v
+    genpages -v
+    indexpages -v
+    sitemapper -v
+    servepages -v
+    bin/nightly-update.bash
+    # Step 7
+    cronjob -e
+    cronjob -l
+```
+
+
 ### Example nightly update
 
 This is an example script that could be run as a nightly cronjob. Output from the cait tools is suitable to sending to a log file (e.g. /Sites/archives.example.edu/logs/nightly-update.log)
@@ -15,7 +61,7 @@ This is an example script that could be run as a nightly cronjob. Output from th
 
 
     # Load the cait configuration
-    . /etc/cait.conf
+    . /etc/cait.bash
 
     # Change directory to where cait is installed
     cd /Sites/archives.example.edu/
