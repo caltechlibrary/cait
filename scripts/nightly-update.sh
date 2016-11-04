@@ -1,6 +1,10 @@
 #!/bin/bash
 #
 
+# You can set the "HOME" directory for the deployment.
+# e.g. /Sites/archives.example.edu
+# export HOME=/Sites/archives.example.edu
+
 # This is an example cronjob to be run from the root account.
 function consolelog {
     echo $(date +"%Y/%m/%d %H:%M:%S")" $@"
@@ -12,10 +16,8 @@ cd $HOME
 
 consolelog "Working path $(pwd)"
 # Load the cait configuration
-if [ "$USER" = "root" ] && [ -f /etc/cait.bash ]; then
-    consolelog "Configuration /etc/cait.bash"
-    . /etc/cait.bash
-elif [ -f $HOME/etc/cait.bash ]; then
+if [ -f $HOME/etc/cait.bash ]; then
+    consolelog "Sourcing configuration $HOME/etc/cait.bash"
     . $HOME/etc/cait.bash
 fi
 

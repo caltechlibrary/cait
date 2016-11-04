@@ -41,9 +41,9 @@ type command struct {
 }
 
 var (
-	help    = flag.Bool("help", false, "Display the help page")
-	payload = flag.String("input", "", "Use this filepath for the payload")
-	version = flag.Bool("version", false, "Display the version info")
+	showHelp    bool
+	payload     string
+	showVersion bool
 )
 
 var (
@@ -71,9 +71,9 @@ var (
 // These are the global environment variables defaults used by various combinations of subjects and actions
 var (
 	description = `
-  USAGE: cait SUBJECT ACTION [OPTIONS|PAYLOAD]
+  USAGE: %s SUBJECT ACTION [OPTIONS|PAYLOAD]
 
-  cait is a command line utility for interacting with ArchivesSpace.
+  %s is a command line utility for interacting with ArchivesSpace.
   The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
 
     SUBJECT can be %s.
@@ -90,7 +90,7 @@ var (
 	configuration = `
  CONFIGURATION
 
-  cait also relies on the shell environment for information about connecting
+  %s also relies on the shell environment for information about connecting
   to ArchivesSpace. The following shell variables are used
 
     CAIT_API_URL           (e.g. http://localhost:8089)
@@ -101,7 +101,7 @@ var (
 
   EXAMPLES:
 
-  	cait repository create '{"repo_code":"MyTest","name":"My Test Repository"}'
+  	%s repository create '{"repo_code":"MyTest","name":"My Test Repository"}'
 
   The subject is "repository", the action is "create", the target is "MyTest"
   and the options are "My Test Repository".
@@ -111,11 +111,11 @@ var (
 
   You can check to see what repositories exists with
 
-    cait repository list
+    %s repository list
 
   Or for a specific repository by ID with
 
-    cait repository list '{"uri": "/repositories/2"}'
+    %s repository list '{"uri": "/repositories/2"}'
 
   Other SUBJECTS and ACTIONS work in a similar fashion.
 
@@ -130,14 +130,17 @@ var (
 	caitTemplates    = `templates`
 )
 
-func usage() {
+func usage(appName, version string) {
 	fmt.Printf(description,
+		appName,
+		appName,
 		strings.Join(subjects, ", "),
 		strings.Join(actions, ", "))
 	flag.VisitAll(func(f *flag.Flag) {
 		fmt.Printf("\t-%s\t%s\n", f.Name, f.Usage)
 	})
-	fmt.Println(configuration)
+	fmt.Printf(configuration, appName, appName, appName, appName)
+	fmt.Printf("\n%s %s\n", appName, version)
 	os.Exit(0)
 }
 
@@ -948,7 +951,7 @@ func getenv(envvar, defaultValue string) string {
 	return defaultValue
 }
 
-func main() {
+func init() {
 	caitAPIURL = getenv("CAIT_API_URL", caitAPIURL)
 	caitUsername = getenv("CAIT_USERNAME", caitUsername)
 	caitPassword = getenv("CAIT_PASSWORD", caitPassword)
@@ -958,23 +961,28 @@ func main() {
 	caitHtdocsIndex = getenv("CAIT_HTDOCS_INDEX", caitHtdocsIndex)
 	caitTemplates = getenv("CAIT_TEMPLATES", caitTemplates)
 
-	flag.BoolVar(help, "h", false, "Display the help page")
-	flag.StringVar(payload, "I", "", "Use this filepath for the payload")
-	flag.BoolVar(version, "v", false, "Display version info")
+	flag.BoolVar(&showHelp, "h", false, "Display the help page")
+	flag.BoolVar(&showHelp, "help", false, "Display the help page")
+	flag.StringVar(&payload, "I", "", "Use this filepath for the payload")
+	flag.StringVar(&payload, "input", "", "Use this filepath for the payload")
+	flag.BoolVar(&showVersion, "v", false, "Display version info")
+	flag.BoolVar(&showVersion, "version", false, "Display version info")
+}
 
-	api := cait.New(caitAPIURL, caitUsername, caitPassword)
+func main() {
+	appName := path.Base(os.Args[0])
 
 	flag.Parse()
-	if *help == true {
-		usage()
+	if showHelp == true {
+		usage(appName, cait.Version)
 	}
 
-	if *version == true {
-		fmt.Printf("Version: %s\n", cait.Version)
+	if showVersion == true {
+		fmt.Printf("%s %s\n", appName, cait.Version)
 		os.Exit(0)
 	}
 
-	args := os.Args[1:]
+	args := flag.Args()
 	if len(args) < 2 {
 		log.Fatalf("Missing commands options. For more info try: cait -h")
 	}
@@ -985,21 +993,10 @@ func main() {
 	}
 	os.Args = args[1:]
 
-	flag.Parse()
-
-	if *help == true {
-		usage()
-	}
-
-	if *version == true {
-		log.Printf("Version: %s\n", cait.Version)
-		os.Exit(0)
-	}
-
-	if *payload != "" {
-		src, err := ioutil.ReadFile(*payload)
+	if payload != "" {
+		src, err := ioutil.ReadFile(payload)
 		if err != nil {
-			log.Fatalf("Cannot read %s", *payload)
+			log.Fatalf("Cannot read %s", payload)
 		}
 		cmd.Payload = fmt.Sprintf("%s", src)
 	}
@@ -1007,6 +1004,8 @@ func main() {
 	if cmd.Subject == "agent" && len(args) > 2 {
 		cmd.Options = []string{args[2]}
 	}
+
+	api := cait.New(caitAPIURL, caitUsername, caitPassword)
 	src, err := runCmd(api, cmd)
 	if err != nil {
 		fmt.Println(err)

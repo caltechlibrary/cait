@@ -1,6 +1,8 @@
 
 # Installation
 
+This is generalized instructions for a release.  For deployment suggestions see NOTES.md
+
 ## Compiled version
 
 *cait* is a set of command line programs run from a shell like Bash. If you download the repository a compiled version is in the dist directory. The compiled binary matching your computer type and operating system can be copied to a bin directory in your PATH.
@@ -45,18 +47,12 @@ If you are using a Raspberry Pi 2 or later use the ARM7 binary, ARM6 is only for
 
 ## Compiling from source
 
-If you have go v1.7 or better installed then should be able to "go get" to install all the **cait** utilities and
-package. You will need the GOBIN environment variable set. In this example I've set it to $HOME/bin.
-
-```
-    GOBIN=$HOME/bin
-    go get github.com/caltechlibrary/cait/...
-```
-
-or
-
-```
-    git clone https://github.com/caltechlibrary/cait src/github.com/caltechlibrary/cait
+```shell
+    go get github.com/blevesearch/bleve/...
+    cd src/github.com/blevesearch/belve
+    git checkout v0.5.0
+    cd
+    go get github.com/caltechlibrary/cait
     cd src/github.com/caltechlibrary/cait
     make
     make test

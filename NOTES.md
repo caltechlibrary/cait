@@ -1,71 +1,56 @@
 
-# General development notes
+# General deployment notes
 
-## Installation
+For illustration purposes the deployment directory and site URL,
+and release version are
 
-1. Build a new release (or pick one available at https://github.com/caltechlibrary/cait/latest). 
-2. Copy the zip archive to the production machine
-3. Extract the appropriate binaries (e.g. linux-amd42/*) to an appropriate bin directory (e.g. /Sites/archives.example.edu/bin)
-4. Create a configuration and source it to your environment (e.g. `. /etc/cait.bash`)
-5. Test the commands (e.g. cait, genpages, indexpages, sitemapper, servepages)
-6. Setup cronjob to run and harvest ArchivesSpace content (see below)
-7. Manually run your nightly script and watch the logs for errors.
-8. Fix deployment bugs as needed.
++ /Sites/archives.example.edu
++ http://archives.example.edu
++ v0.0.8  
 
-Here's an example of the commands for install v0.0.8 on a Linux machine
-where the deployment directory is /Sites/archives.example.edu.
+Overview steps taken
+
+1. Get the release zip file from http://github.com/caltechlibrary/cait/releases/latest
+2. unzip the release file
+3. copy the binaries for the appropriate architecture (e.g. linux-amd64) to an appropraite bin directory (e.g. /Sites/archives.example.edu/bin)
+4. copy, modify, and source the example configuration file (e.g. etc/cait.bash-example to /etc/cait.bash)
+5. copy and modify scripts/nightly-update.bash for running under cron
+6. Test everything works
+7. If everything is OK then setup cronjob
+
+Example shell commands run
 
 ```shell
+    # Step 1
     curl -O https://github.com/caltechlibrary/cait/releases/download/v0.0.8/cait-binary-release.zip
+    # Step 2
     unzip cait-binary-release.zip
-    cp -v dist/linix-amd64/* /Sites/archives.example.edu/bin/
-    sudo cp -v dist/etc/setup.conf-example /etc/cait.bash
-    # Edit /etc/cait.bash to make sense for your envinronment
-    # E.g. add "export PATH=/Sites/archives.example.edu/bin:$PATH"
-    # for this example and set the other CAIT_* variables.
-    sudo vi /etc/cait.bash
-    # Source the configuration into your environment
-    . /etc/cait.bash
+    # Step 3
+    mkdir -p /Sites/archives.example.edu/bin
+    cp -v dist/linux-amd64/* /Sites/archives.example.edu/bin/
+    # Step 4
+    cp -v etc/cait.bash-example etc/cait.bash
+    # e.g. setup the value of $HOME to /Sites/archives.example.edu
+    # If needed include /Sites/archives.example.edu in PATH
+    vi etc/cait.bash
+    . etc/cait.bash
+    # Step 5
+    cp -v scripts/nightly-update.bash /Sites/archives.example.edu/bin/
+    # e.g. Set the value of HOME to /Sites/archives.example.edu
+    vi /Sites/archives.example.edu/bin/nightly-update.bash
+    # Step 6
     cait -v
     genpages -v
     indexpages -v
-    sitemapepr -v
-    serverpages -v
-    # Now test your nightly script, watch the output for problems
-    /Sites/archives.example.edu/scripts/nightly-update.bash
+    sitemapper -v
+    servepages -v
+    bin/nightly-update.bash
+    # Step 7
+    cronjob -e
+    cronjob -l
 ```
 
-## Running things in a production setting
-
-### Example nightly update
-
-This is an example script that could be run as a nightly cronjob. Output from the cait tools is suitable to sending to a log file (e.g. /Sites/archives.example.edu/logs/nightly-update.log)
-
-```shell
-    #!/bin/bash
-    #
-
-    # This is an example cronjob to be run from the root account.
-
-
-    # Load the cait configuration
-    . /etc/cait.conf
-
-    # Change directory to where cait is installed
-    cd /Sites/archives.example.edu/
-    # Export the current content from ArchivesSpace
-    ./bin/cait archivesspace export
-    # Generate webpages
-    ./bin/genpages
-    # Index webpages
-    ./bin/indexpages
-
-    # You should now be ready to reload the search engine
-    /etc/init.d/servepages stop
-    /etc/init.d/servepages start
-```
-
-### Example cronjob
+## Example cronjob
 
 ```shell
     #!/bin/bash
@@ -78,10 +63,9 @@ This is an example script that could be run as a nightly cronjob. Output from th
     #  month         1-12 (or names, see below)
     #  day of week   0-7 (0 or 7 is Sun, or use names)
     #
-    # Run archives site update everyday at 3:00am.
-    0 3 * * * /Sites/archives.example.edu/scripts/nightly-update.sh >> /Sites/archives.example.edu/logs/nightly-update.log 2>&1
+    # Run archives site update everyday at 6:30am.
+    30 6 * * * /Sites/archives.example.edu/bin/nightly-update.sh >> /Sites/archives.example.edu/logs/nightly-update.log 2>&1
 ```
-
 
 ## Reference Links
 

@@ -13,5 +13,5 @@ for PROGNAME in cait genpages indexpages servepages sitemapper; do
     env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspberrypi-arm7/$PROGNAME cmds/$PROGNAME/$PROGNAME.go
 done
 echo "Zipping release $RELEASE_NAME"
-zip -r $RELEASE_NAME-binary-release.zip README.md INSTALL.md LICENSE dist/*
+zip -r $RELEASE_NAME-binary-release.zip README.md INSTALL.md NOTES.md etc/cait.bash-example scripts/nightly-update.bash templates/* LICENSE dist/*
 

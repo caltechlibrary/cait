@@ -26,6 +26,9 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	// Caltech Library packages
+	"github.com/caltechlibrary/cait"
 )
 
 type locInfo struct {
@@ -34,43 +37,56 @@ type locInfo struct {
 }
 
 var (
-	help       bool
-	changefreq string
-	locList    []*locInfo
+	showHelp    bool
+	showVersion bool
+	changefreq  string
+	locList     []*locInfo
 )
 
-func usage() {
+func usage(appName, version string) {
 	fmt.Println(`
- USAGE: sitemapper [OPTIONS] HTDOCS_PATH MAP_FILENAME PUBLIC_BASE_URL
+ USAGE: %s [OPTIONS] HTDOCS_PATH MAP_FILENAME PUBLIC_BASE_URL
 
  OVERVIEW
 
  Generates a sitemap for the accession pages.
 
-`)
+`, appName)
 	flag.VisitAll(func(f *flag.Flag) {
 		fmt.Printf("\t-%s\t%s\n", f.Name, f.Usage)
 	})
 	fmt.Println(`
  EXAMPLE
 
-    sitemapper htdocs htdocs/sitemap.xml http://archives.example.edu
+    %s htdocs htdocs/sitemap.xml http://archives.example.edu
 
-`)
+`, appName)
+	fmt.Printf("\n%s %s\n", appName, version)
 	os.Exit(0)
 }
 
 func init() {
-	flag.BoolVar(&help, "h", false, "display this help message")
-	flag.BoolVar(&help, "help", false, "display this help message")
+	flag.BoolVar(&showHelp, "h", false, "display this help message")
+	flag.BoolVar(&showHelp, "help", false, "display this help message")
+	flag.BoolVar(&showVersion, "v", false, "display version info")
+	flag.BoolVar(&showVersion, "version", false, "display version info")
 	flag.StringVar(&changefreq, "c", "daily", "Set the change frequencely value, e.g. daily, weekly, monthly")
 }
 
 func main() {
+	appName := path.Base(os.Args[0])
 	flag.Parse()
 	args := flag.Args()
-	if help == true || len(args) != 3 {
-		usage()
+	if showHelp == true {
+		usage(appName, cait.Version)
+	}
+	if showVersion == true {
+		fmt.Printf("%s %s\n", appName, cait.Version)
+		os.Exit(0)
+	}
+	if len(args) != 3 {
+		fmt.Printf("%s requires 3 parameters, see %s --help", appName, appName)
+		os.Exit(1)
 	}
 	if changefreq == "" {
 		changefreq = "daily"
