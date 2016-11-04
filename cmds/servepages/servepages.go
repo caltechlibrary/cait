@@ -155,7 +155,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		pageInclude = "results-search.include"
 	)
 
-	query := r.URL.Query()
+	urlQuery := r.URL.Query()
 	err := r.ParseForm()
 	if err != nil {
 		w.Header().Set("Content-Type", "text/plain")
@@ -166,7 +166,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	submission := make(map[string]interface{})
 	// Basic Search results
 	if r.Method == "GET" {
-		for k, v := range query {
+		for k, v := range urlQuery {
 			if k == "all_ids" {
 				b, _ := strconv.ParseBool(strings.Join(v, ""))
 				submission[k] = b
@@ -210,29 +210,41 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	// q_excluded NewQueryStringQuery with a - prefix for each strings.Feilds(q_excluded) value
 	//
 
-	//NOTE: We start with an empty query, then add based on what we find.
-	qry := bleve.NewConjunctionQuery(nil)
-
+	//DEBUG START
+	//FIXME: Start bug-cait-44
+	var (
+		conQry []bleve.Query
+	)
 	if q.Q != "" {
-		qry.AddQuery(bleve.NewQueryStringQuery(q.Q))
+		conQry = append(conQry, bleve.NewQueryStringQuery(q.Q))
 	}
 	if q.QExact != "" {
-		qry.AddQuery(bleve.NewMatchPhraseQuery(q.QExact))
+		conQry = append(conQry, bleve.NewMatchPhraseQuery(q.QExact))
 	}
 	if q.QRequired != "" {
 		for _, s := range strings.Fields(q.QRequired) {
-			qry.AddQuery(bleve.NewQueryStringQuery(fmt.Sprintf("+%s", s)))
+			conQry = append(conQry, bleve.NewQueryStringQuery(fmt.Sprintf("+%s", s)))
 		}
 	}
 	if q.QExcluded != "" {
 		for _, s := range strings.Fields(q.QExcluded) {
-			qry.AddQuery(bleve.NewQueryStringQuery(fmt.Sprintf("-%s", s)))
+			conQry = append(conQry, bleve.NewQueryStringQuery(fmt.Sprintf("-%s", s)))
 		}
 	}
+	qry := bleve.NewConjunctionQuery(conQry)
 	if q.Size == 0 {
 		q.Size = 10
 	}
 	search := bleve.NewSearchRequestOptions(qry, q.Size, q.From, q.Explain)
+
+	if search == nil {
+		log.Printf("DEBUG Bleve can't build new search request options %v, %s", qry, err)
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("%s", err)))
+		return
+	}
+	//FIXME: End bug-cait-44
+	//DEBUG END
 
 	search.Highlight = bleve.NewHighlight()
 	search.Highlight.AddField("title")
