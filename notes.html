@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Caltech Library's Digital Library Development Sandbox</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<header>
+<a href="http://library.caltech.edu"><img src="assets/liblogo.gif" alt="Caltech Library logo"></a>
+</header>
+<nav>
+<ul>
+<li><a href="/">Home</a></li>
+<li><a href="./">cait</a></li>
+<li><a href="./install.html">INSTALL</a></li>
+<li><a href="./notes.html">NOTES</a></li>
+<li><a href="./license.html">LICENSE</a></li>
+<li><a href="https://github.com/caltechlibrary/cait">Github</a></li>
+</ul>
+
+</nav>
+
+<section>
+<h1>General deployment notes</h1>
+
+<p>For illustration purposes the deployment directory and site URL,
+and release version are</p>
+
+<ul>
+<li>/Sites/archives.example.edu</li>
+<li><a href="http://archives.example.edu">http://archives.example.edu</a></li>
+<li>v0.0.8<br /></li>
+</ul>
+
+<p>Overview steps taken</p>
+
+<ol>
+<li>Get the release zip file from <a href="http://github.com/caltechlibrary/cait/releases/latest">http://github.com/caltechlibrary/cait/releases/latest</a></li>
+<li>unzip the release file</li>
+<li>copy the binaries for the appropriate architecture (e.g. linux-amd64) to an appropraite bin directory (e.g. /Sites/archives.example.edu/bin)</li>
+<li>copy, modify, and source the example configuration file (e.g. etc/cait.bash-example to /etc/cait.bash)</li>
+<li>copy and modify scripts/nightly-update.bash for running under cron</li>
+<li>Test everything works</li>
+<li>If everything is OK then setup cronjob</li>
+</ol>
+
+<p>Example shell commands run</p>
+
+<pre><code class="language-shell">    # Step 1
+    curl -O https://github.com/caltechlibrary/cait/releases/download/v0.0.8/cait-binary-release.zip
+    # Step 2
+    unzip cait-binary-release.zip
+    # Step 3
+    mkdir -p /Sites/archives.example.edu/bin
+    cp -v dist/linux-amd64/* /Sites/archives.example.edu/bin/
+    # Step 4
+    cp -v etc/cait.bash-example etc/cait.bash
+    # e.g. setup the value of $HOME to /Sites/archives.example.edu
+    # If needed include /Sites/archives.example.edu in PATH
+    vi etc/cait.bash
+    . etc/cait.bash
+    # Step 5
+    cp -v scripts/nightly-update.bash /Sites/archives.example.edu/bin/
+    # e.g. Set the value of HOME to /Sites/archives.example.edu
+    vi /Sites/archives.example.edu/bin/nightly-update.bash
+    # Step 6
+    cait -v
+    genpages -v
+    indexpages -v
+    sitemapper -v
+    servepages -v
+    bin/nightly-update.bash
+    # Step 7
+    cronjob -e
+    cronjob -l
+</code></pre>
+
+<h2>Example cronjob</h2>
+
+<pre><code class="language-shell">    #!/bin/bash
+    #
+    #  field         allowed values
+    #  -----         --------------
+    #  minute        0-59
+    #  hour          0-23
+    #  day of month  1-31
+    #  month         1-12 (or names, see below)
+    #  day of week   0-7 (0 or 7 is Sun, or use names)
+    #
+    # Run archives site update everyday at 6:30am.
+    30 6 * * * /Sites/archives.example.edu/bin/nightly-update.sh &gt;&gt; /Sites/archives.example.edu/logs/nightly-update.log 2&gt;&amp;1
+</code></pre>
+
+<h2>Reference Links</h2>
+
+<ul>
+<li><a href="https://github.com/archivesspace/archivesspace/blob/4c26d82b1b0e343b7e1aea86a11913dcf6ff5b6f/docs/slate/source/index.md#authentication">Explanation of authentication</a></li>
+<li><a href="https://archivesspace.github.io/archivesspace/doc/file.API.html">File API</a></li>
+<li><a href="https://archivesspace.github.io/archivesspace/">General Docs</a></li>
+<li><a href="http://archivesspace.github.io/archivesspace/api/">API Docs</a> (dynamically generated so doesn&rsquo;t show in Google search results)</li>
+<li><a href="https://archivesspace.atlassian.net/wiki/display/ADC/ArchivesSpace">Wiki</a></li>
+<li><a href="https://github.com/noahgh221/archivesspace-duke-scripts">Duke&rsquo;s Python scripts for ArchivesSpace</a></li>
+</ul>
+
+</section>
+
+<footer>
+<span><h1><A href="http://caltech.edu">Caltech</a></h1></span>
+<span>&copy; 2015 - 2016 <a href="http://library.caltech.edu/CLS_Copyright.htm">Caltech library</a></span>
+<address>1200 E California Blvd, Mail Code 1-32, Pasadena, CA 91125-3200</address> 
+<span>Phone: <a href="tel:+1-626-395-3405">(626)395-3405</a></span>
+<span><a href="mailto:library@caltech.edu">Email Us</a></span>
+<a class="cl-hide" href="sitemap.xml">Site Map</a>
+</footer>
+</body>
+</html>
