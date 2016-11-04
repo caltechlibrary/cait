@@ -210,27 +210,27 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	// q_excluded NewQueryStringQuery with a - prefix for each strings.Feilds(q_excluded) value
 	//
 
-	//DEBUG START
-	//FIXME: Start bug-cait-44
-	var (
-		conQry []bleve.Query
-	)
+	//BUG: bug-cait-44 is related to how I am constructing the joined
+	// query.
+	var conQry []bleve.Query
+
 	if q.Q != "" {
 		conQry = append(conQry, bleve.NewQueryStringQuery(q.Q))
 	}
 	if q.QExact != "" {
 		conQry = append(conQry, bleve.NewMatchPhraseQuery(q.QExact))
 	}
-	if q.QRequired != "" {
-		for _, s := range strings.Fields(q.QRequired) {
-			conQry = append(conQry, bleve.NewQueryStringQuery(fmt.Sprintf("+%s", s)))
-		}
+	var terms []string
+	for _, s := range strings.Fields(q.QRequired) {
+		terms = append(terms, fmt.Sprintf("+%s", strings.TrimSpace(s)))
 	}
-	if q.QExcluded != "" {
-		for _, s := range strings.Fields(q.QExcluded) {
-			conQry = append(conQry, bleve.NewQueryStringQuery(fmt.Sprintf("-%s", s)))
-		}
+	for _, s := range strings.Fields(q.QExcluded) {
+		terms = append(terms, fmt.Sprintf("-%s", strings.TrimSpace(s)))
 	}
+	if len(terms) > 0 {
+		conQry = append(conQry, bleve.NewQueryStringQuery(strings.Join(terms, " ")))
+	}
+
 	qry := bleve.NewConjunctionQuery(conQry)
 	if q.Size == 0 {
 		q.Size = 10
@@ -243,8 +243,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
-	//FIXME: End bug-cait-44
-	//DEBUG END
 
 	search.Highlight = bleve.NewHighlight()
 	search.Highlight.AddField("title")
