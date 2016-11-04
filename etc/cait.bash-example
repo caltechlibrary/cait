@@ -20,3 +20,6 @@ export CAIT_SITE_URL=http://localhost:8501
 export CAIT_WEBHOOK_PATH="/my-webhook"
 export CAIT_WEBHOOK_SECRET="!!!SOME LONG SECRET KEY VALUE HERE!!!"
 export CAIT_WEBHOOK_COMMAND="/Sites/archives.example.edu/scripts/do-webhook.bash"
+
+# Add the cli and scripts to PATH if needed
+# export PATH=/Sites/archives.example.edu/bin:$PATH

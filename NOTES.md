@@ -35,7 +35,6 @@ Overview steps taken
     # Step 5
     cp -v scripts/nightly-update.bash /Sites/archives.example.edu/bin/
     vi /Sites/archives.example.edu/bin/nightly-update.bash
-    cronjob -e
     # Step 6
     cait -v
     genpages -v
