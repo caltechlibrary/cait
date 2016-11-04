@@ -49,11 +49,11 @@ import (
 
 var (
 	description = `
- USAGE: servepages [OPTIONS]
+ USAGE: %s [OPTIONS]
 
  OVERVIEW
 
-	servepages provides search services defined by CAIT_SITE_URL for the
+	%s provides search services defined by CAIT_SITE_URL for the
 	website content defined by CAIT_HTDOCS using the index defined
 	by CAIT_HTDOCS_INDEX. Additionally a webhook call can be defined
 	to trigger an action such as pulling new site content.
@@ -63,7 +63,7 @@ var (
 	configuration = `
  CONFIGURATION
 
- servepages can be configured through environment variables. The following
+ %s can be configured through environment variables. The following
  variables are supported-
 
    CAIT_SITE_URL
@@ -79,7 +79,9 @@ var (
    CAIT_WEBHOOK_COMMAND
 
 `
-	help           bool
+	showHelp    bool
+	showVersion bool
+
 	indexName      string
 	htdocsDir      string
 	templatesDir   string
@@ -94,12 +96,13 @@ var (
 	index bleve.Index
 )
 
-func usage() {
-	fmt.Println(description)
+func usage(appName, version string) {
+	fmt.Printf(description, appName, appName)
 	flag.VisitAll(func(f *flag.Flag) {
 		fmt.Printf("\t-%s\t%s\n", f.Name, f.Usage)
 	})
-	fmt.Println(configuration)
+	fmt.Printf(configuration, appName)
+	fmt.Printf("%s %s\n", appName, version)
 	os.Exit(0)
 }
 
@@ -206,26 +209,26 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	// q_exact     NewMatchPhraseQuery
 	// q_excluded NewQueryStringQuery with a - prefix for each strings.Feilds(q_excluded) value
 	//
-	var (
-		conQry []bleve.Query
-	)
+
+	//NOTE: We start with an empty query, then add based on what we find.
+	qry := bleve.NewConjunctionQuery(nil)
+
 	if q.Q != "" {
-		conQry = append(conQry, bleve.NewQueryStringQuery(q.Q))
+		qry.AddQuery(bleve.NewQueryStringQuery(q.Q))
 	}
 	if q.QExact != "" {
-		conQry = append(conQry, bleve.NewMatchPhraseQuery(q.QExact))
+		qry.AddQuery(bleve.NewMatchPhraseQuery(q.QExact))
 	}
 	if q.QRequired != "" {
 		for _, s := range strings.Fields(q.QRequired) {
-			conQry = append(conQry, bleve.NewQueryStringQuery(fmt.Sprintf("+%s", s)))
+			qry.AddQuery(bleve.NewQueryStringQuery(fmt.Sprintf("+%s", s)))
 		}
 	}
 	if q.QExcluded != "" {
 		for _, s := range strings.Fields(q.QExcluded) {
-			conQry = append(conQry, bleve.NewQueryStringQuery(fmt.Sprintf("-%s", s)))
+			qry.AddQuery(bleve.NewQueryStringQuery(fmt.Sprintf("-%s", s)))
 		}
 	}
-	qry := bleve.NewConjunctionQuery(conQry)
 	if q.Size == 0 {
 		q.Size = 10
 	}
@@ -435,8 +438,10 @@ func init() {
 	flag.StringVar(&indexName, "index", indexName, "specify the Bleve index to use")
 	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "specify where to write the HTML files to")
 	flag.StringVar(&templatesDir, "templates", templatesDir, "The directory path for templates")
-	flag.BoolVar(&help, "h", false, "display this help message")
-	flag.BoolVar(&help, "help", false, "display this help message")
+	flag.BoolVar(&showHelp, "h", false, "display this help message")
+	flag.BoolVar(&showHelp, "help", false, "display this help message")
+	flag.BoolVar(&showVersion, "v", false, "display version info")
+	flag.BoolVar(&showVersion, "version", false, "display version info")
 
 	flag.StringVar(&webhookPath, "webhook-path", webhookPath, "the webhook path, e.g. /my-webhook/something")
 	flag.StringVar(&webhookSecret, "webhook-secret", webhookSecret, "the secret to validate before executing command")
@@ -513,9 +518,16 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	var err error
+
+	appName := path.Base(os.Args[0])
+
 	flag.Parse()
-	if help == true {
-		usage()
+	if showHelp == true {
+		usage(appName, cait.Version)
+	}
+	if showVersion == true {
+		fmt.Printf("%s %s\n", appName, cait.Version)
+		os.Exit(0)
 	}
 
 	// Wake up our search engine

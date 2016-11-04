@@ -39,11 +39,11 @@ import (
 
 var (
 	description = `
- USAGE: indexpages [-h|--help]
+ USAGE: %s [-h|--help]
 
  SYNOPSIS
 
- indexpages is a command line utility to indexes content in the htdocs directory.
+ %s is a command line utility to indexes content in the htdocs directory.
  It produces a Bleve search index used by servepages web service.
  Configuration is done through environmental variables.
 
@@ -54,7 +54,7 @@ var (
 
  CONFIGURATION
 
- indexpages relies on the following environment variables for
+ %s relies on the following environment variables for
  configuration when overriding the defaults:
 
     CAIT_HTDOCS       This should be the path to the directory tree
@@ -66,7 +66,8 @@ var (
                         indexes. Defaults to ./htdocs.bleve
 
 `
-	help         bool
+	showHelp     bool
+	showVersion  bool
 	replaceIndex bool
 	htdocsDir    string
 	indexName    string
@@ -74,12 +75,13 @@ var (
 	fileCount    int
 )
 
-func usage() {
-	fmt.Println(description)
+func usage(appName, version string) {
+	fmt.Printf(description, appName, appName)
 	flag.VisitAll(func(f *flag.Flag) {
 		fmt.Printf("\t-%s\t%s\n", f.Name, f.Usage)
 	})
-	fmt.Println(configuration)
+	fmt.Printf(configuration, appName)
+	fmt.Printf("%s %s\n", appName, version)
 	os.Exit(0)
 }
 
@@ -97,8 +99,10 @@ func init() {
 	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "The document root for the website")
 	flag.StringVar(&indexName, "index", indexName, "The name of the Bleve index")
 	flag.BoolVar(&replaceIndex, "r", false, "Replace the index if it exists")
-	flag.BoolVar(&help, "h", false, "this help message")
-	flag.BoolVar(&help, "help", false, "this help message")
+	flag.BoolVar(&showHelp, "h", false, "this help message")
+	flag.BoolVar(&showHelp, "help", false, "this help message")
+	flag.BoolVar(&showVersion, "v", false, "display version info")
+	flag.BoolVar(&showVersion, "version", false, "display version info")
 }
 
 func getIndex(indexName string) (bleve.Index, error) {
@@ -246,9 +250,15 @@ func indexSite(index bleve.Index, batchSize int) error {
 func main() {
 	var err error
 
+	appName := path.Base(os.Args[0])
+
 	flag.Parse()
-	if help == true {
-		usage()
+	if showHelp == true {
+		usage(appName, cait.Version)
+	}
+	if showVersion == true {
+		fmt.Printf("%s %s\n", appName, cait.Version)
+		os.Exit(0)
 	}
 
 	if replaceIndex == true {

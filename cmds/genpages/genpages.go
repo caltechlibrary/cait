@@ -37,11 +37,11 @@ import (
 
 var (
 	description = `
- USAGE: genpages [OPTIONS]
+ USAGE: %s [OPTIONS]
 
  OVERVIEW
 
-	genpages generates HTML, .include pages and normalized JSON based on the JSON output form
+	%s generates HTML, .include pages and normalized JSON based on the JSON output form
 	cait and templates associated with the command.
 
  OPTIONS
@@ -49,7 +49,7 @@ var (
 	configuration = `
  CONFIGURATION
 
-    genpages can be configured through setting the following environment
+    %s can be configured through setting the following environment
 	variables-
 
     CAIT_DATASET    this is the directory that contains the output of the
@@ -62,18 +62,21 @@ var (
 
 `
 
-	help        bool
+	showHelp    bool
+	showVersion bool
+
 	htdocsDir   string
 	datasetDir  string
 	templateDir string
 )
 
-func usage() {
-	fmt.Println(description)
+func usage(appName, version string) {
+	fmt.Printf(description, appName, appName)
 	flag.VisitAll(func(f *flag.Flag) {
 		fmt.Printf("\t-%s\t%s\n", f.Name, f.Usage)
 	})
-	fmt.Println(configuration)
+	fmt.Printf(configuration, appName)
+	fmt.Printf("%s %s\n", appName, version)
 	os.Exit(0)
 }
 
@@ -190,14 +193,21 @@ func init() {
 	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "specify where to write the HTML files to")
 	flag.StringVar(&datasetDir, "dataset", datasetDir, "specify where to read the JSON files from")
 	flag.StringVar(&templateDir, "templates", templateDir, "specify where to read the templates from")
-	flag.BoolVar(&help, "h", false, "display this help message")
-	flag.BoolVar(&help, "help", false, "display this help message")
+	flag.BoolVar(&showHelp, "h", false, "display this help message")
+	flag.BoolVar(&showHelp, "help", false, "display this help message")
+	flag.BoolVar(&showVersion, "v", false, "display version info")
+	flag.BoolVar(&showVersion, "version", false, "display version info")
 }
 
 func main() {
+	appName := path.Base(os.Args[0])
 	flag.Parse()
-	if help == true {
-		usage()
+	if showHelp == true {
+		usage(appName, cait.Version)
+	}
+	if showVersion == true {
+		fmt.Printf("%s %s\n", appName, cait.Version)
+		os.Exit(0)
 	}
 
 	if htdocsDir != "" {
