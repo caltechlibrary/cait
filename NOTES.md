@@ -14,9 +14,10 @@ Overview steps taken
 2. unzip the release file
 3. copy the binaries for the appropriate architecture (e.g. linux-amd64) to an appropraite bin directory (e.g. /Sites/archives.example.edu/bin)
 4. copy, modify, and source the example configuration file (e.g. etc/cait.bash-example to /etc/cait.bash)
-5. copy and modify scripts/nightly-update.bash for running under cron
-6. Test everything works
-7. If everything is OK then setup cronjob
+5. copy and modify scripts/update-website.bash (if using Github webhooks)
+6. copy and modify scripts/nightly-update.bash for running under cron
+7. Test everything works
+9. If everything is OK then setup cronjob
 
 Example shell commands run
 
@@ -35,17 +36,21 @@ Example shell commands run
     vi etc/cait.bash
     . etc/cait.bash
     # Step 5
+    cp -v scripts/update-website.bash /Sites/archives.example.edu/bin/
+    vi /Sites/archives.example.edu/bin/update-website.bash
+    # Step 6
     cp -v scripts/nightly-update.bash /Sites/archives.example.edu/bin/
     # e.g. Set the value of HOME to /Sites/archives.example.edu
     vi /Sites/archives.example.edu/bin/nightly-update.bash
-    # Step 6
+    # Step 7
     cait -v
     genpages -v
     indexpages -v
     sitemapper -v
     servepages -v
+    bin/update-website.bash
     bin/nightly-update.bash
-    # Step 7
+    # Step 8
     cronjob -e
     cronjob -l
 ```
