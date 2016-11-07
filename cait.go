@@ -20,4 +20,4 @@
 package cait
 
 // Version of library
-var Version = "0.0.8"
+var Version = "v0.0.9"

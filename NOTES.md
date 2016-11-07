@@ -6,12 +6,12 @@ and release version are
 
 + /Sites/archives.example.edu
 + http://archives.example.edu
-+ v0.0.8  
++ v0.0.9
 
 Overview steps taken
 
 1. Get the release zip file from http://github.com/caltechlibrary/cait/releases/latest
-2. unzip the release file
+2. unzip the release file into a temporary directory
 3. copy the binaries for the appropriate architecture (e.g. linux-amd64) to an appropraite bin directory (e.g. /Sites/archives.example.edu/bin)
 4. copy, modify, and source the example configuration file (e.g. etc/cait.bash-example to /etc/cait.bash)
 5. copy and modify scripts/update-website.bash (if using Github webhooks)
@@ -25,16 +25,17 @@ Example shell commands run
     # Step 1
     curl -O https://github.com/caltechlibrary/cait/releases/download/v0.0.8/cait-binary-release.zip
     # Step 2
+    mkdir -p tmp && cd tmp
     unzip cait-binary-release.zip
     # Step 3
     mkdir -p /Sites/archives.example.edu/bin
     cp -v dist/linux-amd64/* /Sites/archives.example.edu/bin/
     # Step 4
-    cp -v etc/cait.bash-example etc/cait.bash
+    cp -v etc/cait.bash-example /Sites/archives.example.edu/etc/cait.bash
     # e.g. setup the value of $HOME to /Sites/archives.example.edu
     # If needed include /Sites/archives.example.edu in PATH
-    vi etc/cait.bash
-    . etc/cait.bash
+    vi /Sites/archives.example.edu/etc/cait.bash
+    . /Sites/archives.example.edu/etc/cait.bash
     # Step 5
     cp -v scripts/update-website.bash /Sites/archives.example.edu/bin/
     vi /Sites/archives.example.edu/bin/update-website.bash
@@ -51,7 +52,9 @@ Example shell commands run
     bin/update-website.bash
     bin/nightly-update.bash
     # Step 8
+    # Add the cronjob for /Sites/archives.example.edu/bin/nightly-update.bash
     cronjob -e
+    # List the cronjob and verify it is correct.
     cronjob -l
 ```
 
@@ -69,7 +72,7 @@ Example shell commands run
     #  day of week   0-7 (0 or 7 is Sun, or use names)
     #
     # Run archives site update everyday at 6:30am.
-    30 6 * * * /Sites/archives.example.edu/bin/nightly-update.sh >> /Sites/archives.example.edu/logs/nightly-update.log 2>&1
+    30 6 * * * /Sites/archives.example.edu/bin/nightly-update.bash >> /Sites/archives.example.edu/logs/nightly-update.log 2>&1
 ```
 
 ## Reference Links

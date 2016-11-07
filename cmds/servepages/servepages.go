@@ -240,7 +240,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	search := bleve.NewSearchRequestOptions(qry, q.Size, q.From, q.Explain)
 
 	if search == nil {
-		log.Printf("DEBUG Bleve can't build new search request options %v, %s", qry, err)
+		log.Printf("Can't build new search request options %v, %s", qry, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
@@ -375,7 +375,12 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 func requestLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		//FIXME: add the response status returned.
-		log.Printf("Request: %s Path: %s RemoteAddr: %s UserAgent: %s\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
+		q := r.URL.Query()
+		if len(q) > 0 {
+			log.Printf("Request: %s Path: %s RemoteAddr: %s UserAgent: %s Query: %+v\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent(), q)
+		} else {
+			log.Printf("Request: %s Path: %s RemoteAddr: %s UserAgent: %s\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent())
+		}
 		next.ServeHTTP(w, r)
 	})
 }
@@ -553,6 +558,7 @@ func main() {
 	// search routes are handled by middleware customRoutes()
 	http.Handle("/", http.FileServer(http.Dir(htdocsDir)))
 
+	log.Printf("%s %s\n", appName, cait.Version)
 	log.Printf("Listening on %s\n", serviceURL.String())
 	err = http.ListenAndServe(serviceURL.Host, requestLogger(customRoutes(http.DefaultServeMux)))
 	if err != nil {
