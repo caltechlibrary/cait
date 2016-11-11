@@ -286,8 +286,8 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	searchRequest := bleve.NewSearchRequestOptions(qry, q.Size, q.From, q.Explain)
 	if searchRequest == nil {
-		log.Printf("Can't build new search request options %v, %s", qry, err)
-		w.WriteHeader(http.StatusInternalServerError)
+		responseLogger(r, http.StatusBadRequest, fmt.Errorf("Can't build new search request options %+v, %s", qry, err))
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
@@ -339,7 +339,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 
 	searchResults, err := index.Search(searchRequest)
 	if err != nil {
-		log.Printf("Bleve results error %v, %s", qry, err)
+		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Bleve results error %v, %s", qry, err))
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
@@ -355,7 +355,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	// Load my templates and setup to execute them
 	tmpl, err := cait.AssembleTemplate(path.Join(templatesDir, pageHTML), path.Join(templatesDir, pageInclude))
 	if err != nil {
-		log.Printf("Template Errors: %s, %s, %s\n", pageHTML, pageInclude, err)
+		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Template Errors: %s, %s, %s\n", pageHTML, pageInclude, err))
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("Template errors: %s", err)))
 		return
@@ -366,8 +366,10 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	err = tmpl.Execute(&buf, q)
 	//err = tmpl.Execute(w, q)
 	if err != nil {
-		log.Printf("Can't render %s, %s/%s, %s", templatesDir, pageHTML, pageInclude, err)
+		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Can't render %s, %s/%s, %s", templatesDir, pageHTML, pageInclude, err))
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte("Template error"))
+		return
 	}
 	//NOTE: This bit of ugliness is here because I need to allow <mark> elements and ellipis in the results fragments
 	w.Write(bytes.Replace(bytes.Replace(bytes.Replace(buf.Bytes(), []byte("&lt;mark&gt;"), []byte("<mark>"), -1), []byte("&lt;/mark&gt;"), []byte("</mark>"), -1), []byte(`…`), []byte(`&hellip;`), -1))
@@ -414,7 +416,10 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = tmpl.Execute(w, formData)
 	if err != nil {
+		responseLogger(r, http.StatusInternalServerError, err)
+		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("%s", err)))
+		return
 	}
 }
 
