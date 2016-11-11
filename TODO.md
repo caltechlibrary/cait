@@ -3,6 +3,7 @@
 
 ## Action Item
 
++ Don't allow non-supported query options
 + Improve logging
 
 ### Bugs

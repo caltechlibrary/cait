@@ -108,21 +108,64 @@ func usage(appName, version string) {
 
 func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
 	var err error
+
+	// raw is a tempory data structure to sanitize the
+	// form request submitted via the query.
+	raw := &struct {
+		Q         string `json:"q"`
+		QExact    string `json:"q_exact"`
+		QExcluded string `json:"q_excluded"`
+		QRequired string `json:"q_required"`
+		Size      int    `json:"size"`
+		From      int    `json:"from"`
+		AllIDs    bool   `json:"all_ids"`
+	}{}
+
+	isQuery := false
+
 	q := new(cait.SearchQuery)
 	src, err := json.Marshal(m)
 	if err != nil {
 		return nil, fmt.Errorf("Can't marshal %+v, %s", m, err)
 	}
-	err = json.Unmarshal(src, &q)
+	err = json.Unmarshal(src, &raw)
 	if err != nil {
 		return nil, fmt.Errorf("Can't unmarshal %s, %s", src, err)
 	}
-	//Note: if q.Size is not set by the query request pick a nice default value
-	if q.Size == 0 {
-		q.Size = 10
+	if len(raw.Q) > 0 {
+		q.Q = raw.Q
+		isQuery = true
 	}
-	if q.From < 0 {
+	if len(raw.QExact) > 0 {
+		q.QExact = raw.QExact
+		isQuery = true
+	}
+	if len(raw.QExcluded) > 0 {
+		q.QExcluded = q.QExact
+	}
+	if len(raw.QRequired) > 0 {
+		q.QRequired = raw.QRequired
+		isQuery = true
+	}
+
+	if isQuery == false {
+		return nil, fmt.Errorf("Missing query value fields")
+	}
+
+	if raw.AllIDs == true {
+		q.AllIDs = true
+	}
+
+	//Note: if q.Size is not set by the query request pick a nice default value
+	if raw.Size <= 1 {
+		q.Size = 10
+	} else {
+		q.Size = raw.Size
+	}
+	if raw.From < 0 {
 		q.From = 0
+	} else {
+		q.From = raw.From
 	}
 	return q, nil
 }
@@ -163,31 +206,37 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Collect the submissions fields.
 	submission := make(map[string]interface{})
 	// Basic Search results
 	if r.Method == "GET" {
 		for k, v := range urlQuery {
 			if k == "all_ids" {
-				b, _ := strconv.ParseBool(strings.Join(v, ""))
-				submission[k] = b
+				if b, err := strconv.ParseBool(strings.Join(v, "")); err == nil {
+					submission[k] = b
+				}
 			} else if k == "from" || k == "size" || k == "total" {
-				i, _ := strconv.Atoi(strings.Join(v, ""))
-				submission[k] = i
-			} else {
+				if i, err := strconv.Atoi(strings.Join(v, "")); err == nil {
+					submission[k] = i
+				}
+			} else if k == "q" || k == "q_exact" || k == "q_excluded" || k == "q_required" {
 				submission[k] = strings.Join(v, "")
 			}
 		}
 	}
+
 	// Advanced Search results
 	if r.Method == "POST" {
 		for k, v := range r.Form {
 			if k == "all_ids" {
-				b, _ := strconv.ParseBool(strings.Join(v, ""))
-				submission[k] = b
+				if b, err := strconv.ParseBool(strings.Join(v, "")); err == nil {
+					submission[k] = b
+				}
 			} else if k == "from" || k == "size" || k == "total" {
-				i, _ := strconv.Atoi(strings.Join(v, ""))
-				submission[k] = i
-			} else {
+				if i, err := strconv.Atoi(strings.Join(v, "")); err == nil {
+					submission[k] = i
+				}
+			} else if k == "q" || k == "q_exact" || k == "q_excluded" || k == "q_required" {
 				submission[k] = strings.Join(v, "")
 			}
 		}
@@ -195,8 +244,8 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 
 	q, err := mapToSearchQuery(submission)
 	if err != nil {
-		log.Printf("API access error %s", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		log.Printf("Response status No Content: API access error %s", err)
+		w.WriteHeader(http.StatusNoContent)
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
@@ -209,9 +258,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	// q_exact     NewMatchPhraseQuery
 	// q_excluded NewQueryStringQuery with a - prefix for each strings.Feilds(q_excluded) value
 	//
-
-	//BUG: bug-cait-44 is related to how I am constructing the joined
-	// query.
 	var conQry []bleve.Query
 
 	if q.Q != "" {
@@ -229,7 +275,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(terms) > 0 {
 		qString := strings.Join(terms, " ")
-		fmt.Printf("DEBUG qString: %q\n", qString)
 		conQry = append(conQry, bleve.NewQueryStringQuery(qString))
 	}
 
@@ -237,34 +282,33 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	if q.Size == 0 {
 		q.Size = 10
 	}
-	search := bleve.NewSearchRequestOptions(qry, q.Size, q.From, q.Explain)
-
-	if search == nil {
+	searchRequest := bleve.NewSearchRequestOptions(qry, q.Size, q.From, q.Explain)
+	if searchRequest == nil {
 		log.Printf("Can't build new search request options %v, %s", qry, err)
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
 
-	search.Highlight = bleve.NewHighlight()
-	search.Highlight.AddField("title")
-	search.Highlight.AddField("content_description")
-	search.Highlight.AddField("subjects")
-	search.Highlight.AddField("subjects_function")
-	search.Highlight.AddField("subjects_topical")
-	search.Highlight.AddField("extents")
+	searchRequest.Highlight = bleve.NewHighlight()
+	searchRequest.Highlight.AddField("title")
+	searchRequest.Highlight.AddField("content_description")
+	searchRequest.Highlight.AddField("subjects")
+	searchRequest.Highlight.AddField("subjects_function")
+	searchRequest.Highlight.AddField("subjects_topical")
+	searchRequest.Highlight.AddField("extents")
 
 	subjectFacet := bleve.NewFacetRequest("subjects", 3)
-	search.AddFacet("subjects", subjectFacet)
+	searchRequest.AddFacet("subjects", subjectFacet)
 
 	subjectTopicalFacet := bleve.NewFacetRequest("subjects_topical", 3)
-	search.AddFacet("subjects_topical", subjectTopicalFacet)
+	searchRequest.AddFacet("subjects_topical", subjectTopicalFacet)
 
 	subjectFunctionFacet := bleve.NewFacetRequest("subjects_function", 3)
-	search.AddFacet("subjects_function", subjectFunctionFacet)
+	searchRequest.AddFacet("subjects_function", subjectFunctionFacet)
 
 	// Return all fields
-	search.Fields = []string{
+	searchRequest.Fields = []string{
 		"title",
 		"identifier",
 		"content_description",
@@ -291,7 +335,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		"created",
 	}
 
-	searchResults, err := index.Search(search)
+	searchResults, err := index.Search(searchRequest)
 	if err != nil {
 		log.Printf("Bleve results error %v, %s", qry, err)
 		w.WriteHeader(http.StatusInternalServerError)
@@ -405,11 +449,6 @@ func customRoutes(next http.Handler) http.Handler {
 		if webhookPath != "" && strings.HasPrefix(r.URL.Path, webhookPath) == true {
 			webhookHandler(w, r)
 			return
-		}
-
-		// Treat any .cfm request as a /search/ request.
-		if strings.HasSuffix(r.URL.Path, ".cfm") == true {
-			r.URL.Path = "/search/"
 		}
 
 		// Handler are searches and results
