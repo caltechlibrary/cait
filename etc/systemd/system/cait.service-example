@@ -1,0 +1,16 @@
+[Unit]
+Description=CAIT runs the public face website for content managed by ArchivesSpace
+Documentation=man:cait(1)
+After=network.target
+
+[Service]
+Type=forking
+EnvironmentFile=/Sites/archives.example.edu/etc/cait.bash
+ExecStart=/Sites/archives.example.edu/bin/servepages
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+Restart=on-failure
+RestartSec=120s
+
+[Install]
+WantedBy=multi-user.target
