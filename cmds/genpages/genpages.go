@@ -28,7 +28,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	//"html/template"
 	"text/template"
 
 	// Caltech Library packages
@@ -109,6 +108,7 @@ func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName st
 			if err != nil {
 				return err
 			}
+
 			// FIXME: which restrictions do we care about--
 			//        accession.Publish, accession.Suppressed, accession.AccessRestrictions,
 			//        accession.RestrictionsApply, accession.UseRestrictions
@@ -126,6 +126,7 @@ func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName st
 				if err != nil {
 					return fmt.Errorf("Can't create %s, %s", dname, err)
 				}
+
 				// Process HTML file
 				fp, err := os.Create(fname)
 				if err != nil {

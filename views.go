@@ -68,6 +68,7 @@ type NormalizedDigitalObjectView struct {
 
 // NormalizedAccessionView returns a structure suitable for templating public web content.
 type NormalizedAccessionView struct {
+	ID                     string                         `json:"id"`
 	URI                    string                         `json:"uri"`
 	Title                  string                         `json:"title"`
 	Identifier             string                         `json:"identifier"`
@@ -125,6 +126,7 @@ func (a *Accession) NormalizeView(agents []*Agent, subjects map[string]*Subject,
 		agentMap[uri] = title
 	}
 	v := new(NormalizedAccessionView)
+	v.ID = fmt.Sprintf("%d", a.ID)
 	v.Title = a.Title
 	v.Identifier = strings.Trim(strings.Join([]string{a.ID0, a.ID1, a.ID2, a.ID3}, "-"), "-")
 	v.ResourceType = a.ResourceType

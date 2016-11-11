@@ -66,8 +66,26 @@ var (
                         indexes. Defaults to ./htdocs.bleve
 
 `
+
+	license = `
+%s %s
+
+Copyright (c) 2016, Caltech
+All rights not granted herein are expressly reserved by Caltech.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+`
 	showHelp     bool
 	showVersion  bool
+	showLicense  bool
 	replaceIndex bool
 	htdocsDir    string
 	indexName    string
@@ -99,10 +117,12 @@ func init() {
 	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "The document root for the website")
 	flag.StringVar(&indexName, "index", indexName, "The name of the Bleve index")
 	flag.BoolVar(&replaceIndex, "r", false, "Replace the index if it exists")
-	flag.BoolVar(&showHelp, "h", false, "this help message")
-	flag.BoolVar(&showHelp, "help", false, "this help message")
-	flag.BoolVar(&showVersion, "v", false, "display version info")
-	flag.BoolVar(&showVersion, "version", false, "display version info")
+	flag.BoolVar(&showHelp, "h", false, "display help")
+	flag.BoolVar(&showHelp, "help", false, "display help")
+	flag.BoolVar(&showVersion, "v", false, "display version")
+	flag.BoolVar(&showVersion, "version", false, "display version")
+	flag.BoolVar(&showLicense, "l", false, "display license")
+	flag.BoolVar(&showLicense, "license", false, "display license")
 }
 
 func getIndex(indexName string) (bleve.Index, error) {
@@ -203,6 +223,7 @@ func indexSite(index bleve.Index, batchSize int) error {
 	startT := time.Now()
 	count := 0
 	batch := index.NewBatch()
+	log.Printf("Walking %s", path.Join(htdocsDir, "repositories"))
 	err := filepath.Walk(path.Join(htdocsDir, "repositories"), func(p string, f os.FileInfo, err error) error {
 		if strings.Contains(p, "/accessions/") == true && strings.HasSuffix(p, ".json") == true {
 			src, err := ioutil.ReadFile(p)
@@ -224,6 +245,7 @@ func indexSite(index bleve.Index, batchSize int) error {
 				return nil
 			}
 			if batch.Size() >= batchSize {
+				log.Printf("Indexing %d items", batch.Size())
 				err := index.Batch(batch)
 				if err != nil {
 					log.Fatal(err)
@@ -236,6 +258,7 @@ func indexSite(index bleve.Index, batchSize int) error {
 		return nil
 	})
 	if batch.Size() > 0 {
+		log.Printf("Indexing %d items", batch.Size())
 		err := index.Batch(batch)
 		if err != nil {
 			log.Fatal(err)
@@ -258,6 +281,10 @@ func main() {
 	}
 	if showVersion == true {
 		fmt.Printf("%s %s\n", appName, cait.Version)
+		os.Exit(0)
+	}
+	if showLicense == true {
+		fmt.Printf(license, appName, cait.Version)
 		os.Exit(0)
 	}
 

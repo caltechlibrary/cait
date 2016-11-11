@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Accession template example - {{ .Title }}</title>
+    {{ with .ID }}<link rel="alternative" type="application/json" href="{{- . -}}.json">{{ end }}
 </head>
 <body>
     <header><h1>Accession Template Example</h1></header>

@@ -192,7 +192,7 @@ type AbstractNote struct {
 
 // Accession JSONModel(:accession)
 type Accession struct {
-	ID                     int                      `json:"id,omitempty"`
+	ID                     int                      `json:"id"`
 	URI                    string                   `json:"uri,omitempty"`
 	ExternalIDs            []*ExternalID            `json:"external_ids"`
 	Title                  string                   `json:"title"`

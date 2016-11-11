@@ -55,7 +55,7 @@ func usage(appName, version string) {
 	flag.VisitAll(func(f *flag.Flag) {
 		fmt.Printf("\t-%s\t%s\n", f.Name, f.Usage)
 	})
-	fmt.Println(`
+	fmt.Printf(`
  EXAMPLE
 
     %s htdocs htdocs/sitemap.xml http://archives.example.edu
@@ -108,7 +108,7 @@ func main() {
 		}
 		return nil
 	})
-	fmt.Printf("Writing %s\n", args[1])
+	log.Printf("Writing %s\n", args[1])
 	fp, err := os.OpenFile(args[1], os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0664)
 	if err != nil {
 		log.Fatalf("Can't create %s, %s\n", args[1], err)
@@ -129,4 +129,5 @@ func main() {
 	fp.Write([]byte(`
 </urlset>
 `))
+	log.Printf("Writing %s complete\n", args[1])
 }
