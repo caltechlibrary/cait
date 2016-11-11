@@ -201,7 +201,9 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	urlQuery := r.URL.Query()
 	err := r.ParseForm()
 	if err != nil {
+		responseLogger(r, http.StatusBadRequest, err)
 		w.Header().Set("Content-Type", "text/plain")
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf("error in POST: %s", err)))
 		return
 	}
@@ -244,8 +246,8 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 
 	q, err := mapToSearchQuery(submission)
 	if err != nil {
-		log.Printf("Response status No Content: API access error %s", err)
-		w.WriteHeader(http.StatusNoContent)
+		responseLogger(r, http.StatusBadRequest, err)
+		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
 	}
@@ -427,6 +429,15 @@ func requestLogger(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func responseLogger(r *http.Request, status int, err error) {
+	q := r.URL.Query()
+	if len(q) > 0 {
+		log.Printf("Response: %s Path: %s RemoteAddr: %s Query: %+v StatusCode: %d Error: %q\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent(), q, status, err)
+	} else {
+		log.Printf("Response: %s Path: %s RemoteAddr: %s UserAgent: %s StatusCode: %d Error: %q\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent(), status, err)
+	}
 }
 
 // isMultiViewPath checks to see if the path requested behaves like an Apache MultiView request
