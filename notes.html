@@ -30,16 +30,17 @@ and release version are</p>
 <ul>
 <li>/Sites/archives.example.edu</li>
 <li><a href="http://archives.example.edu">http://archives.example.edu</a></li>
-<li>v0.0.8<br /></li>
+<li>v0.0.9</li>
 </ul>
 
 <p>Overview steps taken</p>
 
 <ol>
 <li>Get the release zip file from <a href="http://github.com/caltechlibrary/cait/releases/latest">http://github.com/caltechlibrary/cait/releases/latest</a></li>
-<li>unzip the release file</li>
+<li>unzip the release file into a temporary directory</li>
 <li>copy the binaries for the appropriate architecture (e.g. linux-amd64) to an appropraite bin directory (e.g. /Sites/archives.example.edu/bin)</li>
 <li>copy, modify, and source the example configuration file (e.g. etc/cait.bash-example to /etc/cait.bash)</li>
+<li>copy and modify scripts/update-website.bash (if using Github webhooks)</li>
 <li>copy and modify scripts/nightly-update.bash for running under cron</li>
 <li>Test everything works</li>
 <li>If everything is OK then setup cronjob</li>
@@ -50,29 +51,36 @@ and release version are</p>
 <pre><code class="language-shell">    # Step 1
     curl -O https://github.com/caltechlibrary/cait/releases/download/v0.0.8/cait-binary-release.zip
     # Step 2
+    mkdir -p tmp &amp;&amp; cd tmp
     unzip cait-binary-release.zip
     # Step 3
     mkdir -p /Sites/archives.example.edu/bin
     cp -v dist/linux-amd64/* /Sites/archives.example.edu/bin/
     # Step 4
-    cp -v etc/cait.bash-example etc/cait.bash
+    cp -v etc/cait.bash-example /Sites/archives.example.edu/etc/cait.bash
     # e.g. setup the value of $HOME to /Sites/archives.example.edu
     # If needed include /Sites/archives.example.edu in PATH
-    vi etc/cait.bash
-    . etc/cait.bash
+    vi /Sites/archives.example.edu/etc/cait.bash
+    . /Sites/archives.example.edu/etc/cait.bash
     # Step 5
+    cp -v scripts/update-website.bash /Sites/archives.example.edu/bin/
+    vi /Sites/archives.example.edu/bin/update-website.bash
+    # Step 6
     cp -v scripts/nightly-update.bash /Sites/archives.example.edu/bin/
     # e.g. Set the value of HOME to /Sites/archives.example.edu
     vi /Sites/archives.example.edu/bin/nightly-update.bash
-    # Step 6
+    # Step 7
     cait -v
     genpages -v
     indexpages -v
     sitemapper -v
     servepages -v
+    bin/update-website.bash
     bin/nightly-update.bash
-    # Step 7
+    # Step 8
+    # Add the cronjob for /Sites/archives.example.edu/bin/nightly-update.bash
     cronjob -e
+    # List the cronjob and verify it is correct.
     cronjob -l
 </code></pre>
 
@@ -89,7 +97,7 @@ and release version are</p>
     #  day of week   0-7 (0 or 7 is Sun, or use names)
     #
     # Run archives site update everyday at 6:30am.
-    30 6 * * * /Sites/archives.example.edu/bin/nightly-update.sh &gt;&gt; /Sites/archives.example.edu/logs/nightly-update.log 2&gt;&amp;1
+    30 6 * * * /Sites/archives.example.edu/bin/nightly-update.bash &gt;&gt; /Sites/archives.example.edu/logs/nightly-update.log 2&gt;&amp;1
 </code></pre>
 
 <h2>Reference Links</h2>

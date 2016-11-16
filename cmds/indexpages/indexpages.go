@@ -211,7 +211,7 @@ func getIndex(indexName string) (bleve.Index, error) {
 		}
 		return index, nil
 	}
-	log.Printf("Opening Bleve index at %s\n", indexName)
+	log.Printf("Opening Bleve index at %s", indexName)
 	index, err := bleve.Open(indexName)
 	if err != nil {
 		return nil, fmt.Errorf("Can't create new bleve index %s, %s", indexName, err)
@@ -219,10 +219,11 @@ func getIndex(indexName string) (bleve.Index, error) {
 	return index, nil
 }
 
-func indexSite(index bleve.Index, batchSize int) error {
+func indexSite(index bleve.Index, maxBatchSize int) error {
 	startT := time.Now()
 	count := 0
 	batch := index.NewBatch()
+	batchSize := 10
 	log.Printf("Walking %s", path.Join(htdocsDir, "repositories"))
 	err := filepath.Walk(path.Join(htdocsDir, "repositories"), func(p string, f os.FileInfo, err error) error {
 		if strings.Contains(p, "/accessions/") == true && strings.HasSuffix(p, ".json") == true {
@@ -252,7 +253,13 @@ func indexSite(index bleve.Index, batchSize int) error {
 				}
 				count += batch.Size()
 				batch = index.NewBatch()
-				log.Printf("Indexed: %d items, running %s\n", count, time.Now().Sub(startT))
+				log.Printf("Indexed: %d items, batch size %d, running %s\n", count, batchSize, time.Now().Sub(startT))
+				if batchSize < maxBatchSize {
+					batchSize = batchSize * 2
+				}
+				if batchSize > maxBatchSize {
+					batchSize = maxBatchSize
+				}
 			}
 		}
 		return nil
@@ -264,7 +271,7 @@ func indexSite(index bleve.Index, batchSize int) error {
 			log.Fatal(err)
 		}
 		count += batch.Size()
-		log.Printf("Indexed: %d items, running %s\n", count, time.Now().Sub(startT))
+		log.Printf("Indexed: %d items, batch size %d, running %s\n", count, batchSize, time.Now().Sub(startT))
 	}
 	log.Printf("Total indexed: %d times, total run time %s\n", count, time.Now().Sub(startT))
 	return err
@@ -297,7 +304,8 @@ func main() {
 
 	index, err := getIndex(indexName)
 	if err != nil {
-		log.Fatalf("%s", err)
+		log.Printf("Error opening index %q, %s", indexName, err)
+		os.Exit(1)
 	}
 	defer index.Close()
 
