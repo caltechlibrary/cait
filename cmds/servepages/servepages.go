@@ -439,9 +439,9 @@ func requestLogger(next http.Handler) http.Handler {
 func responseLogger(r *http.Request, status int, err error) {
 	q := r.URL.Query()
 	if len(q) > 0 {
-		log.Printf("Response: %s Path: %s RemoteAddr: %s Query: %+v StatusCode: %d Error: %q\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent(), q, status, err)
+		log.Printf("Response: %s Path: %s RemoteAddr: %s UserAgent: %s Query: %+v Status: %d, %s %q\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent(), q, status, http.StatusText(status), err)
 	} else {
-		log.Printf("Response: %s Path: %s RemoteAddr: %s UserAgent: %s StatusCode: %d Error: %q\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent(), status, err)
+		log.Printf("Response: %s Path: %s RemoteAddr: %s UserAgent: %s Status: %d, %s %q\n", r.Method, r.URL.Path, r.RemoteAddr, r.UserAgent(), status, http.StatusText(status), err)
 	}
 }
 
