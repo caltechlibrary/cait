@@ -952,6 +952,8 @@ func getenv(envvar, defaultValue string) string {
 }
 
 func init() {
+	// We are going to log to standard out rather than standard err
+	log.SetOutput(os.Stdout)
 	caitAPIURL = getenv("CAIT_API_URL", caitAPIURL)
 	caitUsername = getenv("CAIT_USERNAME", caitUsername)
 	caitPassword = getenv("CAIT_PASSWORD", caitPassword)

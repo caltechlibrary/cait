@@ -27,6 +27,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"syscall"
 	//"html/template"
 	"io/ioutil"
 	"log"
@@ -34,6 +35,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -495,9 +497,32 @@ func getenv(envvar, defaultValue string) string {
 	return defaultValue
 }
 
+func handleSignals() {
+	signalChannel := make(chan os.Signal, 3)
+	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
+	go func() {
+		sig := <-signalChannel
+		switch sig {
+		case os.Interrupt:
+			//handle SIGINT
+			log.Println("SIGINT received, shutting down")
+			os.Exit(0)
+		case syscall.SIGTERM:
+			//handle SIGTERM
+			log.Println("SIGTERM received, shutting down")
+			os.Exit(0)
+		case syscall.SIGHUP:
+			//FIXME: this maybe a good choice for closing and re-opening the index with bringing down the web service
+			log.Println("SIGHUP received, shutting down")
+			os.Exit(0)
+		}
+	}()
+}
+
 func init() {
 	var err error
 
+	log.SetOutput(os.Stdout)
 	uri := getenv("CAIT_SITE_URL", "http://localhost:8501")
 	htdocsDir = getenv("CAIT_HTDOCS", "htdocs")
 	indexName = getenv("CAIT_HTDOCS_INDEX", "htdocs.bleve")
@@ -601,6 +626,8 @@ func main() {
 		fmt.Printf("%s %s\n", appName, cait.Version)
 		os.Exit(0)
 	}
+
+	handleSignals()
 
 	// Wake up our search engine
 	index, err = bleve.Open(indexName)

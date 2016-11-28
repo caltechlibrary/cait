@@ -25,9 +25,11 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/signal"
 	"path"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	// 3rd Party packages
@@ -109,6 +111,24 @@ func getenv(envvar, defaultValue string) string {
 		return tmp
 	}
 	return defaultValue
+}
+
+func handleSignals() {
+	signalChannel := make(chan os.Signal, 2)
+	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		sig := <-signalChannel
+		switch sig {
+		case os.Interrupt:
+			//handle SIGINT
+			log.Println("SIGINT received shutting down")
+			os.Exit(0)
+		case syscall.SIGTERM:
+			//handle SIGTERM
+			log.Println("SIGTERM received shutting down")
+			os.Exit(0)
+		}
+	}()
 }
 
 func init() {
@@ -301,6 +321,8 @@ func main() {
 			log.Fatalf("Could not removed %s, %s", indexName, err)
 		}
 	}
+
+	handleSignals()
 
 	index, err := getIndex(indexName)
 	if err != nil {
