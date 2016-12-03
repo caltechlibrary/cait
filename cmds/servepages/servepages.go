@@ -47,26 +47,24 @@ import (
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/cait"
+	"github.com/caltechlibrary/cli"
 )
 
 var (
-	description = `
- USAGE: %s [OPTIONS]
+	usage = `USAGE: %s [OPTIONS]`
 
+	description = `
  OVERVIEW
 
-	%s provides search services defined by CAIT_SITE_URL for the
-	website content defined by CAIT_HTDOCS using the index defined
-	by CAIT_HTDOCS_INDEX. Additionally a webhook call can be defined
-	to trigger an action such as pulling new site content.
+%s provides search services defined by CAIT_SITE_URL for the
+website content defined by CAIT_HTDOCS using the index defined
+by CAIT_HTDOCS_INDEX. Additionally a webhook call can be defined
+to trigger an action such as pulling new site content.
 
- OPTIONS
-`
-	configuration = `
- CONFIGURATION
+CONFIGURATION
 
- %s can be configured through environment variables. The following
- variables are supported-
+%s can be configured through environment variables. The following
+variables are supported-
 
    CAIT_SITE_URL
 
@@ -81,32 +79,42 @@ var (
    CAIT_WEBHOOK_COMMAND
 
 `
+
+	license = `
+%s %s
+
+Copyright (c) 2016, Caltech
+All rights not granted herein are expressly reserved by Caltech.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+`
 	showHelp    bool
 	showVersion bool
+	showLicense bool
 
-	indexName      string
+	bleveNames     string //NOTE: This is a colon delimited string of swapable indexes
 	htdocsDir      string
 	templatesDir   string
 	serviceURL     *url.URL
 	webhookPath    string
 	webhookSecret  string
 	webhookCommand string
+	enableSearch   bool
 
 	advancedPage []byte
 	basicPage    []byte
 
-	index bleve.Index
+	indexAlias bleve.IndexAlias
+	index      bleve.Index
 )
-
-func usage(appName, version string) {
-	fmt.Printf(description, appName, appName)
-	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Printf("\t-%s\t%s\n", f.Name, f.Usage)
-	})
-	fmt.Printf(configuration, appName)
-	fmt.Printf("%s %s\n", appName, version)
-	os.Exit(0)
-}
 
 func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
 	var err error
@@ -474,9 +482,11 @@ func customRoutes(next http.Handler) http.Handler {
 			resultsHandler(w, r)
 			return
 		}
-		if strings.HasPrefix(r.URL.Path, "/search/") == true {
-			searchHandler(w, r)
-			return
+		if enableSearch == true {
+			if strings.HasPrefix(r.URL.Path, "/search/") == true {
+				searchHandler(w, r)
+				return
+			}
 		}
 
 		// If this is a MultiViews style request (i.e. missing .html) then update r.URL.Path
@@ -489,78 +499,95 @@ func customRoutes(next http.Handler) http.Handler {
 	})
 }
 
-func getenv(envvar, defaultValue string) string {
-	tmp := os.Getenv(envvar)
-	if tmp != "" {
-		return tmp
+// switchIndex returns the error if a problem happens swaping the index
+func switchIndex() error {
+	var (
+		curName  string
+		nextName string
+	)
+	curName = index.Name()
+	if len(curName) == 0 {
+		return fmt.Errorf("No index defined")
 	}
-	return defaultValue
+	indexList := strings.Split(bleveNames, ":")
+	if len(indexList) > 1 {
+		// Find the name of the next index
+		for i, iName := range indexList {
+			if strings.Compare(iName, curName) == 0 {
+				i++
+				// Wrap to the beginning if we go off end of list
+				if i >= len(indexList) {
+					i = 0
+				}
+				nextName = indexList[i]
+			}
+		}
+		log.Printf("Opening index %q", nextName)
+		indexNext, err := bleve.Open(nextName)
+		if err != nil {
+			fmt.Printf("Can't open Bleve index %q, %s, aborting swap", nextName, err)
+		} else {
+			log.Printf("Switching from %q to %q", curName, nextName)
+			indexAlias.Swap([]bleve.Index{indexNext}, []bleve.Index{index})
+			log.Printf("Removing %q", index.Name())
+			indexAlias.Remove(index)
+			log.Printf("Closing %q", curName)
+			index.Close()
+			// Point index at indexNext
+			index = indexNext
+			log.Printf("Swap complete, index now %q", index.Name())
+		}
+		return nil
+	}
+	return fmt.Errorf("Only %q index defined, no swap possible", curName)
 }
 
 func handleSignals() {
-	signalChannel := make(chan os.Signal, 3)
-	signal.Notify(signalChannel, os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
+	intChan := make(chan os.Signal, 1)
+	signal.Notify(intChan, os.Interrupt)
 	go func() {
-		sig := <-signalChannel
-		switch sig {
-		case os.Interrupt:
-			//handle SIGINT
+		for {
+			<-intChan
+			//handle SIGINT by shutting down servepages
+			if index != nil {
+				log.Printf("Closing index %q", index.Name())
+				index.Close()
+			}
 			log.Println("SIGINT received, shutting down")
-			os.Exit(0)
-		case syscall.SIGTERM:
-			//handle SIGTERM
-			log.Println("SIGTERM received, shutting down")
-			os.Exit(0)
-		case syscall.SIGHUP:
-			//FIXME: this maybe a good choice for closing and re-opening the index with bringing down the web service
-			log.Println("SIGHUP received, shutting down")
 			os.Exit(0)
 		}
 	}()
-}
 
-func init() {
-	var err error
-
-	log.SetOutput(os.Stdout)
-	uri := getenv("CAIT_SITE_URL", "http://localhost:8501")
-	htdocsDir = getenv("CAIT_HTDOCS", "htdocs")
-	indexName = getenv("CAIT_HTDOCS_INDEX", "htdocs.bleve")
-	templatesDir = getenv("CAIT_TEMPLATES", "templates/default")
-	webhookPath = getenv("CAIT_WEBHOOK_PATH", "")
-	webhookSecret = getenv("CAIT_WEBHOOK_SECRET", "")
-	webhookCommand = getenv("CAIT_WEBHOOK_COMMAND", "")
-
-	flag.StringVar(&uri, "search", uri, "The URL to listen on for search requests")
-	flag.StringVar(&indexName, "index", indexName, "specify the Bleve index to use")
-	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "specify where to write the HTML files to")
-	flag.StringVar(&templatesDir, "templates", templatesDir, "The directory path for templates")
-	flag.BoolVar(&showHelp, "h", false, "display this help message")
-	flag.BoolVar(&showHelp, "help", false, "display this help message")
-	flag.BoolVar(&showVersion, "v", false, "display version info")
-	flag.BoolVar(&showVersion, "version", false, "display version info")
-
-	flag.StringVar(&webhookPath, "webhook-path", webhookPath, "the webhook path, e.g. /my-webhook/something")
-	flag.StringVar(&webhookSecret, "webhook-secret", webhookSecret, "the secret to validate before executing command")
-	flag.StringVar(&webhookCommand, "webhook-command", webhookCommand, "the command to execute if webhook validates")
-
-	templateName := path.Join(templatesDir, "advanced-search.html")
-	advancedPage, err = ioutil.ReadFile(templateName)
-	if err != nil {
-		log.Fatalf("Can't read %s, %s", templateName, err)
-	}
-	templateName = path.Join(templatesDir, "basic-search.html")
-	basicPage, err = ioutil.ReadFile(templateName)
-	if err != nil {
-		log.Fatalf("Can't read %s, %s", templateName, err)
-	}
-
-	if uri != "" {
-		serviceURL, err = url.Parse(uri)
-		if err != nil {
-			log.Fatalf("Aspace Search URL not valid, %s, %s", uri, err)
+	termChan := make(chan os.Signal, 1)
+	signal.Notify(termChan, syscall.SIGTERM)
+	go func() {
+		for {
+			<-termChan
+			//handle SIGTERM by shutting down servepages
+			if index != nil {
+				log.Printf("Closing index %q", index.Name())
+				index.Close()
+			}
+			log.Println("SIGTERM received, shutting down")
+			os.Exit(0)
 		}
-	}
+	}()
+
+	hupChan := make(chan os.Signal, 1)
+	signal.Notify(hupChan, syscall.SIGHUP)
+	go func() {
+		for {
+			<-hupChan
+			//NOTE: HUP triggers an swap of indexes used by search
+			log.Println("SIGHUP received, swaping index")
+			err := switchIndex()
+			if err != nil {
+				log.Printf("Error swaping index %s", err)
+				return
+			}
+			log.Printf("Active Index is now %q", index.Name())
+		}
+	}()
 }
 
 // signBody and verifySignature based on Gist https://gist.github.com/rjz/b51dc03061dbcff1c521
@@ -613,28 +640,117 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
+func check(cfg *cli.Config, key, value string) string {
+	if value == "" {
+		log.Fatal("Missing %s_%s", cfg.EnvPrefix, strings.ToUpper(key))
+		return ""
+	}
+	return value
+}
+
+func init() {
+	var err error
+
+	log.SetOutput(os.Stdout)
+	// Set defaults
+	uri := "http://localhost:8501"
+	htdocsDir = "htdocs"
+	bleveNames = "site-index-A.bleve:site-index-B.bleve"
+	templatesDir = "templates/default"
+	webhookPath = ""
+	webhookSecret = ""
+	webhookCommand = ""
+
+	flag.StringVar(&uri, "search", uri, "The URL to listen on for search requests")
+	flag.StringVar(&bleveNames, "bleve", bleveNames, "a colon delimited list of Bleve index db names")
+	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "specify where to write the HTML files to")
+	flag.StringVar(&templatesDir, "templates", templatesDir, "The directory path for templates")
+	flag.BoolVar(&showHelp, "h", false, "display help")
+	flag.BoolVar(&showHelp, "help", false, "display help")
+	flag.BoolVar(&showVersion, "v", false, "display version")
+	flag.BoolVar(&showVersion, "version", false, "display version")
+	flag.BoolVar(&showLicense, "l", false, "display license")
+	flag.BoolVar(&showLicense, "license", false, "display license")
+
+	flag.StringVar(&webhookPath, "webhook-path", webhookPath, "the webhook path, e.g. /my-webhook/something")
+	flag.StringVar(&webhookSecret, "webhook-secret", webhookSecret, "the secret to validate before executing command")
+	flag.StringVar(&webhookCommand, "webhook-command", webhookCommand, "the command to execute if webhook validates")
+	flag.BoolVar(&enableSearch, "enable-search", true, "turn on search support in webserver")
+
+	templateName := path.Join(templatesDir, "advanced-search.html")
+	advancedPage, err = ioutil.ReadFile(templateName)
+	if err != nil {
+		log.Fatalf("Can't read %s, %s", templateName, err)
+	}
+	templateName = path.Join(templatesDir, "basic-search.html")
+	basicPage, err = ioutil.ReadFile(templateName)
+	if err != nil {
+		log.Fatalf("Can't read %s, %s", templateName, err)
+	}
+
+	if uri != "" {
+		serviceURL, err = url.Parse(uri)
+		if err != nil {
+			log.Fatalf("Aspace Search URL not valid, %s, %s", uri, err)
+		}
+	}
+}
+
 func main() {
 	var err error
 
 	appName := path.Base(os.Args[0])
+	cfg := cli.New(appName, "CAIT", fmt.Sprintf(license, appName, cait.Version), cait.Version)
+	cfg.UsageText = fmt.Sprintf(usage, appName)
+	cfg.DescriptionText = fmt.Sprintf(description, appName, appName)
+	cfg.OptionsText = "OPTIONS\n"
 
 	flag.Parse()
 	if showHelp == true {
-		usage(appName, cait.Version)
-	}
-	if showVersion == true {
-		fmt.Printf("%s %s\n", appName, cait.Version)
+		fmt.Println(cfg.Usage())
 		os.Exit(0)
 	}
+	if showVersion == true {
+		fmt.Printf(cfg.Version())
+		os.Exit(0)
+	}
+
+	if showLicense == true {
+		fmt.Printf(cfg.License())
+		os.Exit(0)
+	}
+
+	htdocsDir = check(cfg, "htdocs", cfg.MergeEnv("htdocs", htdocsDir))
+	bleveNames = check(cfg, "bleve", cfg.MergeEnv("bleve", bleveNames))
+	templatesDir = check(cfg, "templates", cfg.MergeEnv("templates", templatesDir))
+	webhookPath = cfg.MergeEnv("webhook_path", webhookPath)
+	webhookSecret = cfg.MergeEnv("webhook_secret", webhookSecret)
+	webhookCommand = cfg.MergeEnv("webhook_command", webhookCommand)
 
 	handleSignals()
 
 	// Wake up our search engine
-	index, err = bleve.Open(indexName)
-	if err != nil {
-		log.Fatalf("Can't open Bleve index %s, %s", indexName, err)
+	indexList := strings.Split(bleveNames, ":")
+	availableIndex := false
+	if enableSearch == true {
+		for i := 0; i < len(indexList) && availableIndex == false; i++ {
+			indexName := indexList[i]
+			log.Printf("Opening %q", indexName)
+			index, err = bleve.OpenUsing(indexName, map[string]interface{}{
+				"read_only": true,
+			})
+			if err != nil {
+				log.Printf("Can't open Bleve index %q, %s, trying next index", indexName, err)
+			} else {
+				indexAlias = bleve.NewIndexAlias(index)
+				availableIndex = true
+			}
+		}
+		if availableIndex == false {
+			log.Fatalf("No index available %s", bleveNames)
+		}
+		defer index.Close()
 	}
-	defer index.Close()
 
 	// Send static file request to the default handler,
 	// search routes are handled by middleware customRoutes()

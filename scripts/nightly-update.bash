@@ -28,15 +28,20 @@ $HOME/bin/genpages
 if [ "$USER" = "root" ]; then
     /etc/init.d/servepages stop
 fi
-# Index webpages
-$HOME/bin/indexpages
 
 # Generate sitemap
 $HOME/bin/sitemapper htdocs htdocs/sitemap.xml $CAIT_SITE_URL
 
-# You should now be ready to reload the search engine/servepage service
-if [ "$USER" = "root" ]; then
-    /etc/init.d/servepages start
-else
-    $HOME/bin/servepages
-fi
+# Index webpages
+bleveIndexes=${CAIT_BELVE/:/ }
+for I in $bleveIndexes; do
+    console "Updating $I"
+    pids=$(pgrep servepages)
+    if [ "$pids" != "" ]; then
+        console "Sending signal to swap out index $I"
+        kill -s HUP $pids
+    fi
+    echo "Rebuilding index $I"
+    $HOME/bin/indexpages
+done
+

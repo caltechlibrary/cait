@@ -37,36 +37,29 @@ import (
 
 	// Caltech Libraries packages
 	"github.com/caltechlibrary/cait"
+	"github.com/caltechlibrary/cli"
 )
 
 var (
+	usage = `USAGE: %s [OPTIONS] [BLEVE_INDEX_NAME]`
+
 	description = `
- USAGE: %s [-h|--help]
+SYNOPSIS
 
- SYNOPSIS
+%s is a command line utility to indexes content in the htdocs directory.
+It produces a Bleve search index used by servepages web service.
+Configuration is done through environmental variables.
 
- %s is a command line utility to indexes content in the htdocs directory.
- It produces a Bleve search index used by servepages web service.
- Configuration is done through environmental variables.
+CONFIGURATION
 
- OPTIONS
-`
+%s relies on the following environment variables for
+configuration when overriding the defaults:
 
-	configuration = `
+    CAIT_HTDOCS   This should be the path to the directory tree
+                  containings the content (e.g. JSON files) to be index.
+                  This is generally populated with the genpages command.
 
- CONFIGURATION
-
- %s relies on the following environment variables for
- configuration when overriding the defaults:
-
-    CAIT_HTDOCS       This should be the path to the directory tree
-                        containings the content (e.g. JSON files) to be index.
-                        This is generally populated with the caitpage command.
-						Defaults to ./htdocs.
-
-    CAIT_HTDOCS_INDEX	This is the directory that will contain all the Bleve
-                        indexes. Defaults to ./htdocs.bleve
-
+    CAIT_BLEVE	  A colon delimited list of the Bleve indexes (for swapping)
 `
 
 	license = `
@@ -90,28 +83,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 	showLicense  bool
 	replaceIndex bool
 	htdocsDir    string
-	indexName    string
+	bleveNames   string
 	dirCount     int
 	fileCount    int
 )
-
-func usage(appName, version string) {
-	fmt.Printf(description, appName, appName)
-	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Printf("\t-%s\t%s\n", f.Name, f.Usage)
-	})
-	fmt.Printf(configuration, appName)
-	fmt.Printf("%s %s\n", appName, version)
-	os.Exit(0)
-}
-
-func getenv(envvar, defaultValue string) string {
-	tmp := os.Getenv(envvar)
-	if tmp != "" {
-		return tmp
-	}
-	return defaultValue
-}
 
 func handleSignals() {
 	signalChannel := make(chan os.Signal, 2)
@@ -129,20 +104,6 @@ func handleSignals() {
 			os.Exit(0)
 		}
 	}()
-}
-
-func init() {
-	htdocsDir = getenv("CAIT_HTDOCS", "htdocs")
-	indexName = getenv("CAIT_HTDOCS_INDEX", "htdocs.bleve")
-	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "The document root for the website")
-	flag.StringVar(&indexName, "index", indexName, "The name of the Bleve index")
-	flag.BoolVar(&replaceIndex, "r", false, "Replace the index if it exists")
-	flag.BoolVar(&showHelp, "h", false, "display help")
-	flag.BoolVar(&showHelp, "help", false, "display help")
-	flag.BoolVar(&showVersion, "v", false, "display version")
-	flag.BoolVar(&showVersion, "version", false, "display version")
-	flag.BoolVar(&showLicense, "l", false, "display license")
-	flag.BoolVar(&showLicense, "license", false, "display license")
 }
 
 func getIndex(indexName string) (bleve.Index, error) {
@@ -232,7 +193,9 @@ func getIndex(indexName string) (bleve.Index, error) {
 		return index, nil
 	}
 	log.Printf("Opening Bleve index at %s", indexName)
-	index, err := bleve.Open(indexName)
+	index, err := bleve.OpenUsing(indexName, map[string]interface{}{
+		"read_only": false,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("Can't create new bleve index %s, %s", indexName, err)
 	}
@@ -297,42 +260,80 @@ func indexSite(index bleve.Index, maxBatchSize int) error {
 	return err
 }
 
-func main() {
-	var err error
+func check(cfg *cli.Config, key, value string) string {
+	if value == "" {
+		log.Fatal("Missing %s_%s", cfg.EnvPrefix, strings.ToUpper(key))
+		return ""
+	}
+	return value
+}
 
+func init() {
+	bleveNames = "site-index-A.bleve:site-index-B.bleve"
+	htdocsDir = "htdocs"
+	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "The document root for the website")
+	flag.StringVar(&bleveNames, "bleve", bleveNames, "a colon delimited list of Bleve index db names")
+	flag.BoolVar(&replaceIndex, "r", true, "Replace the index if it exists")
+	flag.BoolVar(&showHelp, "h", false, "display help")
+	flag.BoolVar(&showHelp, "help", false, "display help")
+	flag.BoolVar(&showVersion, "v", false, "display version")
+	flag.BoolVar(&showVersion, "version", false, "display version")
+	flag.BoolVar(&showLicense, "l", false, "display license")
+	flag.BoolVar(&showLicense, "license", false, "display license")
+}
+
+func main() {
 	appName := path.Base(os.Args[0])
+	cfg := cli.New(appName, "CAIT", fmt.Sprintf(license, appName, cait.Version), cait.Version)
+	cfg.UsageText = fmt.Sprintf(usage, appName)
+	cfg.DescriptionText = fmt.Sprintf(description, appName, appName)
+	cfg.OptionsText = "OPTIONS\n"
 
 	flag.Parse()
+	args := flag.Args()
 	if showHelp == true {
-		usage(appName, cait.Version)
+		fmt.Println(cfg.Usage())
+		os.Exit(0)
 	}
 	if showVersion == true {
-		fmt.Printf("%s %s\n", appName, cait.Version)
+		fmt.Println(cfg.Version())
 		os.Exit(0)
 	}
 	if showLicense == true {
-		fmt.Printf(license, appName, cait.Version)
+		fmt.Println(cfg.License())
 		os.Exit(0)
 	}
 
-	if replaceIndex == true {
-		err := os.RemoveAll(indexName)
-		if err != nil {
-			log.Fatalf("Could not removed %s, %s", indexName, err)
-		}
+	if len(args) > 0 {
+		bleveNames = strings.Join(args, ":")
 	}
+
+	htdocsDir = check(cfg, "htdocs", cfg.MergeEnv("htdocs", htdocsDir))
+	names := check(cfg, "bleve", cfg.MergeEnv("bleve", bleveNames))
 
 	handleSignals()
 
-	index, err := getIndex(indexName)
-	if err != nil {
-		log.Printf("Error opening index %q, %s", indexName, err)
-		os.Exit(1)
-	}
-	defer index.Close()
+	for _, indexName := range strings.Split(names, ":") {
+		if replaceIndex == true {
+			log.Printf("Clearing index %s", indexName)
+			if err := os.RemoveAll(indexName); err != nil {
+				log.Fatalf("Could not removed %q, %s", indexName, err)
+			}
+		}
 
-	// Walk our data import tree and index things
-	log.Printf("Start indexing of %s in %s\n", htdocsDir, indexName)
-	indexSite(index, 1000)
+		index, err := getIndex(indexName)
+		if err != nil {
+			log.Printf("Skipping %s, ", indexName, err)
+		} else {
+			defer index.Close()
+
+			// Walk our data import tree and index things
+			log.Printf("Start indexing of %s in %s\n", htdocsDir, indexName)
+			err = indexSite(index, 1000)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+	}
 	log.Printf("Finished")
 }
