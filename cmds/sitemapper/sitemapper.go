@@ -1,5 +1,5 @@
 //
-// sitemapper generates a sitemap.xml file by crawling the content generate with caitpage
+// sitemapper generates a sitemap.xml file by crawling the content generate with genpages
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
 //
@@ -29,6 +29,7 @@ import (
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/cait"
+	"github.com/caltechlibrary/cli"
 )
 
 type locInfo struct {
@@ -37,67 +38,154 @@ type locInfo struct {
 }
 
 var (
-	showHelp    bool
-	showVersion bool
-	changefreq  string
-	locList     []*locInfo
-)
+	usage = `USAGE: %s [OPTIONS] HTDOCS_PATH MAP_FILENAME PUBLIC_BASE_URL`
 
-func usage(appName, version string) {
-	fmt.Println(`
- USAGE: %s [OPTIONS] HTDOCS_PATH MAP_FILENAME PUBLIC_BASE_URL
+	description = `
 
- OVERVIEW
+OVERVIEW
 
- Generates a sitemap for the accession pages.
+%s generates a sitemap for the website.
 
-`, appName)
-	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Printf("\t-%s\t%s\n", f.Name, f.Usage)
-	})
-	fmt.Printf(`
- EXAMPLE
+`
+
+	examples = `
+EXAMPLE
 
     %s htdocs htdocs/sitemap.xml http://archives.example.edu
 
-`, appName)
-	fmt.Printf("\n%s %s\n", appName, version)
-	os.Exit(0)
+`
+
+	license = `
+%s %s
+
+Copyright (c) 2016, Caltech
+All rights not granted herein are expressly reserved by Caltech.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+`
+	// Standard cli options
+	showHelp    bool
+	showVersion bool
+	showLicense bool
+
+	// App specific options
+	apiURL       string
+	dbName       string
+	bleveName    string
+	htdocs       string
+	templatePath string
+	siteURL      string
+	excludeList  string
+
+	changefreq string
+	locList    []*locInfo
+)
+
+func check(cfg *cli.Config, key, value string) string {
+	if value == "" {
+		log.Fatal("Missing %s_%s", cfg.EnvPrefix, strings.ToUpper(key))
+		return ""
+	}
+	return value
 }
 
 func init() {
-	flag.BoolVar(&showHelp, "h", false, "display this help message")
-	flag.BoolVar(&showHelp, "help", false, "display this help message")
-	flag.BoolVar(&showVersion, "v", false, "display version info")
-	flag.BoolVar(&showVersion, "version", false, "display version info")
-	flag.StringVar(&changefreq, "c", "daily", "Set the change frequencely value, e.g. daily, weekly, monthly")
+	// Log to standard out
+	log.SetOutput(os.Stdout)
+
+	// Setup options
+	flag.BoolVar(&showHelp, "h", false, "display help")
+	flag.BoolVar(&showHelp, "help", false, "display help")
+	flag.BoolVar(&showVersion, "v", false, "display version")
+	flag.BoolVar(&showVersion, "version", false, "display version")
+	flag.BoolVar(&showLicense, "l", false, "display license")
+	flag.BoolVar(&showLicense, "license", false, "display license")
+
+	// App specific options
+	flag.StringVar(&changefreq, "u", "daily", "Set the change frequencely value, e.g. daily, weekly, monthly")
+	flag.StringVar(&changefreq, "update-frequency", "daily", "Set the change frequencely value, e.g. daily, weekly, monthly")
+	flag.StringVar(&excludeList, "e", "", "A colon delimited list of path parts to exclude from sitemap")
+	flag.StringVar(&excludeList, "exclude", "", "A colon delimited list of path parts to exclude from sitemap")
+}
+
+type ExcludeList []string
+
+// Set returns the len of the new DirList array based on spliting the passed in string
+func (dirList ExcludeList) Set(s string) int {
+	dirList = strings.Split(s, ":")
+	return len(dirList)
+}
+
+// Exclude returns true if a fname fragment is included in set of dirList
+func (dirList ExcludeList) Exclude(p string) bool {
+	for _, item := range dirList {
+		if len(p) > 0 && strings.Contains(p, item) == true {
+			log.Printf("Skipping %q", p)
+			return true
+		}
+	}
+	return false
 }
 
 func main() {
 	appName := path.Base(os.Args[0])
 	flag.Parse()
+
+	cfg := cli.New(appName, "CAIT", fmt.Sprintf(license, appName, cait.Version), cait.Version)
+	cfg.UsageText = fmt.Sprintf(usage, appName)
+	cfg.DescriptionText = fmt.Sprintf(description, appName)
+	cfg.OptionsText = "OPTIONS\n"
+	cfg.ExampleText = fmt.Sprintf(examples, appName)
+
 	args := flag.Args()
 	if showHelp == true {
-		usage(appName, cait.Version)
-	}
-	if showVersion == true {
-		fmt.Printf("%s %s\n", appName, cait.Version)
+		fmt.Println(cfg.Usage())
 		os.Exit(0)
 	}
+	if showVersion == true {
+		fmt.Println(cfg.Version())
+		os.Exit(0)
+	}
+	if showLicense == true {
+		fmt.Println(cfg.License())
+		os.Exit(0)
+	}
+
 	if len(args) != 3 {
-		fmt.Printf("%s requires 3 parameters, see %s --help", appName, appName)
+		fmt.Printf("%s requires 3 parameters, see %s --help\n", appName, appName)
 		os.Exit(1)
 	}
+
+	// Required
+	htdocs = check(cfg, "htdocs", cfg.MergeEnv("htdocs", htdocs))
+	siteURL = check(cfg, "site_url", cfg.MergeEnv("site_url", siteURL))
+
+	// Optional
+	apiURL = cfg.MergeEnv("api_url", apiURL)
+	dbName = cfg.MergeEnv("dbname", dbName)
+	bleveName = cfg.MergeEnv("bleve", bleveName)
+	templatePath = cfg.MergeEnv("template_path", templatePath)
+
 	if changefreq == "" {
 		changefreq = "daily"
 	}
+
+	excludeDirs := ExcludeList(strings.Split(excludeList, ":"))
 
 	log.Printf("Starting map of %s\n", args[0])
 	filepath.Walk(args[0], func(p string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(p, ".html") {
 			fname := path.Base(p)
-			//NOTE: You can skip the eror pages in the sitemap
-			if strings.HasPrefix(fname, "50") == false && strings.HasPrefix(p, "40") == false {
+			//NOTE: You can skip the eror pages, and excluded directories in the sitemap
+			if strings.HasPrefix(fname, "50") == false && strings.HasPrefix(p, "40") == false && excludeDirs.Exclude(p) == false {
 				finfo := new(locInfo)
 				finfo.Loc = fmt.Sprintf("%s%s", args[2], strings.TrimPrefix(p, args[0]))
 				yr, mn, dy := info.ModTime().Date()
@@ -108,7 +196,7 @@ func main() {
 		}
 		return nil
 	})
-	log.Printf("Writing %s\n", args[1])
+	fmt.Printf("Writing %s\n", args[1])
 	fp, err := os.OpenFile(args[1], os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0664)
 	if err != nil {
 		log.Fatalf("Can't create %s, %s\n", args[1], err)
@@ -129,5 +217,4 @@ func main() {
 	fp.Write([]byte(`
 </urlset>
 `))
-	log.Printf("Writing %s complete\n", args[1])
 }
