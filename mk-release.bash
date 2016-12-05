@@ -4,7 +4,7 @@
 #
 RELEASE_NAME=cait
 
-PROGRAM_LIST=cait genpages sitemapper indexpages servepages
+PROGRAM_LIST="cait genpages sitemapper indexpages servepages"
 
 for PROGNAME in $PROGRAM_LIST; do
     echo "Compiling $PROGNAME for all architectures"
@@ -15,5 +15,5 @@ for PROGNAME in $PROGRAM_LIST; do
     env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspberrypi-arm7/$PROGNAME cmds/$PROGNAME/$PROGNAME.go
 done
 echo "Zipping release $RELEASE_NAME"
-zip -r $RELEASE_NAME-release.zip README.md INSTALL.md NOTES.md LICENSE etc/cait.bash-example etc/systemd/system/*example scripts/harvest.bash templates/* dist/*
+zip -r $RELEASE_NAME-release.zip README.md INSTALL.md NOTES.md LICENSE etc/cait.bash-example etc/systemd/system/*example scripts/harvest-*.bash templates/* dist/*
 
