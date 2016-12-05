@@ -3,13 +3,27 @@
 #
 PROG = cait
 
-build: api.go cait.go export.go schema.go search.go views.go
-	go build
-	go build -o bin/cait cmds/cait/cait.go
-	go build -o bin/genpages cmds/genpages/genpages.go
-	go build -o bin/indexpages cmds/indexpages/indexpages.go
-	go build -o bin/servepages cmds/servepages/servepages.go
-	go build -o bin/sitemapper cmds/sitemapper/sitemapper.go
+PROGRAM_liST = cait genpages sitemapper indexpages servepages 
+
+build: api $(PROGRAM_LIST)
+
+api: cait.go api.go export.go schema.go search.go views.go
+	env CGO_ENABLED=0 go build
+
+cait: api cmds/cait/cait.go
+	env CGO_ENABLED=0 go build -o bin/cait cmds/cait/cait.go
+
+genpages: api cmds/genpages/genpages.go
+	env CGO_ENABLED=0 go build -o bin/genpages cmds/genpages/genpages.go
+
+indexpages: api cmds/indexpages/indexpages.go
+	env CGO_ENABLED=0 go build -o bin/indexpages cmds/indexpages/indexpages.go
+
+servepages: api cmds/servepages/servepages.go
+	env CGO_ENABLED=0 go build -o bin/servepages cmds/servepages/servepages.go
+
+sitemapper: api cmds/sitemapper/sitemapper.go
+	env CGO_ENABLED=0 go build -o bin/sitemapper cmds/sitemapper/sitemapper.go
 
 test:
 	go test
@@ -17,14 +31,14 @@ test:
 clean:
 	if [ -d bin ]; then /bin/rm -fR bin; fi
 	if [ -d dist ]; then /bin/rm -fR dist; fi
-	if [ -f $(PROG)-binary-release.zip ]; then /bin/rm $(PROG)-binary-release.zip; fi
+	if [ -f $(PROG)-release.zip ]; then /bin/rm $(PROG)-release.zip; fi
 
 install:
-	env GOBIN=$(HOME)/bin go install cmds/cait/cait.go
-	env GOBIN=$(HOME)/bin go install cmds/genpages/genpages.go
-	env GOBIN=$(HOME)/bin go install cmds/indexpages/indexpages.go
-	env GOBIN=$(HOME)/bin go install cmds/servepages/servepages.go
-	env GOBIN=$(HOME)/bin go install cmds/sitemapper/sitemapper.go
+	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/cait/cait.go
+	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/genpages/genpages.go
+	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/indexpages/indexpages.go
+	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/servepages/servepages.go
+	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/sitemapper/sitemapper.go
 
 website:
 	./mk-website.bash
