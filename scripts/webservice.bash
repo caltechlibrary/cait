@@ -11,5 +11,8 @@ export WEEKDAY=$(date +%A)
 if [ -f etc/cait.bash ]; then
     . etc/cait.bash
 fi
+if [ ! -d logs ]; then
+    mkdir -p logs
+fi
 bin/servepages >> logs/servepages.$WEEKDAY.log
 
