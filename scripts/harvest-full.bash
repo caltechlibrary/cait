@@ -12,6 +12,10 @@
 
 # This is an example cronjob to be run from the root account.
 export WEEKDAY=$(date +%A)
+if [ ! -d "logs" ]; then
+    mkdir -p logs
+fi
+
 function consolelog {
     echo $(date +"%Y/%m/%d %H:%M:%S")" $@"
     echo $(date +"%Y/%m/%d %H:%M:%S")" $@" >> logs/harvest.$WEEKDAY.log
@@ -29,10 +33,6 @@ consolelog "Working path: $(pwd)"
 if [ -f $CONFIG ]; then
     consolelog "Sourcing configuration $CONFIG"
     . $CONFIG
-fi
-
-if [ ! -d "logs" ]; then
-    mkdir -p logs
 fi
 
 # Export the current content from ArchivesSpace
