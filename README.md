@@ -65,7 +65,7 @@ The command line tools and services are configured via environment variables. Be
     export CAIT_DATASET=dataset
     export CAIT_SITE_URL=http://localhost:8501
     export CAIT_HTDOCS=htdocs
-    export CAIT_HTDOCS_INDEX=htdocs.bleve
+    export CAIT_BLEVE=htdocs.bleve
     export CAIT_TEMPLATES=templates/default
 
 ```
@@ -168,7 +168,7 @@ correspond to accession id 1 for repository 2.
 _indexpages_ depends on four environment variables
 
 + CAIT_HTDOCS, the root directory where the JSON blobs and HTML files are saved
-+ CAIT_HTDOCS_INDEX, the name of the Bleve index (created or maintained)
++ CAIT_BLEVE, the name of the Bleve index (created or maintained)
 
 ### _servepages_
 
@@ -180,7 +180,7 @@ uses the search page and results templates defined in CAIT_TEMPLATES.
 It uses the following environment variables
 
 + CAIT_HTDOCS, the htdoc root of the website
-+ CAIT_HTDOCS_INDEX, the Bleve index to use to drive the search service
++ CAIT_BLEVE, the Bleve index to use to drive the search service
 + CAIT_TEMPLATES, templates for search service as well as browsable static pages
 + CAIT_SITE_URL, the url you want to run the search service on (e.g. http://localhost:8501)
 
