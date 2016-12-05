@@ -23,11 +23,9 @@ fi
 
 # Export the current content from ArchivesSpace
 $HOME/bin/cait archivesspace export
+
 # Generate webpages
 $HOME/bin/genpages
-if [ "$USER" = "root" ]; then
-    /etc/init.d/servepages stop
-fi
 
 # Generate sitemap
 $HOME/bin/sitemapper htdocs htdocs/sitemap.xml $CAIT_SITE_URL
@@ -44,4 +42,12 @@ for I in $bleveIndexes; do
     echo "Rebuilding index $I"
     $HOME/bin/indexpages
 done
+
+#if [ "$USER" = "root" ]; then
+# Sys Init restart 
+#    /etc/init.d/servepages restart
+# Systemd reload environment and restart 
+#    systemctl daemon-reload
+#    systemctl restart servepages
+#fi
 
