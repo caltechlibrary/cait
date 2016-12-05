@@ -715,12 +715,12 @@ func main() {
 		os.Exit(0)
 	}
 	if showVersion == true {
-		fmt.Printf(cfg.Version())
+		fmt.Println(cfg.Version())
 		os.Exit(0)
 	}
 
 	if showLicense == true {
-		fmt.Printf(cfg.License())
+		fmt.Println(cfg.License())
 		os.Exit(0)
 	}
 
