@@ -29,14 +29,19 @@ if [ -f $CONFIG ]; then
     . $CONFIG
 fi
 
+if [ ! -d "logs" ]; then
+    mkdir -p logs
+fi
+
+export WEEKDAY=$(date +%A)
 # Export the current content from ArchivesSpace
-bin/cait archivesspace export
+bin/cait archivesspace export >> logs/harvest.$WEEKDAY.log
 
 # Generate webpages
-bin/genpages
+bin/genpages >> logs/harvest.$WEEKDAY.log
 
 # Generate sitemap
-bin/sitemapper htdocs htdocs/sitemap.xml $CAIT_SITE_URL
+bin/sitemapper htdocs htdocs/sitemap.xml $CAIT_SITE_URL >> logs/harvest.$WEEKDAY.log
 
 # Index webpages
 bleveIndexes=${CAIT_BELVE/:/ }
@@ -48,7 +53,7 @@ for I in $bleveIndexes; do
         kill -s HUP $pids
     fi
     echo "Rebuilding index $I"
-    bin/indexpages
+    bin/indexpages >> logs/harvest.$WEEKDAY.log
 done
 
 #
