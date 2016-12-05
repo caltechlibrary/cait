@@ -11,8 +11,10 @@
 # export CONFIG=/Sites/archives.example.edu
 
 # This is an example cronjob to be run from the root account.
+export WEEKDAY=$(date +%A)
 function consolelog {
     echo $(date +"%Y/%m/%d %H:%M:%S")" $@"
+    echo $(date +"%Y/%m/%d %H:%M:%S")" $@" >> logs/harvest.$WEEKDAY.log
 }
 
 # Change directory to where cait is installed
@@ -33,7 +35,6 @@ if [ ! -d "logs" ]; then
     mkdir -p logs
 fi
 
-export WEEKDAY=$(date +%A)
 # Export the current content from ArchivesSpace
 bin/cait archivesspace export >> logs/harvest.$WEEKDAY.log
 
@@ -46,13 +47,13 @@ bin/sitemapper htdocs htdocs/sitemap.xml $CAIT_SITE_URL >> logs/harvest.$WEEKDAY
 # Index webpages
 bleveIndexes=${CAIT_BELVE/:/ }
 for I in $bleveIndexes; do
-    console "Updating $I"
+    consolelog "Updating $I"
     pids=$(pgrep servepages)
     if [ "$pids" != "" ]; then
-        console "Sending signal to swap out index $I"
+        consolelog "Sending signal to swap out index $I"
         kill -s HUP $pids
     fi
-    echo "Rebuilding index $I"
+    consolelog "Rebuilding index $I"
     bin/indexpages >> logs/harvest.$WEEKDAY.log
 done
 
