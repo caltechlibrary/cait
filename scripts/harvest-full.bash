@@ -4,6 +4,7 @@
 # You can set the "HOME" directory for the deployment.
 # e.g. /Sites/archives.example.edu
 # export HOME=/Sites/archives.example.edu
+# cd $HOME
 
 # You can set the environment file for the deployment.
 # e.g. /Sites/archives.example.edu/etc/cait.bash
@@ -16,13 +17,12 @@ function consolelog {
 
 # Change directory to where cait is installed
 consolelog  "Running as $USER"
-cd $HOME
 
 if [ "$CONFIG" = "" ]; then
-    export CONFIG=$HOME/etc/cait.bash
+    export CONFIG=etc/cait.bash
 fi
 
-consolelog "Working path $(pwd)"
+consolelog "Working path: $(pwd)"
 # Load the cait configuration
 if [ -f $CONFIG ]; then
     consolelog "Sourcing configuration $CONFIG"
@@ -30,13 +30,13 @@ if [ -f $CONFIG ]; then
 fi
 
 # Export the current content from ArchivesSpace
-$HOME/bin/cait archivesspace export
+bin/cait archivesspace export
 
 # Generate webpages
-$HOME/bin/genpages
+bin/genpages
 
 # Generate sitemap
-$HOME/bin/sitemapper htdocs htdocs/sitemap.xml $CAIT_SITE_URL
+bin/sitemapper htdocs htdocs/sitemap.xml $CAIT_SITE_URL
 
 # Index webpages
 bleveIndexes=${CAIT_BELVE/:/ }
@@ -48,7 +48,7 @@ for I in $bleveIndexes; do
         kill -s HUP $pids
     fi
     echo "Rebuilding index $I"
-    $HOME/bin/indexpages
+    bin/indexpages
 done
 
 #
