@@ -961,7 +961,7 @@ func init() {
 	caitDataset = getenv("CAIT_DATASET", caitDataset)
 	caitDatasetIndex = getenv("CAIT_DATASET_INDEX", caitDatasetIndex)
 	caitHtdocs = getenv("CAIT_HTDOCS", caitHtdocs)
-	caitHtdocsIndex = getenv("CAIT_HTDOCS_INDEX", caitHtdocsIndex)
+	caitHtdocsIndex = getenv("CAIT_BLEVE", caitHtdocsIndex)
 	caitTemplates = getenv("CAIT_TEMPLATES", caitTemplates)
 
 	flag.BoolVar(&showHelp, "h", false, "Display the help page")

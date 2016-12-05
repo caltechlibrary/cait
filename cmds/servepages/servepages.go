@@ -58,7 +58,7 @@ var (
 
 %s provides search services defined by CAIT_SITE_URL for the
 website content defined by CAIT_HTDOCS using the index defined
-by CAIT_HTDOCS_INDEX. Additionally a webhook call can be defined
+by CAIT_BLEVE. Additionally a webhook call can be defined
 to trigger an action such as pulling new site content.
 
 CONFIGURATION
@@ -68,7 +68,9 @@ variables are supported-
 
    CAIT_SITE_URL
 
-   CAIT_HTDOCS_INDEX
+   CAIT_HTDOCS
+
+   CAIT_BLEVE
 
    CAIT_TEMPLATES
 

@@ -41,7 +41,7 @@ import (
 )
 
 var (
-	usage = `USAGE: %s [OPTIONS] [BLEVE_INDEX_NAME]`
+	usage = `USAGE: %s [OPTIONS] [BLEVE_INDEX]`
 
 	description = `
 SYNOPSIS
