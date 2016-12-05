@@ -651,7 +651,9 @@ func check(cfg *cli.Config, key, value string) string {
 func init() {
 	var err error
 
+	// We are going to log to standard out rather than standard err
 	log.SetOutput(os.Stdout)
+
 	// Set defaults
 	uri := "http://localhost:8501"
 	htdocsDir = "htdocs"

@@ -269,6 +269,9 @@ func check(cfg *cli.Config, key, value string) string {
 }
 
 func init() {
+	// We are going to log to standard out rather than standard err
+	log.SetOutput(os.Stdout)
+
 	bleveNames = "site-index-A.bleve:site-index-B.bleve"
 	htdocsDir = "htdocs"
 	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "The document root for the website")

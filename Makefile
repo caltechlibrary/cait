@@ -14,6 +14,16 @@ build: $(API) $(PROGRAM_LIST) $(CMDS)
 api: $(API)
 	env CGO_ENABLED=0 go build
 
+cait: bin/cait
+
+genpages: bin/genpages
+
+sitemapper: bin/sitemapper
+
+indexpages: bin/indexpages
+
+servepages: bin/servepages
+
 bin/cait: $(API) cmds/cait/cait.go
 	env CGO_ENABLED=0 go build -o bin/cait cmds/cait/cait.go
 

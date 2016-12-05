@@ -188,6 +188,9 @@ func getenv(envar, defaultValue string) string {
 }
 
 func init() {
+	// We are going to log to standard out rather than standard err
+	log.SetOutput(os.Stdout)
+
 	datasetDir = getenv("CAIT_DATASET", "dataset")
 	templateDir = getenv("CAIT_TEMPLATES", path.Join("templates", "default"))
 	htdocsDir = getenv("CAIT_HTDOCS", "htdocs")

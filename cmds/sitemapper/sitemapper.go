@@ -98,7 +98,7 @@ func check(cfg *cli.Config, key, value string) string {
 }
 
 func init() {
-	// Log to standard out
+	// We are going to log to standard out rather than standard err
 	log.SetOutput(os.Stdout)
 
 	// Setup options
