@@ -3,26 +3,30 @@
 #
 PROG = cait
 
-PROGRAM_liST = cait genpages sitemapper indexpages servepages 
+PROGRAM_LIST = bin/cait bin/genpages bin/sitemapper bin/indexpages bin/servepages 
 
-build: api $(PROGRAM_LIST)
+API = cait.go api.go export.go schema.go search.go views.go
 
-api: cait.go api.go export.go schema.go search.go views.go
+CMDS = cmds/*/*.go
+
+build: $(API) $(PROGRAM_LIST) $(CMDS)
+
+api: $(API)
 	env CGO_ENABLED=0 go build
 
-cait: api cmds/cait/cait.go
+bin/cait: $(API) cmds/cait/cait.go
 	env CGO_ENABLED=0 go build -o bin/cait cmds/cait/cait.go
 
-genpages: api cmds/genpages/genpages.go
+bin/genpages: $(API)  cmds/genpages/genpages.go
 	env CGO_ENABLED=0 go build -o bin/genpages cmds/genpages/genpages.go
 
-indexpages: api cmds/indexpages/indexpages.go
+bin/indexpages: $(API) cmds/indexpages/indexpages.go
 	env CGO_ENABLED=0 go build -o bin/indexpages cmds/indexpages/indexpages.go
 
-servepages: api cmds/servepages/servepages.go
+bin/servepages: $(API) cmds/servepages/servepages.go
 	env CGO_ENABLED=0 go build -o bin/servepages cmds/servepages/servepages.go
 
-sitemapper: api cmds/sitemapper/sitemapper.go
+bin/sitemapper: $(API) cmds/sitemapper/sitemapper.go
 	env CGO_ENABLED=0 go build -o bin/sitemapper cmds/sitemapper/sitemapper.go
 
 test:
