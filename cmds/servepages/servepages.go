@@ -105,7 +105,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 	bleveNames     string //NOTE: This is a colon delimited string of swapable indexes
 	htdocsDir      string
 	templatesDir   string
-	serviceURL     *url.URL
+	siteURL        string
 	webhookPath    string
 	webhookSecret  string
 	webhookCommand string
@@ -651,24 +651,13 @@ func check(cfg *cli.Config, key, value string) string {
 }
 
 func init() {
-	var err error
-
 	// We are going to log to standard out rather than standard err
 	log.SetOutput(os.Stdout)
 
-	// Set defaults
-	uri := "http://localhost:8501"
-	htdocsDir = "htdocs"
-	bleveNames = "site-index-A.bleve:site-index-B.bleve"
-	templatesDir = "templates/default"
-	webhookPath = ""
-	webhookSecret = ""
-	webhookCommand = ""
-
-	flag.StringVar(&uri, "search", uri, "The URL to listen on for search requests")
-	flag.StringVar(&bleveNames, "bleve", bleveNames, "a colon delimited list of Bleve index db names")
-	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "specify where to write the HTML files to")
-	flag.StringVar(&templatesDir, "templates", templatesDir, "The directory path for templates")
+	flag.StringVar(&siteURL, "search", "", "The URL to listen on for search requests")
+	flag.StringVar(&bleveNames, "bleve", "", "a colon delimited list of Bleve index db names")
+	flag.StringVar(&htdocsDir, "htdocs", "", "specify where to write the HTML files to")
+	flag.StringVar(&templatesDir, "templates", "", "The directory path for templates")
 	flag.BoolVar(&showHelp, "h", false, "display help")
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "v", false, "display version")
@@ -676,28 +665,10 @@ func init() {
 	flag.BoolVar(&showLicense, "l", false, "display license")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 
-	flag.StringVar(&webhookPath, "webhook-path", webhookPath, "the webhook path, e.g. /my-webhook/something")
-	flag.StringVar(&webhookSecret, "webhook-secret", webhookSecret, "the secret to validate before executing command")
-	flag.StringVar(&webhookCommand, "webhook-command", webhookCommand, "the command to execute if webhook validates")
+	flag.StringVar(&webhookPath, "webhook-path", "", "the webhook path, e.g. /my-webhook/something")
+	flag.StringVar(&webhookSecret, "webhook-secret", "", "the secret to validate before executing command")
+	flag.StringVar(&webhookCommand, "webhook-command", "", "the command to execute if webhook validates")
 	flag.BoolVar(&enableSearch, "enable-search", true, "turn on search support in webserver")
-
-	templateName := path.Join(templatesDir, "advanced-search.html")
-	advancedPage, err = ioutil.ReadFile(templateName)
-	if err != nil {
-		log.Fatalf("Can't read %s, %s", templateName, err)
-	}
-	templateName = path.Join(templatesDir, "basic-search.html")
-	basicPage, err = ioutil.ReadFile(templateName)
-	if err != nil {
-		log.Fatalf("Can't read %s, %s", templateName, err)
-	}
-
-	if uri != "" {
-		serviceURL, err = url.Parse(uri)
-		if err != nil {
-			log.Fatalf("Aspace Search URL not valid, %s, %s", uri, err)
-		}
-	}
 }
 
 func main() {
@@ -724,12 +695,28 @@ func main() {
 		os.Exit(0)
 	}
 
+	siteURL = check(cfg, "site_url", cfg.MergeEnv("site_url", siteURL))
+	serviceURL, err := url.Parse(siteURL)
+	if err != nil {
+		log.Fatal(err)
+	}
 	htdocsDir = check(cfg, "htdocs", cfg.MergeEnv("htdocs", htdocsDir))
 	bleveNames = check(cfg, "bleve", cfg.MergeEnv("bleve", bleveNames))
 	templatesDir = check(cfg, "templates", cfg.MergeEnv("templates", templatesDir))
 	webhookPath = cfg.MergeEnv("webhook_path", webhookPath)
 	webhookSecret = cfg.MergeEnv("webhook_secret", webhookSecret)
 	webhookCommand = cfg.MergeEnv("webhook_command", webhookCommand)
+
+	templateName := path.Join(templatesDir, "advanced-search.html")
+	advancedPage, err = ioutil.ReadFile(templateName)
+	if err != nil {
+		log.Fatalf("Can't read templates, e.g. %s, %s", templateName, err)
+	}
+	templateName = path.Join(templatesDir, "basic-search.html")
+	basicPage, err = ioutil.ReadFile(templateName)
+	if err != nil {
+		log.Fatalf("Can't read %s, %s", templateName, err)
+	}
 
 	handleSignals()
 
