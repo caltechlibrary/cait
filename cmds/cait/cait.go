@@ -31,6 +31,7 @@ import (
 
 	// Caltech Library Packages
 	"github.com/caltechlibrary/cait"
+	"github.com/caltechlibrary/cli"
 )
 
 type command struct {
@@ -42,8 +43,9 @@ type command struct {
 
 var (
 	showHelp    bool
-	payload     string
 	showVersion bool
+	showLicense bool
+	payload     string
 )
 
 var (
@@ -70,79 +72,77 @@ var (
 
 // These are the global environment variables defaults used by various combinations of subjects and actions
 var (
+	usage = `USAGE: %s SUBJECT ACTION [OPTIONS|PAYLOAD]`
+
 	description = `
-  USAGE: %s SUBJECT ACTION [OPTIONS|PAYLOAD]
+SYSNOPSIS
 
-  %s is a command line utility for interacting with ArchivesSpace.
-  The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
+%s is a command line utility for interacting with ArchivesSpace.
+The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
 
-    SUBJECT can be %s.
++ SUBJECT can be %s.
++ ACTION can be %s.
++ PAYLOAD is a JSON expression appropriate to SUBJECT and ACTION.
++ OPTIONS addition flags based parameters appropriate apply to the SUBJECT,
+    ACTION or PAYLOAD
 
-    ACTION can be %s.
+CONFIGURATION
 
-    PAYLOAD is a JSON expression appropriate to SUBJECT and ACTION.
-
-    OPTIONS addition flags based parameters appropriate apply to the SUBJECT,
-	        ACTION or PAYLOAD
-
-`
-
-	configuration = `
- CONFIGURATION
-
-  %s also relies on the shell environment for information about connecting
-  to ArchivesSpace. The following shell variables are used
+%s also relies on the shell environment for information about connecting
+to ArchivesSpace. The following shell variables are used
 
     CAIT_API_URL           (e.g. http://localhost:8089)
     CAIT_API_TOKEN         (e.g. long token string of letters and numbers)
 
-  If CAIT_API_TOKEN is not set then CAIT_USERNAME and CAIT_PASSWORD
-  are used if available.
+If CAIT_API_TOKEN is not set then CAIT_USERNAME and CAIT_PASSWORD
+are used.
+`
 
-  EXAMPLES:
+	examples = `
+EXAMPLES:
 
   	%s repository create '{"repo_code":"MyTest","name":"My Test Repository"}'
 
-  The subject is "repository", the action is "create", the target is "MyTest"
-  and the options are "My Test Repository".
+The subject is "repository", the action is "create", the target is "MyTest"
+and the options are "My Test Repository".
 
-  This would create a test repository with a repo code of "MyTest" and a name of
-  "My Test Repository".
+This would create a test repository with a repo code of "MyTest" and a name of
+"My Test Repository".
 
-  You can check to see what repositories exists with
+You can check to see what repositories exists with
 
     %s repository list
 
-  Or for a specific repository by ID with
+Or for a specific repository by ID with
 
     %s repository list '{"uri": "/repositories/2"}'
 
-  Other SUBJECTS and ACTIONS work in a similar fashion.
+Other SUBJECTS and ACTIONS work in a similar fashion.`
 
-`
-	caitAPIURL       = `http://localhost:8089`
-	caitUsername     = ``
-	caitPassword     = ``
-	caitDataset      = `dataset`
-	caitDatasetIndex = `dataset.bleve`
-	caitHtdocs       = `htdocs`
-	caitHtdocsIndex  = `htdocs.bleve`
-	caitTemplates    = `templates`
+	license = `
+%s %s
+
+Copyright (c) 2016, Caltech
+All rights not granted herein are expressly reserved by Caltech.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.`
+
+	caitAPIURL      = `http://localhost:8089`
+	caitUsername    = ``
+	caitPassword    = ``
+	caitDataset     = `dataset`
+	caitHtdocs      = `htdocs`
+	caitHtdocsIndex = `htdocs.bleve`
+	caitTemplates   = `templates`
 )
-
-func usage(appName, version string) {
-	fmt.Printf(description,
-		appName,
-		appName,
-		strings.Join(subjects, ", "),
-		strings.Join(actions, ", "))
-	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Printf("\t-%s\t%s\n", f.Name, f.Usage)
-	})
-	fmt.Printf(configuration, appName, appName, appName, appName)
-	fmt.Printf("\n%s %s\n", appName, version)
-	os.Exit(0)
-}
 
 func containsElement(src []string, elem string) bool {
 	for _, item := range src {
@@ -943,49 +943,49 @@ func (c *command) String() string {
 	return string(src)
 }
 
-func getenv(envvar, defaultValue string) string {
-	tmp := os.Getenv(envvar)
-	if tmp != "" {
-		return tmp
-	}
-	return defaultValue
-}
-
 func init() {
-	// We are going to log to standard out rather than standard err
-	log.SetOutput(os.Stdout)
+	flag.BoolVar(&showHelp, "h", false, "Display help")
+	flag.BoolVar(&showHelp, "help", false, "Display help")
+	flag.BoolVar(&showVersion, "v", false, "Display version")
+	flag.BoolVar(&showVersion, "version", false, "Display version")
+	flag.BoolVar(&showLicense, "l", false, "Display license")
+	flag.BoolVar(&showLicense, "license", false, "Display license")
 
-	caitAPIURL = getenv("CAIT_API_URL", caitAPIURL)
-	caitUsername = getenv("CAIT_USERNAME", caitUsername)
-	caitPassword = getenv("CAIT_PASSWORD", caitPassword)
-	caitDataset = getenv("CAIT_DATASET", caitDataset)
-	caitDatasetIndex = getenv("CAIT_DATASET_INDEX", caitDatasetIndex)
-	caitHtdocs = getenv("CAIT_HTDOCS", caitHtdocs)
-	caitHtdocsIndex = getenv("CAIT_BLEVE", caitHtdocsIndex)
-	caitTemplates = getenv("CAIT_TEMPLATES", caitTemplates)
-
-	flag.BoolVar(&showHelp, "h", false, "Display the help page")
-	flag.BoolVar(&showHelp, "help", false, "Display the help page")
-	flag.StringVar(&payload, "I", "", "Use this filepath for the payload")
+	flag.StringVar(&payload, "i", "", "Use this filepath for the payload")
 	flag.StringVar(&payload, "input", "", "Use this filepath for the payload")
-	flag.BoolVar(&showVersion, "v", false, "Display version info")
-	flag.BoolVar(&showVersion, "version", false, "Display version info")
 }
 
 func main() {
 	appName := path.Base(os.Args[0])
-
 	flag.Parse()
-	if showHelp == true {
-		usage(appName, cait.Version)
-	}
+	args := flag.Args()
 
-	if showVersion == true {
-		fmt.Printf("%s %s\n", appName, cait.Version)
+	cfg := cli.New(appName, "CAIT", fmt.Sprintf(license, appName, cait.Version), cait.Version)
+	cfg.UsageText = fmt.Sprintf(usage, appName)
+	cfg.DescriptionText = fmt.Sprintf(description, appName, appName, appName, appName)
+	cfg.ExampleText = fmt.Sprintf(examples, appName, appName, appName)
+	cfg.OptionsText = "OPTIONS\n"
+
+	if showHelp == true {
+		fmt.Println(cfg.Usage())
 		os.Exit(0)
 	}
 
-	args := flag.Args()
+	if showVersion == true {
+		fmt.Println(cfg.Version())
+		os.Exit(0)
+	}
+
+	if showLicense == true {
+		fmt.Println(cfg.License())
+		os.Exit(0)
+	}
+
+	caitAPIURL = cfg.CheckOption("api_url", cfg.MergeEnv("api_url", caitAPIURL), true)
+	caitUsername = cfg.CheckOption("username", cfg.MergeEnv("username", caitUsername), true)
+	caitPassword = cfg.CheckOption("password", cfg.MergeEnv("password", caitPassword), true)
+	caitDataset = cfg.CheckOption("dataset", cfg.MergeEnv("dataset", caitDataset), true)
+
 	if len(args) < 2 {
 		log.Fatalf("Missing commands options. For more info try: cait -h")
 	}
@@ -994,7 +994,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("%s\n", err)
 	}
-	os.Args = args[1:]
 
 	if payload != "" {
 		src, err := ioutil.ReadFile(payload)
@@ -1007,6 +1006,9 @@ func main() {
 	if cmd.Subject == "agent" && len(args) > 2 {
 		cmd.Options = []string{args[2]}
 	}
+
+	//NOTE: if we have no errors we can switch the log statement to os.Stdout here.
+	log.SetOutput(os.Stdout)
 
 	api := cait.New(caitAPIURL, caitUsername, caitPassword)
 	src, err := runCmd(api, cmd)

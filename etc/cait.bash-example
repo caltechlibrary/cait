@@ -23,3 +23,4 @@ export CAIT_WEBHOOK_COMMAND="/Sites/archives.example.edu/scripts/do-webhook.bash
 
 # Add the cli and scripts to PATH if needed
 # export PATH=/Sites/archives.example.edu/bin:$PATH
+# Make sure the directories exist for htdocs and dataset
