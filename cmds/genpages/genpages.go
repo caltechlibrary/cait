@@ -32,24 +32,22 @@ import (
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/cait"
+	"github.com/caltechlibrary/cli"
 )
 
 var (
+	usage = `USAGE: %s [OPTIONS]`
+
 	description = `
- USAGE: %s [OPTIONS]
+SYNOPSIS
 
- OVERVIEW
+%s generates HTML, .include pages and normalized JSON based on the JSON output form
+cait and templates associated with the command.
 
-	%s generates HTML, .include pages and normalized JSON based on the JSON output form
-	cait and templates associated with the command.
+CONFIGURATION
 
- OPTIONS
-`
-	configuration = `
- CONFIGURATION
-
-    %s can be configured through setting the following environment
-	variables-
+%s can be configured through setting the following environment
+variables-
 
     CAIT_DATASET    this is the directory that contains the output of the
                       'cait archivesspace export' command.
@@ -58,26 +56,33 @@ var (
                       used used to generate the static content of the website.
 
     CAIT_HTDOCS     this is the directory where the HTML files are written.
+`
 
+	license = `
+%s %s
+
+Copyright (c) 2016, Caltech
+All rights not granted herein are expressly reserved by Caltech.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 `
 
 	showHelp    bool
 	showVersion bool
+	showLicense bool
 
 	htdocsDir   string
 	datasetDir  string
 	templateDir string
 )
-
-func usage(appName, version string) {
-	fmt.Printf(description, appName, appName)
-	flag.VisitAll(func(f *flag.Flag) {
-		fmt.Printf("\t-%s\t%s\n", f.Name, f.Usage)
-	})
-	fmt.Printf(configuration, appName)
-	fmt.Printf("%s %s\n", appName, version)
-	os.Exit(0)
-}
 
 func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.Template, *template.Template, error) {
 	aHTMLTmpl, err := cait.AssembleTemplate(path.Join(templateDir, aHTMLTmplName), path.Join(templateDir, aIncTmplName))
@@ -94,7 +99,9 @@ func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.T
 func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName string, agents []*cait.Agent, subjects map[string]*cait.Subject, digitalObjects map[string]*cait.DigitalObject) error {
 	log.Printf("Reading templates from %s\n", templateDir)
 	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
-	check(err)
+	if err != nil {
+		log.Fatalf("template error %q, %q: %s", aHTMLTmplName, aIncTmplName, err)
+	}
 
 	return filepath.Walk(path.Join(datasetDir, "repositories"), func(p string, f os.FileInfo, err error) error {
 		// Process accession records
@@ -173,46 +180,51 @@ func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName st
 	})
 }
 
-func check(err error) {
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func getenv(envar, defaultValue string) string {
-	tmp := os.Getenv(envar)
-	if tmp != "" {
-		return tmp
-	}
-	return defaultValue
-}
-
 func init() {
 	// We are going to log to standard out rather than standard err
 	log.SetOutput(os.Stdout)
 
-	datasetDir = getenv("CAIT_DATASET", "dataset")
-	templateDir = getenv("CAIT_TEMPLATES", path.Join("templates", "default"))
-	htdocsDir = getenv("CAIT_HTDOCS", "htdocs")
-	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "specify where to write the HTML files to")
-	flag.StringVar(&datasetDir, "dataset", datasetDir, "specify where to read the JSON files from")
-	flag.StringVar(&templateDir, "templates", templateDir, "specify where to read the templates from")
-	flag.BoolVar(&showHelp, "h", false, "display this help message")
-	flag.BoolVar(&showHelp, "help", false, "display this help message")
-	flag.BoolVar(&showVersion, "v", false, "display version info")
-	flag.BoolVar(&showVersion, "version", false, "display version info")
+	flag.BoolVar(&showHelp, "h", false, "display help")
+	flag.BoolVar(&showHelp, "help", false, "display help")
+	flag.BoolVar(&showVersion, "v", false, "display version")
+	flag.BoolVar(&showVersion, "version", false, "display version")
+	flag.BoolVar(&showLicense, "l", false, "display license")
+	flag.BoolVar(&showLicense, "license", false, "display license")
+
+	flag.StringVar(&htdocsDir, "htdocs", "", "specify where to write the HTML files to")
+	flag.StringVar(&datasetDir, "dataset", "", "specify where to read the JSON files from")
+	flag.StringVar(&templateDir, "templates", "templates/default", "specify where to read the templates from")
 }
 
 func main() {
 	appName := path.Base(os.Args[0])
 	flag.Parse()
+	//args := flag.Args()
+
+	cfg := cli.New(appName, "CAIT", fmt.Sprintf(license, appName, cait.Version), cait.Version)
+	cfg.UsageText = fmt.Sprintf(usage, appName)
+	cfg.DescriptionText = fmt.Sprintf(description, appName, appName)
+	//cfg.ExampleText = fmt.Sprintf(examples, appName)
+	cfg.OptionsText = "OPTIONS\n"
+
 	if showHelp == true {
-		usage(appName, cait.Version)
-	}
-	if showVersion == true {
-		fmt.Printf("%s %s\n", appName, cait.Version)
+		fmt.Println(cfg.Usage())
 		os.Exit(0)
 	}
+
+	if showVersion == true {
+		fmt.Println(cfg.Version())
+		os.Exit(0)
+	}
+
+	if showLicense == true {
+		fmt.Println(cfg.License())
+		os.Exit(0)
+	}
+
+	datasetDir = cfg.CheckOption("dataset", cfg.MergeEnv("dataset", datasetDir), true)
+	templateDir = cfg.CheckOption("templates", cfg.MergeEnv("templates", templateDir), true)
+	htdocsDir = cfg.CheckOption("htdocs", cfg.MergeEnv("htdocs", htdocsDir), true)
 
 	if htdocsDir != "" {
 		if _, err := os.Stat(htdocsDir); os.IsNotExist(err) {
@@ -232,7 +244,7 @@ func main() {
 		return err
 	})
 	if digitalObjectDir == "" {
-		check(fmt.Errorf("Can't find the digital object directory in %s", datasetDir))
+		log.Fatalf("Can't find the digital object directory in %s", datasetDir)
 	}
 	subjectDir := path.Join(datasetDir, "subjects")
 	agentsDir := path.Join(datasetDir, "agents", "people")
@@ -242,16 +254,24 @@ func main() {
 	//
 	log.Printf("Reading Subjects from %s", subjectDir)
 	subjectsMap, err := cait.MakeSubjectMap(subjectDir)
-	check(err)
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
 
 	log.Printf("Reading Digital Objects from %s", digitalObjectDir)
 	digitalObjectsMap, err := cait.MakeDigitalObjectMap(digitalObjectDir)
-	check(err)
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
 
 	agentsList, err := cait.MakeAgentList(agentsDir)
-	check(err)
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
 
 	log.Printf("Processing accessions in %s\n", datasetDir)
 	err = processAccessions(templateDir, "accession.html", "accession.include", agentsList, subjectsMap, digitalObjectsMap)
-	check(err)
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
 }
