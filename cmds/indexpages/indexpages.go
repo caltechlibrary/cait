@@ -82,10 +82,11 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 	showVersion  bool
 	showLicense  bool
 	replaceIndex bool
-	htdocsDir    string
-	bleveNames   string
-	dirCount     int
-	fileCount    int
+
+	htdocs     string
+	bleveNames string
+	dirCount   int
+	fileCount  int
 )
 
 func handleSignals() {
@@ -207,8 +208,8 @@ func indexSite(index bleve.Index, maxBatchSize int) error {
 	count := 0
 	batch := index.NewBatch()
 	batchSize := 10
-	log.Printf("Walking %s", path.Join(htdocsDir, "repositories"))
-	err := filepath.Walk(path.Join(htdocsDir, "repositories"), func(p string, f os.FileInfo, err error) error {
+	log.Printf("Walking %s", path.Join(htdocs, "repositories"))
+	err := filepath.Walk(path.Join(htdocs, "repositories"), func(p string, f os.FileInfo, err error) error {
 		if strings.Contains(p, "/accessions/") == true && strings.HasSuffix(p, ".json") == true {
 			src, err := ioutil.ReadFile(p)
 			if err != nil {
@@ -221,9 +222,9 @@ func indexSite(index bleve.Index, maxBatchSize int) error {
 				log.Printf("Can't parse %s, %s", p, err)
 				return nil
 			}
-			// Trim the htdocsDir and trailing .json extension
+			// Trim the htdocs and trailing .json extension
 			//log.Printf("Queued %s", p)
-			err = batch.Index(strings.TrimSuffix(strings.TrimPrefix(p, htdocsDir), "json"), view)
+			err = batch.Index(strings.TrimSuffix(strings.TrimPrefix(p, htdocs), "json"), view)
 			if err != nil {
 				log.Printf("Indexing error %s, %s", p, err)
 				return nil
@@ -272,28 +273,28 @@ func init() {
 	// We are going to log to standard out rather than standard err
 	log.SetOutput(os.Stdout)
 
-	bleveNames = "site-index-A.bleve:site-index-B.bleve"
-	htdocsDir = "htdocs"
-	flag.StringVar(&htdocsDir, "htdocs", htdocsDir, "The document root for the website")
-	flag.StringVar(&bleveNames, "bleve", bleveNames, "a colon delimited list of Bleve index db names")
-	flag.BoolVar(&replaceIndex, "r", true, "Replace the index if it exists")
 	flag.BoolVar(&showHelp, "h", false, "display help")
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "v", false, "display version")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "l", false, "display license")
 	flag.BoolVar(&showLicense, "license", false, "display license")
+
+	flag.StringVar(&htdocs, "htdocs", "", "The document root for the website")
+	flag.StringVar(&bleveNames, "bleve", "", "a colon delimited list of Bleve index db names")
+	flag.BoolVar(&replaceIndex, "r", true, "Replace the index if it exists")
 }
 
 func main() {
 	appName := path.Base(os.Args[0])
+	flag.Parse()
+	args := flag.Args()
+
 	cfg := cli.New(appName, "CAIT", fmt.Sprintf(license, appName, cait.Version), cait.Version)
 	cfg.UsageText = fmt.Sprintf(usage, appName)
 	cfg.DescriptionText = fmt.Sprintf(description, appName, appName)
 	cfg.OptionsText = "OPTIONS\n"
 
-	flag.Parse()
-	args := flag.Args()
 	if showHelp == true {
 		fmt.Println(cfg.Usage())
 		os.Exit(0)
@@ -311,8 +312,8 @@ func main() {
 		bleveNames = strings.Join(args, ":")
 	}
 
-	htdocsDir = check(cfg, "htdocs", cfg.MergeEnv("htdocs", htdocsDir))
-	names := check(cfg, "bleve", cfg.MergeEnv("bleve", bleveNames))
+	htdocs = cfg.CheckOption("htdocs", cfg.MergeEnv("htdocs", htdocs), true)
+	names := cfg.CheckOption("bleve", cfg.MergeEnv("bleve", bleveNames), true)
 
 	handleSignals()
 
@@ -331,7 +332,7 @@ func main() {
 			defer index.Close()
 
 			// Walk our data import tree and index things
-			log.Printf("Start indexing of %s in %s\n", htdocsDir, indexName)
+			log.Printf("Start indexing of %s in %s\n", htdocs, indexName)
 			err = indexSite(index, 1000)
 			if err != nil {
 				log.Fatal(err)

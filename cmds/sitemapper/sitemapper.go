@@ -122,10 +122,13 @@ func (dirList ExcludeList) Set(s string) int {
 }
 
 // Exclude returns true if a fname fragment is included in set of dirList
-func (dirList ExcludeList) Exclude(p string) bool {
+func (dirList ExcludeList) IsExcluded(p string) bool {
+	if len(dirList) == 0 {
+		return false
+	}
 	for _, item := range dirList {
-		if len(p) > 0 && strings.Contains(p, item) == true {
-			log.Printf("Skipping %q", p)
+		if len(p) > 0 && len(item) > 0 && strings.Contains(p, item) == true {
+			log.Printf("Skipping %q, because %q", p, item)
 			return true
 		}
 	}
@@ -163,7 +166,11 @@ func main() {
 	if changefreq == "" {
 		changefreq = "daily"
 	}
-	excludeDirs := ExcludeList(strings.Split(excludeList, ":"))
+
+	excludeDirs := new(ExcludeList)
+	if len(excludeList) > 0 {
+		excludeDirs.Set(excludeList)
+	}
 
 	// Required
 	htdocs = cfg.CheckOption("htdocs", cfg.MergeEnv("htdocs", htdocs), true)
@@ -175,7 +182,7 @@ func main() {
 		if strings.HasSuffix(p, ".html") {
 			fname := path.Base(p)
 			//NOTE: You can skip the eror pages, and excluded directories in the sitemap
-			if strings.HasPrefix(fname, "50") == false && strings.HasPrefix(p, "40") == false && excludeDirs.Exclude(p) == false {
+			if strings.HasPrefix(fname, "50") == false && strings.HasPrefix(p, "40") == false && excludeDirs.IsExcluded(p) == false {
 				finfo := new(locInfo)
 				finfo.Loc = fmt.Sprintf("%s%s", siteURL, strings.TrimPrefix(p, htdocs))
 				yr, mn, dy := info.ModTime().Date()
