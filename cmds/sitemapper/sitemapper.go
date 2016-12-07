@@ -38,7 +38,7 @@ type locInfo struct {
 }
 
 var (
-	usage = `USAGE: %s [OPTIONS] HTDOCS_PATH MAP_FILENAME PUBLIC_BASE_URL`
+	usage = `USAGE: %s [OPTIONS] [SITEMAP_PATH]`
 
 	description = `
 
@@ -46,12 +46,17 @@ OVERVIEW
 
 %s generates a sitemap for the website.
 
+CONFIGURATION
+
++ CAIT_HTDOCS is the path to the HTML document root
++ CAIT_SITE_URL is the base path for the URL to website (e.g. http://localhost:8001)
++ CAIT_SITEMAP is the path to the sitemap xml file (e.g. htdocs/sitemap.xml)
 `
 
 	examples = `
 EXAMPLE
 
-    %s htdocs htdocs/sitemap.xml http://archives.example.edu
+    %s htdocs htdocs/sitemap.xml
 
 `
 
@@ -77,25 +82,14 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 	showLicense bool
 
 	// App specific options
-	apiURL       string
-	dbName       string
-	bleveName    string
-	htdocs       string
-	templatePath string
-	siteURL      string
-	excludeList  string
+	htdocs      string
+	sitemap     string
+	siteURL     string
+	excludeList string
 
 	changefreq string
 	locList    []*locInfo
 )
-
-func check(cfg *cli.Config, key, value string) string {
-	if value == "" {
-		log.Fatal("Missing %s_%s", cfg.EnvPrefix, strings.ToUpper(key))
-		return ""
-	}
-	return value
-}
 
 func init() {
 	// We are going to log to standard out rather than standard err
@@ -110,6 +104,9 @@ func init() {
 	flag.BoolVar(&showLicense, "license", false, "display license")
 
 	// App specific options
+	flag.StringVar(&htdocs, "htdocs", "", "Path to website directory (e.g. www or htdocs)")
+	flag.StringVar(&siteURL, "url", "", "Basepath for website")
+	flag.StringVar(&sitemap, "sitemap", "", "path to sitemap file (e.g. htdocs/sitemap.xml)")
 	flag.StringVar(&changefreq, "u", "daily", "Set the change frequencely value, e.g. daily, weekly, monthly")
 	flag.StringVar(&changefreq, "update-frequency", "daily", "Set the change frequencely value, e.g. daily, weekly, monthly")
 	flag.StringVar(&excludeList, "e", "", "A colon delimited list of path parts to exclude from sitemap")
@@ -159,35 +156,28 @@ func main() {
 		os.Exit(0)
 	}
 
-	if len(args) != 3 {
-		fmt.Printf("%s requires 3 parameters, see %s --help\n", appName, appName)
-		os.Exit(1)
+	if len(args) > 0 {
+		sitemap = args[0]
 	}
-
-	// Required
-	htdocs = check(cfg, "htdocs", cfg.MergeEnv("htdocs", htdocs))
-	siteURL = check(cfg, "site_url", cfg.MergeEnv("site_url", siteURL))
-
-	// Optional
-	apiURL = cfg.MergeEnv("api_url", apiURL)
-	dbName = cfg.MergeEnv("dbname", dbName)
-	bleveName = cfg.MergeEnv("bleve", bleveName)
-	templatePath = cfg.MergeEnv("template_path", templatePath)
 
 	if changefreq == "" {
 		changefreq = "daily"
 	}
-
 	excludeDirs := ExcludeList(strings.Split(excludeList, ":"))
 
-	log.Printf("Starting map of %s\n", args[0])
-	filepath.Walk(args[0], func(p string, info os.FileInfo, err error) error {
+	// Required
+	htdocs = cfg.CheckOption("htdocs", cfg.MergeEnv("htdocs", htdocs), true)
+	siteURL = cfg.CheckOption("site_url", cfg.MergeEnv("site_url", siteURL), true)
+	sitemap = cfg.CheckOption("sitemap", cfg.MergeEnv("sitemap", sitemap), true)
+
+	log.Printf("Starting map of %s\n", htdocs)
+	filepath.Walk(htdocs, func(p string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(p, ".html") {
 			fname := path.Base(p)
 			//NOTE: You can skip the eror pages, and excluded directories in the sitemap
 			if strings.HasPrefix(fname, "50") == false && strings.HasPrefix(p, "40") == false && excludeDirs.Exclude(p) == false {
 				finfo := new(locInfo)
-				finfo.Loc = fmt.Sprintf("%s%s", args[2], strings.TrimPrefix(p, args[0]))
+				finfo.Loc = fmt.Sprintf("%s%s", siteURL, strings.TrimPrefix(p, htdocs))
 				yr, mn, dy := info.ModTime().Date()
 				finfo.LastMod = fmt.Sprintf("%d-%0.2d-%0.2d", yr, mn, dy)
 				log.Printf("Adding %s\n", finfo.Loc)
@@ -196,10 +186,10 @@ func main() {
 		}
 		return nil
 	})
-	fmt.Printf("Writing %s\n", args[1])
-	fp, err := os.OpenFile(args[1], os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0664)
+	fmt.Printf("Writing %s\n", sitemap)
+	fp, err := os.OpenFile(sitemap, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0664)
 	if err != nil {
-		log.Fatalf("Can't create %s, %s\n", args[1], err)
+		log.Fatalf("Can't create %s, %s\n", sitemap, err)
 	}
 	defer fp.Close()
 	fp.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>
