@@ -45,7 +45,7 @@ bin/genpages >> logs/harvest.$WEEKDAY.log
 bin/sitemapper htdocs htdocs/sitemap.xml $CAIT_SITE_URL >> logs/harvest.$WEEKDAY.log
 
 # Index webpages
-bleveIndexes=${CAIT_BELVE/:/ }
+bleveIndexes=${CAIT_BLEVE/:/ }
 for I in $bleveIndexes; do
     consolelog "Updating $I"
     pids=$(pgrep servepages)
