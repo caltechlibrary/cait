@@ -86,7 +86,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 )
 
 func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.Template, *template.Template, error) {
-	tmplFuncs := tmplfn.Join(tmplfn.TimeMap, tmplfn.PageMap)
+	tmplFuncs := tmplfn.Join(tmplfn.TimeMap, tmplfn.PageMap, cait.TmplMap)
 	aHTMLTmpl, err := tmplfn.Assemble(tmplFuncs, path.Join(templateDir, aHTMLTmplName), path.Join(templateDir, aIncTmplName))
 	if err != nil {
 		return nil, nil, fmt.Errorf("Can't parse template %s, %s, %s", aHTMLTmplName, aIncTmplName, err)

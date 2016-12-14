@@ -119,7 +119,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 	index      bleve.Index
 
 	// Internal package var
-	tmplFuncs = tmplfn.Join(tmplfn.TimeMap, tmplfn.PageMap)
+	tmplFuncs = tmplfn.Join(tmplfn.TimeMap, tmplfn.PageMap, cait.TmplMap)
 )
 
 func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
