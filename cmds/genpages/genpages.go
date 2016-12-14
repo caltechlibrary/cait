@@ -33,6 +33,7 @@ import (
 	// Caltech Library packages
 	"github.com/caltechlibrary/cait"
 	"github.com/caltechlibrary/cli"
+	"github.com/caltechlibrary/tmplfn"
 )
 
 var (
@@ -85,11 +86,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 )
 
 func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.Template, *template.Template, error) {
-	aHTMLTmpl, err := cait.AssembleTemplate(path.Join(templateDir, aHTMLTmplName), path.Join(templateDir, aIncTmplName))
+	tmplFuncs := tmplfn.Join(tmplfn.TimeMap, tmplfn.PageMap)
+	aHTMLTmpl, err := tmplfn.Assemble(tmplFuncs, path.Join(templateDir, aHTMLTmplName), path.Join(templateDir, aIncTmplName))
 	if err != nil {
 		return nil, nil, fmt.Errorf("Can't parse template %s, %s, %s", aHTMLTmplName, aIncTmplName, err)
 	}
-	aIncTmpl, err := cait.Template(path.Join(templateDir, aIncTmplName))
+	aIncTmpl, err := tmplfn.Assemble(tmplFuncs, path.Join(templateDir, aIncTmplName))
 	if err != nil {
 		return aHTMLTmpl, nil, fmt.Errorf("Can't parse template %s, %s", aIncTmplName, err)
 	}
@@ -193,7 +195,7 @@ func init() {
 
 	flag.StringVar(&htdocsDir, "htdocs", "", "specify where to write the HTML files to")
 	flag.StringVar(&datasetDir, "dataset", "", "specify where to read the JSON files from")
-	flag.StringVar(&templateDir, "templates", "templates/default", "specify where to read the templates from")
+	flag.StringVar(&templateDir, "templates", "", "specify where to read the templates from")
 }
 
 func main() {

@@ -48,6 +48,7 @@ import (
 	// Caltech Library packages
 	"github.com/caltechlibrary/cait"
 	"github.com/caltechlibrary/cli"
+	"github.com/caltechlibrary/tmplfn"
 )
 
 var (
@@ -116,6 +117,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 	indexAlias bleve.IndexAlias
 	index      bleve.Index
+
+	// Internal package var
+	tmplFuncs = tmplfn.Join(tmplfn.TimeMap, tmplfn.PageMap)
 )
 
 func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
@@ -365,7 +369,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	pageInclude = "results-search.include"
 
 	// Load my templates and setup to execute them
-	tmpl, err := cait.AssembleTemplate(path.Join(templatesDir, pageHTML), path.Join(templatesDir, pageInclude))
+	tmpl, err := tmplfn.Assemble(tmplFuncs, path.Join(templatesDir, pageHTML), path.Join(templatesDir, pageInclude))
 	if err != nil {
 		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Template Errors: %s, %s, %s\n", pageHTML, pageInclude, err))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -412,14 +416,14 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	if strings.HasPrefix(r.URL.Path, "/search/advanced") == true {
 		formData.URI = "/search/advanced/"
-		tmpl, err = cait.AssembleTemplate(path.Join(templatesDir, "advanced-search.html"), path.Join(templatesDir, "advanced-search.include"))
+		tmpl, err = tmplfn.Assemble(tmplFuncs, path.Join(templatesDir, "advanced-search.html"), path.Join(templatesDir, "advanced-search.include"))
 		if err != nil {
 			fmt.Printf("Can't read advanced-search templates, %s", err)
 			return
 		}
 	} else {
 		formData.URI = "/search/basic/"
-		tmpl, err = cait.AssembleTemplate(path.Join(templatesDir, "basic-search.html"), path.Join(templatesDir, "basic-search.include"))
+		tmpl, err = tmplfn.Assemble(tmplFuncs, path.Join(templatesDir, "basic-search.html"), path.Join(templatesDir, "basic-search.include"))
 		if err != nil {
 			log.Printf("Can't read basic-search templates, %s\n", err)
 			return
