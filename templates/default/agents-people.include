@@ -1,0 +1,10 @@
+    <nav>
+    <ul>
+        <li><a href="/search/basic/">Basic Search</a></li>
+        <li><a href="/search/advanced/">Advanced Search</a></li>
+    </ul>
+    </nav>
+    <section>
+    DEBUG: Agent/People template goes here.
+    <div class="debug">JSON:<pre>{{ stringify . true }}</pre></div>
+    </section>

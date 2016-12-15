@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Agent/People  example {{- with .Title }} - {{ . }}{{end}}</title>
+    {{ with .ID }}<link rel="alternative" type="application/json" href="{{- . -}}.json">{{ end }}
+</head>
+<body>
+    <header><h1>Agent/People Template Example</h1></header>
+    <nav class="site-nav">
+        <li><a href="/search/basic/">New Search</a></li>
+    </nav>
+    {{ template "agent-people.include" . }}
+    <footer>
+    </footer>
+</body>
+</html>

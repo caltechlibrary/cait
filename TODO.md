@@ -3,8 +3,8 @@
 
 ## Action Item
 
-+ Don't allow non-supported query options
-+ Improve logging
++ Add harvesting of agents (all types) to export, genpages, indexing and servepages
+
 
 ### Bugs
 
