@@ -3,6 +3,10 @@
 #
 PROG = cait
 
+VERSION = $(shell grep 'Version =' cait.go | cut -d = -f 2)
+
+BRANCH = $(shell git branch | grep '* ' | cut -d\  -f 2)
+
 PROGRAM_LIST = bin/cait bin/genpages bin/sitemapper bin/indexpages bin/servepages 
 
 API = cait.go api.go export.go schema.go search.go views.go
@@ -45,7 +49,7 @@ test:
 clean:
 	if [ -d bin ]; then /bin/rm -fR bin; fi
 	if [ -d dist ]; then /bin/rm -fR dist; fi
-	if [ -f $(PROG)-release.zip ]; then /bin/rm $(PROG)-release.zip; fi
+	if [ -f $(PROG)-$(VERSION)-release.zip ]; then /bin/rm $(PROG)-$(VERSION)-release.zip; fi
 
 install:
 	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/cait/cait.go
@@ -58,9 +62,8 @@ website:
 	./mk-website.bash
 
 save:
-	./mk-website.bash
 	git commit -am "Quick save"
-	git push origin master
+	git push origin $(BRANCH)
 
 publish:
 	./mk-website.bash
