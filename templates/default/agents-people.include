@@ -6,5 +6,10 @@
     </nav>
     <section>
     DEBUG: Agent/People template goes here.
+    <h1>{{ .Title }}</h1>
+    {{ with .Notes }}
+    <p>
+    <pre>{{ stringify . false }}</pre>
+    {{ end }}
     <div class="debug">JSON:<pre>{{ stringify . true }}</pre></div>
     </section>

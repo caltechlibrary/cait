@@ -120,7 +120,7 @@ func processAgentsPeople(templateDir string, aHTMLTmplName string, aIncTmplName 
 
 			// FIXME: which restrictions do we care about agent/people?--
 			//        agent.Published, person.DisplayName.IsDisplayName, person.DisplayName.Authorized
-			if person.Published == true && person.DisplayName.IsDisplayName == true && person.DisplayName.Authorized == true {
+			if person.Published == true && person.IsLinkedToPublishedRecord == true && person.DisplayName.IsDisplayName == true && person.DisplayName.Authorized == true {
 				// Create a normalized view of the accession to make it easier to work with
 
 				// If the accession is published and the accession is not suppressed then generate the webpage
