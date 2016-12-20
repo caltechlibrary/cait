@@ -2,10 +2,12 @@
 #
 # Make releases for Linux/amd64, Linux/ARM7 (Raspberry Pi), Windows, and Mac OX X (darwin)
 #
-RELEASE_NAME=cait
+PROJECT=cait
+VERSION=$(grep -m 1 'Version =' cait.go | cut -d \" -f 2)
+RELEASE_NAME=cait-$VERSION
 
+echo "Preparing release $RELEASE_NAME"
 PROGRAM_LIST="cait genpages sitemapper indexpages servepages"
-
 for PROGNAME in $PROGRAM_LIST; do
     echo "Compiling $PROGNAME for all architectures"
     env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/$PROGNAME cmds/$PROGNAME/$PROGNAME.go
