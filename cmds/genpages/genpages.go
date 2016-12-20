@@ -98,6 +98,85 @@ func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.T
 	return aHTMLTmpl, aIncTmpl, nil
 }
 
+func processAgentsPeople(templateDir string, aHTMLTmplName string, aIncTmplName string) error {
+	log.Printf("Reading templates from %s\n", templateDir)
+	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
+	if err != nil {
+		log.Fatalf("template error %q, %q: %s", aHTMLTmplName, aIncTmplName, err)
+	}
+
+	return filepath.Walk(path.Join(datasetDir, "agents/people"), func(p string, f os.FileInfo, err error) error {
+		// Process accession records
+		if strings.Contains(p, "agents/people") == true && strings.HasSuffix(p, ".json") == true {
+			src, err := ioutil.ReadFile(p)
+			if err != nil {
+				return err
+			}
+			person := new(cait.Agent)
+			err = json.Unmarshal(src, &person)
+			if err != nil {
+				return err
+			}
+
+			// FIXME: which restrictions do we care about agent/people?--
+			//        agent.Published, person.DisplayName.IsDisplayName, person.DisplayName.Authorized
+			if person.Published == true && person.DisplayName.IsDisplayName == true && person.DisplayName.Authorized == true {
+				// Create a normalized view of the accession to make it easier to work with
+
+				// If the accession is published and the accession is not suppressed then generate the webpage
+				fname := path.Join(htdocsDir, fmt.Sprintf("%s.html", person.URI))
+				dname := path.Dir(fname)
+				err = os.MkdirAll(dname, 0775)
+				if err != nil {
+					return fmt.Errorf("Can't create %s, %s", dname, err)
+				}
+
+				// Process HTML file
+				fp, err := os.Create(fname)
+				if err != nil {
+					return fmt.Errorf("Problem creating %s, %s", fname, err)
+				}
+				log.Printf("Writing %s", fname)
+				err = aHTMLTmpl.Execute(fp, person)
+				if err != nil {
+					log.Fatalf("template execute error %s, %s", aHTMLTmplName, err)
+					return err
+				}
+				fp.Close()
+
+				// Process Include file (just the HTML content)
+				fname = path.Join(htdocsDir, fmt.Sprintf("%s.include", person.URI))
+				fp, err = os.Create(fname)
+				if err != nil {
+					return fmt.Errorf("Problem creating %s, %s", fname, err)
+				}
+				log.Printf("Writing %s", fname)
+				err = aIncTmpl.Execute(fp, person)
+				if err != nil {
+					log.Fatalf("template execute error %s, %s", aIncTmplName, err)
+					return err
+				}
+				fp.Close()
+
+				// Process JSON file (an abridged version of the JSON output in data)
+				fname = path.Join(htdocsDir, fmt.Sprintf("%s.json", person.URI))
+				src, err := json.Marshal(person)
+				if err != nil {
+					return fmt.Errorf("Could not JSON encode %s, %s", fname, err)
+				}
+				log.Printf("Writing %s", fname)
+				err = ioutil.WriteFile(fname, src, 0664)
+				if err != nil {
+					log.Fatalf("could not write JSON view %s, %s", fname, err)
+					return err
+				}
+				fp.Close()
+			}
+		}
+		return nil
+	})
+}
+
 func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName string, agents []*cait.Agent, subjects map[string]*cait.Subject, digitalObjects map[string]*cait.DigitalObject) error {
 	log.Printf("Reading templates from %s\n", templateDir)
 	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
@@ -266,10 +345,13 @@ func main() {
 		log.Fatalf("%s", err)
 	}
 
+	log.Printf("Reading Agents/People from %s", agentsDir)
 	agentsList, err := cait.MakeAgentList(agentsDir)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
+	log.Printf("Processing Agents/People in %s\n", agentsDir)
+	err = processAgentsPeople(templateDir, "agents-people.html", "agents-people.include")
 
 	log.Printf("Processing accessions in %s\n", datasetDir)
 	err = processAccessions(templateDir, "accession.html", "accession.include", agentsList, subjectsMap, digitalObjectsMap)

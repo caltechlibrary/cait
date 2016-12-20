@@ -196,6 +196,8 @@ func (a *Accession) NormalizeView(agents []*Agent, subjects map[string]*Subject,
 	return v, nil
 }
 
+//FIXME: NormalizeView takes an Agent/People object and returns a normalized view
+
 // NormalizeView takes a digital object and returns a normalized view
 func (o *DigitalObject) NormalizeView() *NormalizedDigitalObjectView {
 	result := new(NormalizedDigitalObjectView)
