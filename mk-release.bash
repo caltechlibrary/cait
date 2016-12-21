@@ -19,10 +19,12 @@ done
 mkdir -p dist
 mkdir -p dist/etc/systemd/system
 mkdir -p dist/scripts
-for FNAME in README.md LICENSE INSTALL.md NOTES.md templates scripts/harvest-*.bash etc/*-example etc/systemd/system/*-example; do 
+for FNAME in README.md LICENSE INSTALL.md NOTES.md templates; do
   cp -vR $FNAME dist/
 done
-
+cp -vR scripts/harvest-*.bash dist/scripts/
+cp -vR etc/*-example dist/etc/
+cp -vR etc/systemd/system/*-example dist/etc/systemd/system/
 echo "Zipping release $RELEASE_NAME"
 zip -r $RELEASE_NAME-release.zip dist/*
 
