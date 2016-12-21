@@ -24,5 +24,5 @@ for FNAME in README.md LICENSE INSTALL.md NOTES.md templates scripts/harvest-*.b
 done
 
 echo "Zipping release $RELEASE_NAME"
-zip -r $RELEASE_NAME-release.zip README.md INSTALL.md NOTES.md LICENSE etc/cait.*-example etc/systemd/system/*-example scripts/harvest-*.bash templates/* dist/*
+zip -r $RELEASE_NAME-release.zip dist/*
 
