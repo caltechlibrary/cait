@@ -315,7 +315,7 @@ func main() {
 
 	handleSignals()
 
-	for _, indexName := range strings.Split(names, ":") {
+	for i, indexName := range strings.Split(names, ":") {
 		index, err := getIndex(indexName)
 		if err != nil {
 			log.Printf("Skipping %s, ", indexName, err)
@@ -327,6 +327,9 @@ func main() {
 			err = indexSite(index, 1000)
 			if err != nil {
 				log.Fatal(err)
+			}
+			if i < len(names)-1 {
+				time.Sleep(30 * time.Second)
 			}
 		}
 	}

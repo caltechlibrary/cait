@@ -387,7 +387,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Template error"))
 		return
 	}
-	//NOTE: This bit of ugliness is here because I need to allow <mark> elements and ellipis in the results fragments
+	//NOTE: This hack is a bit of ugliness is here because I need to allow <mark> elements and ellipis in the results fragments
 	w.Write(bytes.Replace(bytes.Replace(bytes.Replace(buf.Bytes(), []byte("&lt;mark&gt;"), []byte("<mark>"), -1), []byte("&lt;/mark&gt;"), []byte("</mark>"), -1), []byte(`…`), []byte(`&hellip;`), -1))
 }
 

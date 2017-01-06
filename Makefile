@@ -65,6 +65,10 @@ save:
 	git commit -am "Quick save"
 	git push origin $(BRANCH)
 
+refresh:
+	git fetch origin
+	git pull origin $(BRANCH)
+
 publish:
 	./mk-website.bash
 	./publish.bash

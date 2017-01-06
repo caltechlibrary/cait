@@ -52,6 +52,8 @@ for I in $bleveIndexes; do
     if [ "$pids" != "" ]; then
         consolelog "Sending signal to swap out index $I"
         kill -s HUP $pids
+        # Sleep for a minute after sending SIGHUP to give time for the indexes to switch
+        sleep 60
     fi
     consolelog "Rebuilding index $I"
     bin/indexpages >> logs/harvest.$WEEKDAY.log
