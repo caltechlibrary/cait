@@ -388,7 +388,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	//NOTE: This hack is a bit of ugliness is here because I need to allow <mark> elements and ellipis in the results fragments
-	w.Write(bytes.Replace(bytes.Replace(bytes.Replace(buf.Bytes(), []byte("&lt;mark&gt;"), []byte("<mark>"), -1), []byte("&lt;/mark&gt;"), []byte("</mark>"), -1), []byte(`…`), []byte(`&hellip;`), -1))
+	w.Write(bytes.Replace(bytes.Replace(bytes.Replace(bytes.Replace(bytes.Replace(buf.Bytes(), []byte("&lt;mark&gt;"), []byte("<mark>"), -1), []byte("&lt;/mark&gt;"), []byte("</mark>"), -1), []byte(`…`), []byte(`&hellip;`), -1), []byte(`”`), []byte(`&rdquo;`), -1), []byte(`’`), []byte(`&rsquo;`), -1))
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
