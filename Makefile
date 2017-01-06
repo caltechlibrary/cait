@@ -13,7 +13,25 @@ API = cait.go api.go export.go schema.go search.go views.go
 
 CMDS = cmds/*/*.go
 
-build: $(API) $(PROGRAM_LIST) $(CMDS)
+build: dependency $(API) $(PROGRAM_LIST) $(CMDS)
+
+dependency: cli tmplfn bleve
+
+cli: $(GOPATH)/src/github.com/caltechlibrary/cli/cli.go 
+
+$(GOPATH)/src/github.com/caltechlibrary/cli/cli.go:
+	go get github.com/caltechlibrary/cli
+
+tmplfn: $(GOPATH)/src/github.com/caltechlibrary/tmplfn/tmplfn.go
+
+$(GOPATH)/src/github.com/caltechlibrary/tmplfn/tmplfn.go:
+	go get github.com/caltechlibrary/tmplfn
+
+bleve: $(GOPATH)/src/github.com/blevesearch/bleve/index.go
+
+$(GOPATH)/src/github.com/blevesearch/bleve/index.go:
+	go get github.com/blevesearch/bleve/...
+	cd $(GOPATH)/src/github.com/blevesearch/bleve && git checkout v0.5.0
 
 api: $(API)
 	env CGO_ENABLED=0 go build
@@ -73,6 +91,53 @@ publish:
 	./mk-website.bash
 	./publish.bash
 
-release:
-	./mk-release.bash
+dist/linux-amd64: *.go cmds/cait/cait.go cmds/genpages/genpages.go cmds/sitemapper/sitemapper.go cmds/indexpages/indexpages.go cmds/servepages/servepages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/cait cmds/cait/cait.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/genpages cmds/genpages/genpages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/sitemapper cmds/sitemapper/sitemapper.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/indexpages cmds/indexpages/indexpages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/servepages cmds/servepages/servepages.go
+
+dist/windows-amd64: *.go cmds/cait/cait.go cmds/genpages/genpages.go cmds/sitemapper/sitemapper.go cmds/indexpages/indexpages.go cmds/servepages/servepages.go
+	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait cmds/cait/cait.go
+	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/genpages cmds/genpages/genpages.go
+	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/sitemapper cmds/sitemapper/sitemapper.go
+	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/indexpages cmds/indexpages/indexpages.go
+	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/servepages cmds/servepages/servepages.go
+
+dist/macosx-amd64: *.go cmds/cait/cait.go cmds/genpages/genpages.go cmds/sitemapper/sitemapper.go cmds/indexpages/indexpages.go cmds/servepages/servepages.go
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/cait cmds/cait/cait.go
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/genpages cmds/genpages/genpages.go
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/sitemapper cmds/sitemapper/sitemapper.go
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/indexpages cmds/indexpages/indexpages.go
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/servepages cmds/servepages/servepages.go
+
+dist/raspbian-arm7: *.go cmds/cait/cait.go cmds/genpages/genpages.go cmds/sitemapper/sitemapper.go cmds/indexpages/indexpages.go cmds/servepages/servepages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/cait cmds/cait/cait.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/genpages cmds/genpages/genpages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/sitemapper cmds/sitemapper/sitemapper.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/indexpages cmds/indexpages/indexpages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/servepages cmds/servepages/servepages.go
+
+dist/raspbian-arm6: *.go cmds/cait/cait.go cmds/genpages/genpages.go cmds/sitemapper/sitemapper.go cmds/indexpages/indexpages.go cmds/servepages/servepages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/cait cmds/cait/cait.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/genpages cmds/genpages/genpages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/sitemapper cmds/sitemapper/sitemapper.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/indexpages cmds/indexpages/indexpages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/servepages cmds/servepages/servepages.go
+
+release: dist/linux-amd64 dist/windows-amd64 dist/macosx-amd64 dist/raspbian-arm7 dist/raspbian-arm6
+	mkdir -p dist
+	mkdir -p dist/etc/systemd/system
+	mkdir -p dist/scripts
+	cp -v README.md dist/
+	cp -v LICENSE dist/
+	cp -v INSTALL.md dist/
+	cp -v NOTES.md dist/
+	cp -vR templates dist/
+	cp -vR scripts/harvest-*.bash dist/scripts/
+	cp -vR etc/*-example dist/etc/
+	cp -vR etc/systemd/system/*-example dist/etc/systemd/system/
+	zip -r $(PROJECT)-$(VERSION)-release.zip dist/*
+
 

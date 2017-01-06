@@ -41,9 +41,9 @@ If you are using a Raspberry Pi 2 or later use the ARM7 VERSION_NUMBER, ARM6 is 
 
 1. Download **cait-VERSION_NUMBER-release.zip** from [https://github.com/caltechlibrary/cait/releases/latest](https://github.com/caltechlibrary/cait/releases/latest)
 2. Find and unzip **cait-VERSION_NUMBER-release.zip**
-3. In the unziped directory and find the files in *dist/raspberrypi-arm7/*
-4. Copy the programs to a "bin" directory (e.g. cp ~/Downloads/cait-VERSION_NUMBER-release/dist/raspberrypi-arm7/cait ~/bin/)
-    + if you are using an original Raspberry Pi you should copy the ARM6 version instead
+3. In the unziped directory and find the files in *dist/rasbian-arm7/*
+4. Copy the programs to a "bin" directory (e.g. cp ~/Downloads/cait-VERSION_NUMBER-release/dist/rasbian-arm7/cait ~/bin/)
+    + if you are using an original Raspberry Pi you should copy the ARM6 version instead (i.e. dist/raspbian-arm6)
 5. From the shell prompt run `cait -h` to confirm you were successful
 
 
@@ -54,6 +54,8 @@ If you are using a Raspberry Pi 2 or later use the ARM7 VERSION_NUMBER, ARM6 is 
     cd src/github.com/blevesearch/belve
     git checkout v0.5.0
     cd
+    go get github.com/caltechlibrary/cli
+    go get github.com/caltechlibrary/tmplfn
     go get github.com/caltechlibrary/cait
     cd src/github.com/caltechlibrary/cait
     make
