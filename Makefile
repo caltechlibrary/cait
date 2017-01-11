@@ -87,6 +87,9 @@ refresh:
 	git fetch origin
 	git pull origin $(BRANCH)
 
+status:
+	git status
+
 publish:
 	./mk-website.bash
 	./publish.bash
