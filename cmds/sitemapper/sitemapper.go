@@ -137,7 +137,6 @@ func main() {
 	cfg.OptionsText = "OPTIONS\n"
 	cfg.ExampleText = fmt.Sprintf(examples, appName)
 
-	args := flag.Args()
 	if showHelp == true {
 		fmt.Println(cfg.Usage())
 		os.Exit(0)
@@ -149,10 +148,6 @@ func main() {
 	if showLicense == true {
 		fmt.Println(cfg.License())
 		os.Exit(0)
-	}
-
-	if len(args) > 0 {
-		sitemap = args[0]
 	}
 
 	if changefreq == "" {
