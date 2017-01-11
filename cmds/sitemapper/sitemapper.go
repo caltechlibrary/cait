@@ -82,10 +82,10 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 	showLicense bool
 
 	// App specific options
-	htdocs      string
-	sitemap     string
-	siteURL     string
-	excludeList string
+	htdocs   string
+	sitemap  string
+	siteURL  string
+	excluded string
 
 	changefreq string
 	locList    []*locInfo
@@ -109,25 +109,17 @@ func init() {
 	flag.StringVar(&sitemap, "sitemap", "", "path to sitemap file (e.g. htdocs/sitemap.xml)")
 	flag.StringVar(&changefreq, "u", "daily", "Set the change frequencely value, e.g. daily, weekly, monthly")
 	flag.StringVar(&changefreq, "update-frequency", "daily", "Set the change frequencely value, e.g. daily, weekly, monthly")
-	flag.StringVar(&excludeList, "e", "", "A colon delimited list of path parts to exclude from sitemap")
-	flag.StringVar(&excludeList, "exclude", "", "A colon delimited list of path parts to exclude from sitemap")
+	flag.StringVar(&excluded, "e", "", "A colon delimited list of path parts to exclude from sitemap")
+	flag.StringVar(&excluded, "exclude", "", "A colon delimited list of path parts to exclude from sitemap")
 }
 
-type ExcludeList []string
-
-// Set returns the len of the new DirList array based on spliting the passed in string
-func (dirList ExcludeList) Set(s string) int {
-	dirList = strings.Split(s, ":")
-	return len(dirList)
-}
-
-// Exclude returns true if a fname fragment is included in set of dirList
-func (dirList ExcludeList) IsExcluded(p string) bool {
-	if len(dirList) == 0 {
+// IsExcluded returns true if a fname fragment is included in set of dirList
+func IsExcluded(el []string, p string) bool {
+	if len(el) == 0 {
 		return false
 	}
-	for _, item := range dirList {
-		if len(p) > 0 && len(item) > 0 && strings.Contains(p, item) == true {
+	for _, item := range el {
+		if strings.Contains(p, item) == true {
 			log.Printf("Skipping %q, because %q", p, item)
 			return true
 		}
@@ -167,22 +159,19 @@ func main() {
 		changefreq = "daily"
 	}
 
-	excludeDirs := new(ExcludeList)
-	if len(excludeList) > 0 {
-		excludeDirs.Set(excludeList)
-	}
-
 	// Required
 	htdocs = cfg.CheckOption("htdocs", cfg.MergeEnv("htdocs", htdocs), true)
 	siteURL = cfg.CheckOption("site_url", cfg.MergeEnv("site_url", siteURL), true)
 	sitemap = cfg.CheckOption("sitemap", cfg.MergeEnv("sitemap", sitemap), true)
+
+	excludeList := strings.Split(excluded, ":")
 
 	log.Printf("Starting map of %s\n", htdocs)
 	filepath.Walk(htdocs, func(p string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(p, ".html") {
 			fname := path.Base(p)
 			//NOTE: You can skip the eror pages, and excluded directories in the sitemap
-			if strings.HasPrefix(fname, "50") == false && strings.HasPrefix(p, "40") == false && excludeDirs.IsExcluded(p) == false {
+			if strings.HasPrefix(fname, "50") == false && strings.HasPrefix(p, "40") == false && IsExcluded(excludeList, p) == false {
 				finfo := new(locInfo)
 				finfo.Loc = fmt.Sprintf("%s%s", siteURL, strings.TrimPrefix(p, htdocs))
 				yr, mn, dy := info.ModTime().Date()
