@@ -42,7 +42,7 @@ bin/cait archivesspace export >> logs/harvest.$WEEKDAY.log
 bin/genpages >> logs/harvest.$WEEKDAY.log
 
 # Generate sitemap
-bin/sitemapper htdocs htdocs/sitemap.xml $CAIT_SITE_URL >> logs/harvest.$WEEKDAY.log
+bin/sitemapper -exclude agents -url $CAIT_SITE_URL >> logs/harvest.$WEEKDAY.log
 
 # Index webpages
 bleveIndexes=${CAIT_BLEVE/:/ }

@@ -14,6 +14,7 @@ export CAIT_SITEMAP=htdocs/sitemap.xml
 export CAIT_BLEVE=site-index-A.bleve:site-index-B.bleve
 export CAIT_TEMPLATES=templates/default
 export CAIT_SITE_URL=http://localhost:8501
+export cAIT_SITEMAP=htdocs/sitemap.xml
 
 #
 # Configure webhook handling

@@ -165,13 +165,14 @@ func main() {
 	sitemap = cfg.CheckOption("sitemap", cfg.MergeEnv("sitemap", sitemap), true)
 
 	excludeList := strings.Split(excluded, ":")
+	// NOTE: Exclude the error pages in htdocs
+	excludeList = append(excludeList, "htdocs/40")
+	excludeList = append(excludeList, "htdocs/50")
 
 	log.Printf("Starting map of %s\n", htdocs)
 	filepath.Walk(htdocs, func(p string, info os.FileInfo, err error) error {
 		if strings.HasSuffix(p, ".html") {
-			fname := path.Base(p)
-			//NOTE: You can skip the eror pages, and excluded directories in the sitemap
-			if strings.HasPrefix(fname, "50") == false && strings.HasPrefix(p, "40") == false && IsExcluded(excludeList, p) == false {
+			if IsExcluded(excludeList, p) == false {
 				finfo := new(locInfo)
 				finfo.Loc = fmt.Sprintf("%s%s", siteURL, strings.TrimPrefix(p, htdocs))
 				yr, mn, dy := info.ModTime().Date()
