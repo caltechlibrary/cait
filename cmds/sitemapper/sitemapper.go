@@ -38,10 +38,9 @@ type locInfo struct {
 }
 
 var (
-	usage = `USAGE: %s [OPTIONS] [SITEMAP_PATH]`
+	usage = `USAGE: %s [OPTIONS]`
 
 	description = `
-
 OVERVIEW
 
 %s generates a sitemap for the website.
@@ -56,8 +55,9 @@ CONFIGURATION
 	examples = `
 EXAMPLE
 
-    %s htdocs htdocs/sitemap.xml
-
+    %s -htdocs htdocs \
+	   -sitemap htdocs/sitemap.xml \
+	   -url http://archives.example.org
 `
 
 	license = `
