@@ -29,15 +29,17 @@ function CheckEnv () {
 # GetRecord from JSON blob
 function GetRecord () {
     FNAME="$1"
-    ID=$(jsoncols '.id' $FNAME)
-    PRIMARY_NAME=$(jsoncols '.names[0].primary_name' $FNAME)
-    REST_OF_NAME=$(jsoncols '.names[0].rest_of_name' $FNAME)
-    SORT_NAME=$(jsoncols '.names[0].sort_name' $FNAME)
-    IS_DISPLAY_NAME=$(jsoncols '.names[0].is_display_name' $FNAME)
-    URL="https://caltecharchives.lyrasistechnology.org/agents/agent_person/$ID"
+    ID=$(jsoncols .id $FNAME)
+    TITLE=$(jsoncols .title $FNAME)
+    ID_0=$(jsoncols .id_0 $FNAME | sed -E 's/"//g')
+    ID_1=$(jsoncols .id_1 $FNAME | sed -E 's/"//g')
+    IDENTIFIER="$ID_0 $ID_1"
+    EXTENT_TYPE=$(jsoncols .extents[0].extent_type $FNAME)
+    PHYSICAL_DETAILS=$(jsoncols .extents[0].physical_details $FNAME)
+    URL="https://caltecharchives.lyrasistechnology.org/repositories/2/accession/$ID"
 
     # Output delimited record
-    csvcols -d "|" "$URL|agent:person:$ID|$PRIMARY_NAME|$REST_OF_NAME|$SORT_NAME|$IS_DISPLAY_NAME"
+    csvcols -d "|" "$URL|repositories:2:accession:$ID|$TITLE|$IDENTIFIER|$EXTENT_TYPE|$PHYSICAL_DETAILS"
 }
 
 
@@ -46,9 +48,9 @@ function GetRecord () {
 #
 CheckEnv CAIT_DATASET
 CheckSoftware cut grep findfile csvcols jsoncols
-csvcols -d "|" "url|ArchivesSpace ID|Primary Name|Rest of Name| Sort Name| Is Display Name"
-findfile -s .json $CAIT_DATASET/agents/people | while read ITEM; do
-    RECORD=$(GetRecord $CAIT_DATASET/agents/people/$ITEM)
+csvcols -d "|" "url | ArchivesSpace ID | Title | Identifier | Extent Type| Physical Details"
+findfile -s .json $CAIT_DATASET/repositories/2/accessions | while read ITEM; do
+    RECORD=$(GetRecord $CAIT_DATASET/repositories/2/accessions/$ITEM)
     echo "$RECORD"
 done
 
