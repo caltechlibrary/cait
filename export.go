@@ -20,26 +20,10 @@
 package cait
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
 	"path"
 )
-
-// WriteJSON write out an ArchivesSpace data structure as a JSON file.
-func WriteJSON(data interface{}, dir string, fname string) error {
-	err := os.MkdirAll(dir, 0770)
-	if err != nil {
-		return fmt.Errorf("WriteJSON() mkdir %s/%s, %s", dir, fname, err)
-	}
-	src, err := json.Marshal(data)
-	if err != nil {
-		return fmt.Errorf("WriteJSON() JSON encode %s/%s, %s", dir, fname, err)
-	}
-	return ioutil.WriteFile(path.Join(dir, fname), src, 0664)
-}
 
 // ExportRepository for specific id to a JSON file.
 func (api *ArchivesSpaceAPI) ExportRepository(id int, dir string, fname string) error {

@@ -9,7 +9,7 @@ BRANCH = $(shell git branch | grep '* ' | cut -d\  -f 2)
 
 PROGRAM_LIST = bin/cait bin/genpages bin/sitemapper bin/indexpages bin/servepages 
 
-API = cait.go api.go export.go schema.go search.go views.go
+API = cait.go api.go io.go export.go schema.go search.go views.go
 
 CMDS = cmds/*/*.go
 
