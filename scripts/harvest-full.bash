@@ -56,7 +56,7 @@ for I in $bleveIndexes; do
         sleep 60
     fi
     consolelog "Rebuilding index $I"
-    bin/indexpages >> logs/harvest.$WEEKDAY.log
+    /bin/rm -fR $I && bin/indexpages $I >> logs/harvest.$WEEKDAY.log
 done
 
 #

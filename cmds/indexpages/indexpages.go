@@ -46,7 +46,7 @@ var (
 	description = `
 SYNOPSIS
 
-%s is a command line utility to indexes content in the htdocs directory.
+%s is a command line utility to create a new index of content in the htdocs directory.
 It produces a Bleve search index used by servepages web service.
 Configuration is done through environmental variables.
 
@@ -106,96 +106,86 @@ func handleSignals() {
 	}()
 }
 
-func getIndex(indexName string) (bleve.Index, error) {
-	if _, err := os.Stat(indexName); os.IsNotExist(err) {
-		log.Printf("Creating Bleve index at %s\n", indexName)
+func newIndex(indexName string) (bleve.Index, error) {
+	log.Printf("Creating Bleve index at %s\n", indexName)
+	log.Println("Setting up index...")
+	indexMapping := bleve.NewIndexMapping()
+	// Add Accession as a specific document map
+	accessionMapping := bleve.NewDocumentMapping()
 
-		log.Println("Setting up index...")
-		indexMapping := bleve.NewIndexMapping()
-		// Add Accession as a specific document map
-		accessionMapping := bleve.NewDocumentMapping()
+	// Now add specific accession fields
+	titleMapping := bleve.NewTextFieldMapping()
+	titleMapping.Analyzer = "en"
+	titleMapping.Store = true
+	titleMapping.Index = true
+	accessionMapping.AddFieldMappingsAt("title", titleMapping)
 
-		// Now add specific accession fields
-		titleMapping := bleve.NewTextFieldMapping()
-		titleMapping.Analyzer = "en"
-		titleMapping.Store = true
-		titleMapping.Index = true
-		accessionMapping.AddFieldMappingsAt("title", titleMapping)
+	descriptionMapping := bleve.NewTextFieldMapping()
+	descriptionMapping.Analyzer = "en"
+	descriptionMapping.Store = true
+	descriptionMapping.Index = true
+	accessionMapping.AddFieldMappingsAt("content_description", descriptionMapping)
 
-		descriptionMapping := bleve.NewTextFieldMapping()
-		descriptionMapping.Analyzer = "en"
-		descriptionMapping.Store = true
-		descriptionMapping.Index = true
-		accessionMapping.AddFieldMappingsAt("content_description", descriptionMapping)
+	subjectsMapping := bleve.NewTextFieldMapping()
+	subjectsMapping.Analyzer = "en"
+	subjectsMapping.Store = true
+	subjectsMapping.Index = true
+	subjectsMapping.IncludeTermVectors = true
+	accessionMapping.AddFieldMappingsAt("subjects", subjectsMapping)
 
-		subjectsMapping := bleve.NewTextFieldMapping()
-		subjectsMapping.Analyzer = "en"
-		subjectsMapping.Store = true
-		subjectsMapping.Index = true
-		subjectsMapping.IncludeTermVectors = true
-		accessionMapping.AddFieldMappingsAt("subjects", subjectsMapping)
+	subjectsFunctionMapping := bleve.NewTextFieldMapping()
+	subjectsFunctionMapping.Analyzer = "en"
+	subjectsFunctionMapping.Store = true
+	subjectsFunctionMapping.Index = true
+	subjectsFunctionMapping.IncludeTermVectors = true
+	accessionMapping.AddFieldMappingsAt("subjects_function", subjectsFunctionMapping)
 
-		subjectsFunctionMapping := bleve.NewTextFieldMapping()
-		subjectsFunctionMapping.Analyzer = "en"
-		subjectsFunctionMapping.Store = true
-		subjectsFunctionMapping.Index = true
-		subjectsFunctionMapping.IncludeTermVectors = true
-		accessionMapping.AddFieldMappingsAt("subjects_function", subjectsFunctionMapping)
+	subjectsTopicalMapping := bleve.NewTextFieldMapping()
+	subjectsTopicalMapping.Analyzer = "en"
+	subjectsTopicalMapping.Store = true
+	subjectsTopicalMapping.Index = true
+	subjectsTopicalMapping.IncludeTermVectors = true
+	accessionMapping.AddFieldMappingsAt("subjects_topical", subjectsTopicalMapping)
 
-		subjectsTopicalMapping := bleve.NewTextFieldMapping()
-		subjectsTopicalMapping.Analyzer = "en"
-		subjectsTopicalMapping.Store = true
-		subjectsTopicalMapping.Index = true
-		subjectsTopicalMapping.IncludeTermVectors = true
-		accessionMapping.AddFieldMappingsAt("subjects_topical", subjectsTopicalMapping)
+	objectTitleMapping := bleve.NewTextFieldMapping()
+	objectTitleMapping.Analyzer = "en"
+	objectTitleMapping.Store = true
+	objectTitleMapping.Index = false
+	accessionMapping.AddFieldMappingsAt("digital_objects.title", objectTitleMapping)
 
-		objectTitleMapping := bleve.NewTextFieldMapping()
-		objectTitleMapping.Analyzer = "en"
-		objectTitleMapping.Store = true
-		objectTitleMapping.Index = false
-		accessionMapping.AddFieldMappingsAt("digital_objects.title", objectTitleMapping)
+	objectFileURIMapping := bleve.NewTextFieldMapping()
+	objectFileURIMapping.Analyzer = ""
+	objectFileURIMapping.Store = true
+	objectFileURIMapping.Index = false
+	accessionMapping.AddFieldMappingsAt("digital_objects.file_uris", objectFileURIMapping)
 
-		objectFileURIMapping := bleve.NewTextFieldMapping()
-		objectFileURIMapping.Analyzer = ""
-		objectFileURIMapping.Store = true
-		objectFileURIMapping.Index = false
-		accessionMapping.AddFieldMappingsAt("digital_objects.file_uris", objectFileURIMapping)
+	extentsMapping := bleve.NewTextFieldMapping()
+	extentsMapping.Analyzer = "en"
+	extentsMapping.Store = true
+	extentsMapping.Index = true
+	accessionMapping.AddFieldMappingsAt("extents", extentsMapping)
 
-		extentsMapping := bleve.NewTextFieldMapping()
-		extentsMapping.Analyzer = "en"
-		extentsMapping.Store = true
-		extentsMapping.Index = true
-		accessionMapping.AddFieldMappingsAt("extents", extentsMapping)
+	accessionDateMapping := bleve.NewTextFieldMapping()
+	accessionDateMapping.Analyzer = "en"
+	accessionDateMapping.Store = true
+	accessionDateMapping.Index = false
+	accessionMapping.AddFieldMappingsAt("accession_date", accessionDateMapping)
 
-		accessionDateMapping := bleve.NewTextFieldMapping()
-		accessionDateMapping.Analyzer = "en"
-		accessionDateMapping.Store = true
-		accessionDateMapping.Index = false
-		accessionMapping.AddFieldMappingsAt("accession_date", accessionDateMapping)
+	datesMapping := bleve.NewTextFieldMapping()
+	datesMapping.Store = true
+	datesMapping.Index = false
+	accessionMapping.AddFieldMappingsAt("date_expression", datesMapping)
 
-		datesMapping := bleve.NewTextFieldMapping()
-		datesMapping.Store = true
-		datesMapping.Index = false
-		accessionMapping.AddFieldMappingsAt("date_expression", datesMapping)
+	createdMapping := bleve.NewDateTimeFieldMapping()
+	createdMapping.Store = true
+	createdMapping.Index = false
+	accessionMapping.AddFieldMappingsAt("created", createdMapping)
 
-		createdMapping := bleve.NewDateTimeFieldMapping()
-		createdMapping.Store = true
-		createdMapping.Index = false
-		accessionMapping.AddFieldMappingsAt("created", createdMapping)
+	// Finally add this mapping to the main index mapping
+	indexMapping.AddDocumentMapping("accession", accessionMapping)
 
-		// Finally add this mapping to the main index mapping
-		indexMapping.AddDocumentMapping("accession", accessionMapping)
-
-		index, err := bleve.New(indexName, indexMapping)
-		if err != nil {
-			return nil, fmt.Errorf("Can't create new bleve index %s, %s", indexName, err)
-		}
-		return index, nil
-	}
-	log.Printf("Opening Bleve index at %s", indexName)
-	index, err := bleve.OpenUsing(indexName, map[string]interface{}{
-		"read_only": false,
-	})
+	log.Printf("Opening a new Bleve index at %s", indexName)
+	index, err := bleve.New(indexName, indexMapping)
 	if err != nil {
 		return nil, fmt.Errorf("Can't create new bleve index %s, %s", indexName, err)
 	}
@@ -229,7 +219,6 @@ func indexSite(index bleve.Index, maxBatchSize int) error {
 				return nil
 			}
 			if batch.Size() >= batchSize {
-				log.Printf("Indexing %d items", batch.Size())
 				err := index.Batch(batch)
 				if err != nil {
 					log.Fatal(err)
@@ -248,7 +237,6 @@ func indexSite(index bleve.Index, maxBatchSize int) error {
 		return nil
 	})
 	if batch.Size() > 0 {
-		log.Printf("Indexing %d items", batch.Size())
 		err := index.Batch(batch)
 		if err != nil {
 			log.Fatal(err)
@@ -315,10 +303,10 @@ func main() {
 
 	handleSignals()
 
-	for i, indexName := range strings.Split(names, ":") {
-		index, err := getIndex(indexName)
+	for _, indexName := range strings.Split(names, ":") {
+		index, err := newIndex(indexName)
 		if err != nil {
-			log.Printf("Skipping %s, ", indexName, err)
+			log.Printf("Skipping %s, %s", indexName, err)
 		} else {
 			defer index.Close()
 
@@ -327,9 +315,6 @@ func main() {
 			err = indexSite(index, 1000)
 			if err != nil {
 				log.Fatal(err)
-			}
-			if i < len(names)-1 {
-				time.Sleep(30 * time.Second)
 			}
 		}
 	}

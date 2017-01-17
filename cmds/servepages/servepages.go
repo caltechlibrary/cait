@@ -27,8 +27,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"syscall"
-	//"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -40,6 +38,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"text/template"
 
 	// 3rd Party packages
@@ -731,9 +730,7 @@ func main() {
 		for i := 0; i < len(indexList) && availableIndex == false; i++ {
 			indexName := indexList[i]
 			log.Printf("Opening %q", indexName)
-			index, err = bleve.OpenUsing(indexName, map[string]interface{}{
-				"read_only": true,
-			})
+			index, err = bleve.Open(indexName)
 			if err != nil {
 				log.Printf("Can't open Bleve index %q, %s, trying next index", indexName, err)
 			} else {
