@@ -7,7 +7,7 @@ VERSION = $(shell grep -m 1 'Version =' $(PROJECT).go | cut -d\" -f 2)
 
 BRANCH = $(shell git branch | grep '* ' | cut -d\  -f 2)
 
-PROGRAM_LIST = bin/cait bin/genpages bin/sitemapper bin/indexpages bin/servepages 
+PROGRAM_LIST = bin/cait bin/cait-genpages bin/cait-sitemapper bin/cait-indexpages bin/cait-servepages 
 
 API = cait.go api.go io.go export.go schema.go search.go views.go
 
@@ -38,28 +38,28 @@ api: $(API)
 
 cait: bin/cait
 
-genpages: bin/genpages
+cait-genpages: bin/cait-genpages
 
-sitemapper: bin/sitemapper
+cait-sitemapper: bin/cait-sitemapper
 
-indexpages: bin/indexpages
+cait-indexpages: bin/cait-indexpages
 
-servepages: bin/servepages
+cait-servepages: bin/cait-servepages
 
 bin/cait: $(API) cmds/cait/cait.go
 	env CGO_ENABLED=0 go build -o bin/cait cmds/cait/cait.go
 
-bin/genpages: $(API)  cmds/genpages/genpages.go
-	env CGO_ENABLED=0 go build -o bin/genpages cmds/genpages/genpages.go
+bin/cait-genpages: $(API)  cmds/cait-genpages/cait-genpages.go
+	env CGO_ENABLED=0 go build -o bin/cait-genpages cmds/cait-genpages/cait-genpages.go
 
-bin/indexpages: $(API) cmds/indexpages/indexpages.go
-	env CGO_ENABLED=0 go build -o bin/indexpages cmds/indexpages/indexpages.go
+bin/cait-indexpages: $(API) cmds/cait-indexpages/cait-indexpages.go
+	env CGO_ENABLED=0 go build -o bin/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
 
-bin/servepages: $(API) cmds/servepages/servepages.go
-	env CGO_ENABLED=0 go build -o bin/servepages cmds/servepages/servepages.go
+bin/cait-servepages: $(API) cmds/cait-servepages/cait-servepages.go
+	env CGO_ENABLED=0 go build -o bin/cait-servepages cmds/cait-servepages/cait-servepages.go
 
-bin/sitemapper: $(API) cmds/sitemapper/sitemapper.go
-	env CGO_ENABLED=0 go build -o bin/sitemapper cmds/sitemapper/sitemapper.go
+bin/cait-sitemapper: $(API) cmds/cait-sitemapper/cait-sitemapper.go
+	env CGO_ENABLED=0 go build -o bin/cait-sitemapper cmds/cait-sitemapper/cait-sitemapper.go
 
 test:
 	go test
@@ -71,10 +71,10 @@ clean:
 
 install:
 	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/cait/cait.go
-	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/genpages/genpages.go
-	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/indexpages/indexpages.go
-	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/servepages/servepages.go
-	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/sitemapper/sitemapper.go
+	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/cait-genpages/cait-genpages.go
+	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/cait-indexpages/cait-indexpages.go
+	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/cait-servepages/cait-servepages.go
+	env CGO_ENABLED=0 GOBIN=$(HOME)/bin go install cmds/cait-sitemapper/cait-sitemapper.go
 
 website:
 	./mk-website.bash
@@ -94,40 +94,40 @@ publish:
 	./mk-website.bash
 	./publish.bash
 
-dist/linux-amd64: *.go cmds/cait/cait.go cmds/genpages/genpages.go cmds/sitemapper/sitemapper.go cmds/indexpages/indexpages.go cmds/servepages/servepages.go
+dist/linux-amd64: *.go cmds/cait/cait.go cmds/cait-genpages/cait-genpages.go cmds/cait-sitemapper/cait-sitemapper.go cmds/cait-indexpages/cait-indexpages.go cmds/cait-servepages/cait-servepages.go
 	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/cait cmds/cait/cait.go
-	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/genpages cmds/genpages/genpages.go
-	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/sitemapper cmds/sitemapper/sitemapper.go
-	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/indexpages cmds/indexpages/indexpages.go
-	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/servepages cmds/servepages/servepages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/cait-genpages cmds/cait-genpages/cait-genpages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/cait-sitemapper cmds/cait-sitemapper/cait-sitemapper.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/cait-servepages cmds/cait-servepages/cait-servepages.go
 
-dist/windows-amd64: *.go cmds/cait/cait.go cmds/genpages/genpages.go cmds/sitemapper/sitemapper.go cmds/indexpages/indexpages.go cmds/servepages/servepages.go
+dist/windows-amd64: *.go cmds/cait/cait.go cmds/cait-genpages/cait-genpages.go cmds/cait-sitemapper/cait-sitemapper.go cmds/cait-indexpages/cait-indexpages.go cmds/cait-servepages/cait-servepages.go
 	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait cmds/cait/cait.go
-	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/genpages cmds/genpages/genpages.go
-	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/sitemapper cmds/sitemapper/sitemapper.go
-	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/indexpages cmds/indexpages/indexpages.go
-	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/servepages cmds/servepages/servepages.go
+	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait-genpages cmds/cait-genpages/cait-genpages.go
+	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait-sitemapper cmds/cait-sitemapper/cait-sitemapper.go
+	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
+	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait-servepages cmds/cait-servepages/cait-servepages.go
 
-dist/macosx-amd64: *.go cmds/cait/cait.go cmds/genpages/genpages.go cmds/sitemapper/sitemapper.go cmds/indexpages/indexpages.go cmds/servepages/servepages.go
+dist/macosx-amd64: *.go cmds/cait/cait.go cmds/cait-genpages/cait-genpages.go cmds/cait-sitemapper/cait-sitemapper.go cmds/cait-indexpages/cait-indexpages.go cmds/cait-servepages/cait-servepages.go
 	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/cait cmds/cait/cait.go
-	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/genpages cmds/genpages/genpages.go
-	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/sitemapper cmds/sitemapper/sitemapper.go
-	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/indexpages cmds/indexpages/indexpages.go
-	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/servepages cmds/servepages/servepages.go
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/cait-genpages cmds/cait-genpages/cait-genpages.go
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/cait-sitemapper cmds/cait-sitemapper/cait-sitemapper.go
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/cait-servepages cmds/cait-servepages/cait-servepages.go
 
-dist/raspbian-arm7: *.go cmds/cait/cait.go cmds/genpages/genpages.go cmds/sitemapper/sitemapper.go cmds/indexpages/indexpages.go cmds/servepages/servepages.go
+dist/raspbian-arm7: *.go cmds/cait/cait.go cmds/cait-genpages/cait-genpages.go cmds/cait-sitemapper/cait-sitemapper.go cmds/cait-indexpages/cait-indexpages.go cmds/cait-servepages/cait-servepages.go
 	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/cait cmds/cait/cait.go
-	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/genpages cmds/genpages/genpages.go
-	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/sitemapper cmds/sitemapper/sitemapper.go
-	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/indexpages cmds/indexpages/indexpages.go
-	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/servepages cmds/servepages/servepages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/cait-genpages cmds/cait-genpages/cait-genpages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/cait-sitemapper cmds/cait-sitemapper/cait-sitemapper.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/cait-servepages cmds/cait-servepages/cait-servepages.go
 
-dist/raspbian-arm6: *.go cmds/cait/cait.go cmds/genpages/genpages.go cmds/sitemapper/sitemapper.go cmds/indexpages/indexpages.go cmds/servepages/servepages.go
+dist/raspbian-arm6: *.go cmds/cait/cait.go cmds/cait-genpages/cait-genpages.go cmds/cait-sitemapper/cait-sitemapper.go cmds/cait-indexpages/cait-indexpages.go cmds/cait-servepages/cait-servepages.go
 	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/cait cmds/cait/cait.go
-	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/genpages cmds/genpages/genpages.go
-	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/sitemapper cmds/sitemapper/sitemapper.go
-	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/indexpages cmds/indexpages/indexpages.go
-	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/servepages cmds/servepages/servepages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/cait-genpages cmds/cait-genpages/cait-genpages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/cait-sitemapper cmds/cait-sitemapper/cait-sitemapper.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/cait-servepages cmds/cait-servepages/cait-servepages.go
 
 release: dist/linux-amd64 dist/windows-amd64 dist/macosx-amd64 dist/raspbian-arm7 dist/raspbian-arm6
 	mkdir -p dist

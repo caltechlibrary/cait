@@ -39,12 +39,12 @@ fi
 bleveIndexes=${CAIT_BLEVE/:/ }
 for I in $bleveIndexes; do
     consolelog "Updating $I"
-    pids=$(pgrep servepages)
+    pids=$(pgrep cait-servepages)
     if [ "$pids" != "" ]; then
         consolelog "Sending signal to swap out index $I"
         kill -s HUP $pids
     fi
     consolelog "Rebuilding index $I"
-    bin/indexpages >> logs/harvest.$WEEKDAY.log
+    bin/cait-indexpages >> logs/harvest.$WEEKDAY.log
 done
 

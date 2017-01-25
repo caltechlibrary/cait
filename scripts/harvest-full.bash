@@ -39,16 +39,16 @@ fi
 bin/cait archivesspace export >> logs/harvest.$WEEKDAY.log
 
 # Generate webpages
-bin/genpages >> logs/harvest.$WEEKDAY.log
+bin/cait-genpages >> logs/harvest.$WEEKDAY.log
 
 # Generate sitemap
-bin/sitemapper -exclude agents -url $CAIT_SITE_URL >> logs/harvest.$WEEKDAY.log
+bin/cait-sitemapper -exclude agents -url $CAIT_SITE_URL >> logs/harvest.$WEEKDAY.log
 
 # Index webpages
 bleveIndexes=${CAIT_BLEVE/:/ }
 for I in $bleveIndexes; do
     consolelog "Updating $I"
-    pids=$(pgrep servepages)
+    pids=$(pgrep cait-servepages)
     if [ "$pids" != "" ]; then
         consolelog "Sending signal to swap out index $I"
         kill -s HUP $pids
@@ -56,19 +56,19 @@ for I in $bleveIndexes; do
         sleep 60
     fi
     consolelog "Rebuilding index $I"
-    /bin/rm -fR $I && bin/indexpages $I >> logs/harvest.$WEEKDAY.log
+    /bin/rm -fR $I && bin/cait-indexpages $I >> logs/harvest.$WEEKDAY.log
 done
 
 #
 # Systemd setup notes:
-# + copy etc/systemd/system/servepages.service to /etc/systemd/system/
-# + Update /etc/systemd/system/servepages.service to match your system deployment
+# + copy etc/systemd/system/cait-servepages.service to /etc/systemd/system/
+# + Update /etc/systemd/system/cait-servepages.service to match your system deployment
 # + copy etc/cait.env-example to etc/cait.env
 # + Update etc/cait.env to match your system deployment
 # + start the web service with "systemctl daemon-reload && systemctl start servcepages"
 #
 
 # For development and non-systemd configuraiton try: 
-# "cd $HOME && . etc/cait.bash && bin/servepages"
+# "cd $HOME && . etc/cait.bash && bin/cait-servepages"
 
 

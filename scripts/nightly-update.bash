@@ -25,29 +25,29 @@ fi
 $HOME/bin/cait archivesspace export
 
 # Generate webpages
-$HOME/bin/genpages
+$HOME/bin/cait-genpages
 
 # Generate sitemap
-$HOME/bin/sitemapper htdocs htdocs/sitemap.xml $CAIT_SITE_URL
+$HOME/bin/cait-sitemapper htdocs htdocs/sitemap.xml $CAIT_SITE_URL
 
 # Index webpages
 bleveIndexes=${CAIT_BELVE/:/ }
 for I in $bleveIndexes; do
     console "Updating $I"
-    pids=$(pgrep servepages)
+    pids=$(pgrep cait-servepages)
     if [ "$pids" != "" ]; then
         console "Sending signal to swap out index $I"
         kill -s HUP $pids
     fi
     echo "Rebuilding index $I"
-    $HOME/bin/indexpages
+    $HOME/bin/cait-indexpages
 done
 
 #if [ "$USER" = "root" ]; then
 # Sys Init restart 
-#    /etc/init.d/servepages restart
+#    /etc/init.d/cait-servepages restart
 # Systemd reload environment and restart 
 #    systemctl daemon-reload
-#    systemctl restart servepages
+#    systemctl restart cait-servepages
 #fi
 

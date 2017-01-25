@@ -6,7 +6,7 @@ After=network.target
 [Service]
 Type=forking
 EnvironmentFile=/Sites/archives.example.edu/etc/cait.env
-ExecStart=/Sites/archives.example.edu/bin/servepages
+ExecStart=/Sites/archives.example.edu/bin/cait-servepages
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 Restart=on-failure
