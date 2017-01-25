@@ -28,10 +28,10 @@
 
 <ul>
 <li>cait - a command line utility for ArchivesSpace interaction (basic CRUD operations and export)</li>
-<li>genpages - a simple static page generator based on exported ArchivesSpace content</li>
-<li>indexpages - for indexing exported JSON structures with <a href="https://github.com/blevesearch/bleve">Bleve</a></li>
-<li>servepages - a web service providing public search services and content browsing</li>
-<li>sitemapper - a simple tool to generate a sitemap.xml file from pages rendered with genpages</li>
+<li>cait-genpages - a simple static page generator based on exported ArchivesSpace content</li>
+<li>cait-indexpages - for indexing exported JSON structures with <a href="https://github.com/blevesearch/bleve">Bleve</a></li>
+<li>cait-servepages - a web service providing public search services and content browsing</li>
+<li>cait-sitemapper - a simple tool to generate a sitemap.xml file from pages rendered with cait-genpages</li>
 </ul>
 
 <h2>Requirements</h2>
@@ -69,10 +69,10 @@
     cd cait
     mkdir bin
     go build -o bin/cait cmds/cait/cait.go
-    go build -o bin/genpages  cmds/genpages/genpages.go
-    go build -o bin/indexpages cmds/indexpages/indexpages.go
-    go build -o bin/servepages cmds/servepages/servepages.go
-    go build -o bin/sitemapper cmds/sitemapper/sitemapper.go
+    go build -o bin/cait-genpages  cmds/cait-genpages/cait-genpages.go
+    go build -o bin/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
+    go build -o bin/cait-servepages cmds/cait-servepages/cait-servepages.go
+    go build -o bin/cait-sitemapper cmds/cait-sitemapper/cait-sitemapper.go
 </code></pre>
 
 <p>At this point you should have your command line utilities ready to go in the <em>bin</em> directory. You are now ready to setup your environment variables.</p>
@@ -84,7 +84,7 @@
 <pre><code class="language-bash">    #!/bin/bash
     #
     # setup.sh - this script sets the environment variables for cait project.
-    # You would source file before using cait, indexpages, or servepages.
+    # You would source file before using cait, cait-indexpages, or cait-servepages.
     #
 
     #
@@ -165,7 +165,7 @@ locally capture output of the API.</p>
 <li>CAIT_DATASET, the directory for exported content</li>
 </ul>
 
-<h3><em>genpages</em></h3>
+<h3><em>cait-genpages</em></h3>
 
 <p>This command generates static webpages from exported ArchivesSpace content.</p>
 
@@ -177,35 +177,35 @@ locally capture output of the API.</p>
 <li>CAIT_TEMPLATES, the templates to use (this defaults to template/defaults but you probably want custom templates for your site)</li>
 </ul>
 
-<p>The typical process would use <em>cait</em> to export all your content and then run <em>genpages</em> to generate your website content.</p>
+<p>The typical process would use <em>cait</em> to export all your content and then run <em>cait-genpages</em> to generate your website content.</p>
 
 <pre><code>    ./bin/cait archivesspace export # this takes a while
-    ./bin/genpages # this is faster
+    ./bin/cait-genpages # this is faster
 </code></pre>
 
 <p>Assuming the default settings you&rsquo;ll see new webpages in your local <em>htdocs</em> directory.</p>
 
-<h3><em>indexpages</em></h3>
+<h3><em>cait-indexpages</em></h3>
 
-<p>This command creates <a href="http://blevesearch.com">bleve</a> indexes for use by <em>servepages</em>.</p>
+<p>This command creates <a href="http://blevesearch.com">bleve</a> indexes for use by <em>cait-servepages</em>.</p>
 
-<p>Current <em>indexpages</em> operates on JSON content exported with <em>cait</em>. It expects
+<p>Current <em>cait-indexpages</em> operates on JSON content exported with <em>cait</em>. It expects
 a specific directory structure with each individual JSON blob named after its
 numeric ID and the extension .json. E.g. htdocs/repositories/2/accession/1.json would
 correspond to accession id 1 for repository 2.</p>
 
-<p><em>indexpages</em> depends on four environment variables</p>
+<p><em>cait-indexpages</em> depends on four environment variables</p>
 
 <ul>
 <li>CAIT_HTDOCS, the root directory where the JSON blobs and HTML files are saved</li>
 <li>CAIT_BLEVE, the name of the Bleve index (created or maintained)</li>
 </ul>
 
-<h3><em>servepages</em></h3>
+<h3><em>cait-servepages</em></h3>
 
-<p><em>servepages</em> provides both a static web server as well as web search service.</p>
+<p><em>cait-servepages</em> provides both a static web server as well as web search service.</p>
 
-<p>Current <em>servepages</em> uses the Bleve indexes created with <em>indexpages</em>. It also
+<p>Current <em>cait-servepages</em> uses the Bleve indexes created with <em>cait-indexpages</em>. It also
 uses the search page and results templates defined in CAIT_TEMPLATES.</p>
 
 <p>It uses the following environment variables</p>
@@ -219,23 +219,23 @@ uses the search page and results templates defined in CAIT_TEMPLATES.</p>
 
 <p>Assuming the default setup, you could start the like</p>
 
-<pre><code>    ./bin/servepages
+<pre><code>    ./bin/cait-servepages
 </code></pre>
 
 <p>Or you could add a startup script to /etc/init.d/ as appropriate.</p>
 
-<h3><em>sitemapper</em></h3>
+<h3><em>cait-sitemapper</em></h3>
 
-<p><em>sitemapper</em> generates a sitemap.xml file based on the arguments you envoke. It you&rsquo;re site&rsquo;s URL is <a href="http://archives.example.edu">http://archives.example.edu</a>, your htdocs directory is htdocs and you want to save you sitemap.xml file as htdocs/sitemap.xml you could run the command with</p>
+<p><em>cait-sitemapper</em> generates a sitemap.xml file based on the arguments you envoke. It you&rsquo;re site&rsquo;s URL is <a href="http://archives.example.edu">http://archives.example.edu</a>, your htdocs directory is htdocs and you want to save you sitemap.xml file as htdocs/sitemap.xml you could run the command with</p>
 
-<pre><code>    sitemapper htdocs htdocs/sitemap.xml http://archives.example.edu
+<pre><code>    cait-sitemapper htdocs htdocs/sitemap.xml http://archives.example.edu
 </code></pre>
 
 <p>This will generate a site map of the HTML files found in <em>htdocs</em> with the results saved in <em>htdocs/sitemap.xml</em>. For more informaiton about sitemaps see the <a href="http://sitemaps.org">sitemaps.org</a> website.</p>
 
 <h2>Setting up a production box</h2>
 
-<p>The basic production environment would export the contents of ArchivesSpace nightly, regenerate the webpages, re-index the webpages and finally restart <em>servepages</em> service.</p>
+<p>The basic production environment would export the contents of ArchivesSpace nightly, regenerate the webpages, re-index the webpages and finally restart <em>cait-servepages</em> service.</p>
 
 <p>The script in <em>bin/nightly-update.sh</em> shows these steps based on the configuration in <em>etc/setup.sh</em>. This script is suitable for running form a cronjob under Linux/Unix/Mac OS X.</p>
 

@@ -32,11 +32,13 @@
 
 <p>Compiled versions are available for Mac OS X (amd64 processor), Linux (amd64), Windows (amd64) and Rapsberry Pi (both ARM6 and ARM7)</p>
 
+<p>VERSION_NUMBER is a <a href="http://semver.org/">symantic version number</a> (e.g. v0.1.2)</p>
+
 <h3>Mac OS X</h3>
 
 <ol>
-<li>Download <strong>cait-binary-release.zip</strong> from <a href="https://github.com/caltechlibrary/cait/releases/latest">https://github.com/caltechlibrary/cait/releases/latest</a></li>
-<li>Open a finder window, find and unzip <strong>cait-binary-release.zip</strong></li>
+<li>Download <strong>cait-VERSION_NUMBER-release.zip</strong> from <a href="https://github.com/caltechlibrary/cait/releases/latest">https://github.com/caltechlibrary/cait/releases/latest</a></li>
+<li>Open a finder window, find and unzip <strong>cait-VERSION_NUMBER-release.zip</strong></li>
 <li>Look in the unziped folder and find the files in <em>dist/macosx-amd64/</em></li>
 <li>Drag (or copy) both the programs (e.g. <em>cait</em>, <em>genpages</em>) to a &ldquo;bin&rdquo; directory in your path</li>
 <li>Open and &ldquo;Terminal&rdquo; and run <code>cait -h</code> to confirm you were successful</li>
@@ -45,8 +47,8 @@
 <h3>Windows</h3>
 
 <ol>
-<li>Download <strong>cait-binary-release.zip</strong> from <a href="https://github.com/caltechlibrary/cait/releases/latest">https://github.com/caltechlibrary/cait/releases/latest</a></li>
-<li>Open the file manager find and unzip <strong>cait-binary-release.zip</strong></li>
+<li>Download <strong>cait-VERSION_NUMBER-release.zip</strong> from <a href="https://github.com/caltechlibrary/cait/releases/latest">https://github.com/caltechlibrary/cait/releases/latest</a></li>
+<li>Open the file manager find and unzip <strong>cait-VERSION_NUMBER-release.zip</strong></li>
 <li>Look in the unziped folder and find the files in <em>dist/windows-amd64/</em></li>
 <li>Drag (or copy) the programs (e.g. <em>cait.exe</em>, <em>genpages.exe</em>) to a &ldquo;bin&rdquo; directory in your path</li>
 <li>Open Bash and and run <code>cait -h</code> to confirm you were successful</li>
@@ -55,25 +57,25 @@
 <h3>Linux</h3>
 
 <ol>
-<li>Download <strong>cait-binary-release.zip</strong> from <a href="https://github.com/caltechlibrary/cait/releases/latest">https://github.com/caltechlibrary/cait/releases/latest</a></li>
-<li>Find and unzip <strong>cait-binary-release.zip</strong></li>
+<li>Download <strong>cait-VERSION_NUMBER-release.zip</strong> from <a href="https://github.com/caltechlibrary/cait/releases/latest">https://github.com/caltechlibrary/cait/releases/latest</a></li>
+<li>Find and unzip <strong>cait-VERSION_NUMBER-release.zip</strong></li>
 <li>In the unziped directory and find the files in <em>dist/linux-amd64/</em></li>
-<li>Copy the programs (e.g. <em>cait</em>, <em>genpages</em>) to a &ldquo;bin&rdquo; directory (e.g. cp ~/Downloads/cait-binary-release/dist/linux-amd64/cait ~/bin/)</li>
+<li>Copy the programs (e.g. <em>cait</em>, <em>genpages</em>) to a &ldquo;bin&rdquo; directory (e.g. cp ~/Downloads/cait-VERSION_NUMBER-release/dist/linux-amd64/cait ~/bin/)</li>
 <li>From the shell prompt run <code>cait -h</code> to confirm you were successful</li>
 </ol>
 
 <h3>Raspberry Pi</h3>
 
-<p>If you are using a Raspberry Pi 2 or later use the ARM7 binary, ARM6 is only for the first generaiton Raspberry Pi.</p>
+<p>If you are using a Raspberry Pi 2 or later use the ARM7 VERSION_NUMBER, ARM6 is only for the first generaiton Raspberry Pi.</p>
 
 <ol>
-<li>Download <strong>cait-binary-release.zip</strong> from <a href="https://github.com/caltechlibrary/cait/releases/latest">https://github.com/caltechlibrary/cait/releases/latest</a></li>
-<li>Find and unzip <strong>cait-binary-release.zip</strong></li>
-<li>In the unziped directory and find the files in <em>dist/raspberrypi-arm7/</em></li>
-<li>Copy the programs to a &ldquo;bin&rdquo; directory (e.g. cp ~/Downloads/cait-binary-release/dist/raspberrypi-arm7/cait ~/bin/)
+<li>Download <strong>cait-VERSION_NUMBER-release.zip</strong> from <a href="https://github.com/caltechlibrary/cait/releases/latest">https://github.com/caltechlibrary/cait/releases/latest</a></li>
+<li>Find and unzip <strong>cait-VERSION_NUMBER-release.zip</strong></li>
+<li>In the unziped directory and find the files in <em>dist/rasbian-arm7/</em></li>
+<li>Copy the programs to a &ldquo;bin&rdquo; directory (e.g. cp ~/Downloads/cait-VERSION_NUMBER-release/dist/rasbian-arm7/cait ~/bin/)
 
 <ul>
-<li>if you are using an original Raspberry Pi you should copy the ARM6 version instead</li>
+<li>if you are using an original Raspberry Pi you should copy the ARM6 version instead (i.e. dist/raspbian-arm6)</li>
 </ul></li>
 <li>From the shell prompt run <code>cait -h</code> to confirm you were successful</li>
 </ol>
@@ -84,6 +86,8 @@
     cd src/github.com/blevesearch/belve
     git checkout v0.5.0
     cd
+    go get github.com/caltechlibrary/cli
+    go get github.com/caltechlibrary/tmplfn
     go get github.com/caltechlibrary/cait
     cd src/github.com/caltechlibrary/cait
     make
