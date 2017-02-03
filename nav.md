@@ -1,8 +1,8 @@
 
 + [Home](/)
 + [README](./)
-+ [INSTALL](./install.html)
-+ [NOTES](./notes.html)
-+ [LICENSE](./license.html)
++ [LICENSE](license.html)
++ [INSTALL](install.html)
++ [NOTES](notes.html)
 + [Github](https://github.com/caltechlibrary/cait)
 
