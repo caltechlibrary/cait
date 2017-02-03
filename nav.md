@@ -1,6 +1,6 @@
 
 + [Home](/)
-+ [cait](./)
++ [README](./)
 + [INSTALL](./install.html)
 + [NOTES](./notes.html)
 + [LICENSE](./license.html)
