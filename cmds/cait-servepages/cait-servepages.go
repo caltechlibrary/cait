@@ -41,13 +41,14 @@ import (
 	"syscall"
 	"text/template"
 
-	// 3rd Party packages
-	"github.com/blevesearch/bleve"
-
 	// Caltech Library packages
 	"github.com/caltechlibrary/cait"
 	"github.com/caltechlibrary/cli"
 	"github.com/caltechlibrary/tmplfn"
+
+	// BleveSearch Packages (3rd Party packages)
+	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/search/query"
 )
 
 var (
@@ -275,7 +276,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	// q_exact     NewMatchPhraseQuery
 	// q_excluded NewQueryStringQuery with a - prefix for each strings.Feilds(q_excluded) value
 	//
-	var conQry []bleve.Query
+	var conQry []query.Query
 
 	if q.Q != "" {
 		conQry = append(conQry, bleve.NewQueryStringQuery(q.Q))
@@ -295,7 +296,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		conQry = append(conQry, bleve.NewQueryStringQuery(qString))
 	}
 
-	qry := bleve.NewConjunctionQuery(conQry)
+	qry := bleve.NewConjunctionQuery(conQry...)
 	if q.Size == 0 {
 		q.Size = 10
 	}

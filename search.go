@@ -26,8 +26,13 @@ import (
 	"net/url"
 	"strconv"
 
-	// 3rd Party Packages
+	// Blevesearch Packages (3rd Party packages)
 	"github.com/blevesearch/bleve"
+	//"github.com/blevesearch/bleve/analysis"
+	//"github.com/blevesearch/bleve/analysis/datetime/optional"
+	//"github.com/blevesearch/bleve/registry"
+	//"github.com/blevesearch/bleve/search"
+	//"github.com/blevesearch/bleve/search/query"
 )
 
 // SearchQuery represents the query options supported by search
