@@ -12,9 +12,9 @@
 ## Requirements
 
 + A working deployment of ArchivesSpace
-+ Golang 1.7.3 or better to compile
++ Golang 1.8 or better to compile
 + Three 3rd party Go packages
-    + [Bleve](https://github.com/blevesearch/bleve) v0.5.0 by [Blevesearch](http://blevesearch.com), Apache License, Version 2.0
+    + [Bleve](https://github.com/blevesearch/bleve) by [Blevesearch](http://blevesearch.com), Apache License, Version 2.0
 + Caltech Library's Go packages
     + [cait](https://github.com/caltechlibrary/cait), Caltech Library's ArchivesSpace integration tools
 
