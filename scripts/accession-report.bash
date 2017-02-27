@@ -1,5 +1,29 @@
 #!/bin/bash
 
+# 
+# Here is my first cut of the data needed for a basic AS data spreadsheet:
+# 
+# Accession Identifier
+# Accession Title - LINK TO ACCESSION
+# Accession Date
+# Accession Publish (T/F)
+# 
+# Date Creation
+# 
+# Extent Type
+# 
+# Agent Role
+# Agent Name - LINK TO AGENT
+# 
+# Subject - LINK TO SUBJECT
+# 
+# Let's start with this and work out from there.
+# Links optional.
+# Thanks!
+# 
+# Stephen
+# 
+
 #
 # Report all the Agent/Person ids found, their full name(s), if the record looks complete
 # and link back to Archives's Person objects for details.
@@ -29,28 +53,43 @@ function CheckEnv () {
 # GetRecord from JSON blob
 function GetRecord () {
     FNAME="$1"
-    ID=$(jsoncols .id $FNAME)
-    TITLE=$(jsoncols .title $FNAME)
-    ID_0=$(jsoncols .id_0 $FNAME | sed -E 's/"//g')
-    ID_1=$(jsoncols .id_1 $FNAME | sed -E 's/"//g')
+    ID=$(jsoncols -i $FNAME .id )
+    TITLE=$(jsoncols -i $FNAME .title)
+    ID_0=$(jsoncols -i $FNAME  .id_0 | sed -E 's/"//g')
+    ID_1=$(jsoncols -i $FNAME .id_1 | sed -E 's/"//g')
+    ACCESSION_DATE=$(jsoncols -i $FNAME .accession_date | sed -E 's/"//g')
+    PUBLISH=$(jsoncols -i $FNAME .publish | sed -E 's/"//g')
     IDENTIFIER="$ID_0 $ID_1"
-    EXTENT_TYPE=$(jsoncols .extents[0].extent_type $FNAME)
-    PHYSICAL_DETAILS=$(jsoncols .extents[0].physical_details $FNAME)
-    URL="https://caltecharchives.lyrasistechnology.org/repositories/2/accession/$ID"
-
-    # Output delimited record
-    csvcols -d "|" "$URL|repositories:2:accession:$ID|$TITLE|$IDENTIFIER|$EXTENT_TYPE|$PHYSICAL_DETAILS"
+    URL="$CAIT_ARCHIVESSPACE_URL/accessions/$ID"
+    EXTENT_COUNT=$(jq ".extents | length" < $FNAME)
+    if [ "$EXTENT_COUNT" = "0" ]; then
+        EXTENT_TYPE=""
+        PHYSICAL_DETAILS=""
+        csvcols -d "|" "$ID|$TITLE|$IDENTIFIER|$EXTENT_TYPE|$PHYSICAL_DETAILS|$ACCESSION_DATE|$PUBLISH|$URL"
+     else
+         for I in range 0 $EXTENT_COUNT; do
+             # Fetch the extent for 
+             EXTENT_TYPE=$(jsoncols -i $FNAME .extents[$I].extent_type)
+             PHYSICAL_DETAILS=$(jsoncols -i $FNAME .extents[$I].physical_details)
+             if [ "$EXTENT_TYPE" != "null" ]; then
+                 # Output delimited record
+                 csvcols -d "|" "$ID|$TITLE|$IDENTIFIER|$EXTENT_TYPE|$PHYSICAL_DETAILS|$ACCESSION_DATE|$PUBLISH|$URL"
+             fi
+         done
+    fi 
 }
 
 
 #
 # Main code
 #
-CheckEnv CAIT_DATASET
-CheckSoftware cut grep findfile csvcols jsoncols
-csvcols -d "|" "url | ArchivesSpace ID | Title | Identifier | Extent Type| Physical Details"
-findfile -s .json $CAIT_DATASET/repositories/2/accessions | while read ITEM; do
-    RECORD=$(GetRecord $CAIT_DATASET/repositories/2/accessions/$ITEM)
-    echo "$RECORD"
+CheckEnv CAIT_DATASET CAIT_ARCHIVESSPACE_URL
+CheckSoftware cut grep findfile csvcols jsoncols range
+csvcols -d "|" "ArchivesSpace ID | Title | Identifier | Extent Type | Physical Details | Accession Date | Publish | URL"
+findfile -f -s .json $CAIT_DATASET/repositories/2/accessions | while read ITEM; do
+    RECORD=$(GetRecord $ITEM)
+    if [ "$RECORD" != "" ]; then
+        echo "$RECORD"
+    fi
 done
 

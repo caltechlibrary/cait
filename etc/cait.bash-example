@@ -5,7 +5,8 @@
 #
 # Local Development setup
 #
-export CAIT_API_URL=http://localhost:8089
+export CAIT_ARCHIVESSPACE_URL=http://localhost:8080 # This is the URL for the web interface to manage ArchivesSpace
+export CAIT_API_URL=http://localhost:8089 # This is the URL to the REST API
 export CAIT_USERNAME=admin
 export CAIT_PASSWORD=admin
 export CAIT_DATASET=dataset
