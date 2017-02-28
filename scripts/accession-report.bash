@@ -1,4 +1,4 @@
-#!/bin/bash
+a!/bin/bash
 
 # 
 # Here is my first cut of the data needed for a basic AS data spreadsheet:
@@ -61,13 +61,13 @@ function GetRecord () {
     PUBLISH=$(jsoncols -i $FNAME .publish | sed -E 's/"//g')
     IDENTIFIER="$ID_0 $ID_1"
     URL="$CAIT_ARCHIVESSPACE_URL/accessions/$ID"
-    EXTENT_COUNT=$(jq ".extents | length" < $FNAME)
-    if [ "$EXTENT_COUNT" = "0" ]; then
+    EXTENT_COUNT=$(jsonrange -i $FNAME -last -dotpath .extents)
+    if [ "$EXTENT_COUNT" = "-1" ]; then
         EXTENT_TYPE=""
         PHYSICAL_DETAILS=""
         csvcols -d "|" "$ID|$TITLE|$IDENTIFIER|$EXTENT_TYPE|$PHYSICAL_DETAILS|$ACCESSION_DATE|$PUBLISH|$URL"
      else
-         for I in range 0 $EXTENT_COUNT; do
+         for I in $(range 0 $EXTENT_COUNT); do
              # Fetch the extent for 
              EXTENT_TYPE=$(jsoncols -i $FNAME .extents[$I].extent_type)
              PHYSICAL_DETAILS=$(jsoncols -i $FNAME .extents[$I].physical_details)
