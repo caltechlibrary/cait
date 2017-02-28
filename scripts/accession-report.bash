@@ -1,4 +1,4 @@
-a!/bin/bash
+#!/bin/bash
 
 # 
 # Here is my first cut of the data needed for a basic AS data spreadsheet:
@@ -62,6 +62,7 @@ function GetRecord () {
     IDENTIFIER="$ID_0 $ID_1"
     URL="$CAIT_ARCHIVESSPACE_URL/accessions/$ID"
     EXTENT_COUNT=$(jsonrange -i $FNAME -last -dotpath .extents)
+    ## FIXME: generate a semi-colon delimited list of people associated this Accession
     if [ "$EXTENT_COUNT" = "-1" ]; then
         EXTENT_TYPE=""
         PHYSICAL_DETAILS=""

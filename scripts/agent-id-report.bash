@@ -38,7 +38,7 @@ function GetRecord () {
         SORT_NAME=$(jsoncols -i $FNAME '.names[0].sort_name')
         IS_DISPLAY_NAME=$(jsoncols -i $FNAME '.names[0].is_display_name')
         # Output delimited record
-        csvcols -d "|" "agent:person:$ID|$PRIMARY_NAME|$REST_OF_NAME|$SORT_NAME|$IS_DISPLAY_NAME|$URL"
+        csvcols -d "|" "$ID|$PRIMARY_NAME|$REST_OF_NAME|$SORT_NAME|$IS_DISPLAY_NAME|$URL"
     done
 }
 
@@ -48,7 +48,7 @@ function GetRecord () {
 #
 CheckEnv CAIT_DATASET CAIT_ARCHIVESSPACE_URL
 CheckSoftware cut grep findfile csvcols jsoncols jsonrange
-csvcols -d "|" "ArchivesSpace ID|Primary Name|Rest of Name|Sort Name|Is Display Name|URL"
+csvcols -d "|" "Agent/People ID|Primary Name|Rest of Name|Sort Name|Is Display Name|URL"
 findfile -s .json $CAIT_DATASET/agents/people | while read ITEM; do
     RECORD=$(GetRecord $CAIT_DATASET/agents/people/$ITEM)
     echo "$RECORD"
