@@ -371,8 +371,13 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Template error"))
 		return
 	}
-	//NOTE: This hack is a bit of ugliness is here because I need to allow <mark> elements and ellipis in the results fragments
-	w.Write(bytes.Replace(bytes.Replace(bytes.Replace(bytes.Replace(bytes.Replace(buf.Bytes(), []byte("&lt;mark&gt;"), []byte("<mark>"), -1), []byte("&lt;/mark&gt;"), []byte("</mark>"), -1), []byte(`…`), []byte(`&hellip;`), -1), []byte(`”`), []byte(`&rdquo;`), -1), []byte(`’`), []byte(`&rsquo;`), -1))
+	w.Write(toHTMLEntities(buf.Bytes()))
+}
+
+// toHTMLEntities is a hack to clean up the responses from Bleve and make it HTML5 friendly
+// NOTE: This hack is a bit of ugliness because I need to allow <mark> elements and ellipis in the results fragments
+func toHTMLEntities(buf []byte) []byte {
+	return bytes.Replace(bytes.Replace(bytes.Replace(bytes.Replace(bytes.Replace(buf, []byte("&lt;mark&gt;"), []byte("<mark>"), -1), []byte("&lt;/mark&gt;"), []byte("</mark>"), -1), []byte(`…`), []byte(`&hellip;`), -1), []byte(`”`), []byte(`&rdquo;`), -1), []byte(`’`), []byte(`&rsquo;`), -1)
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
@@ -632,7 +637,7 @@ func webhookHandler(w http.ResponseWriter, r *http.Request) {
 
 func check(cfg *cli.Config, key, value string) string {
 	if value == "" {
-		log.Fatal("Missing %s_%s", cfg.EnvPrefix, strings.ToUpper(key))
+		log.Fatalf("Missing %s_%s", cfg.EnvPrefix, strings.ToUpper(key))
 		return ""
 	}
 	return value

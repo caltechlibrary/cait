@@ -31,12 +31,11 @@ function GetRecord () {
     FNAME="$1"
     ID=$(jsoncols -i $FNAME '.id')
     URL="$CAIT_ARCHIVESSPACE_URL/agents/agent_person/$ID"
-    LAST=$(jsonrange -i $FNAME -last -dotpath '.names')
-    for I in $(range 0 $LAST); do
-        PRIMARY_NAME=$(jsoncols -i $FNAME '.names[0].primary_name')
-        REST_OF_NAME=$(jsoncols -i $FNAME '.names[0].rest_of_name')
-        SORT_NAME=$(jsoncols -i $FNAME '.names[0].sort_name')
-        IS_DISPLAY_NAME=$(jsoncols -i $FNAME '.names[0].is_display_name')
+    for I in $(jsonrange -i $FNAME .names); do
+        PRIMARY_NAME=$(jsoncols -i $FNAME ".names[$I].primary_name")
+        REST_OF_NAME=$(jsoncols -i $FNAME ".names[$I].rest_of_name")
+        SORT_NAME=$(jsoncols -i $FNAME ".names[$I].sort_name")
+        IS_DISPLAY_NAME=$(jsoncols -i $FNAME ".names[$I].is_display_name")
         # Output delimited record
         csvcols -d "|" "$ID|$PRIMARY_NAME|$REST_OF_NAME|$SORT_NAME|$IS_DISPLAY_NAME|$URL"
     done

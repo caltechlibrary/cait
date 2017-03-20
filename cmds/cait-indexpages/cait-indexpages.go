@@ -31,6 +31,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"unicode/utf8"
 
 	// 3rd Party packages
 	"github.com/blevesearch/bleve"
@@ -189,6 +190,10 @@ func indexSite(index bleve.Index, maxBatchSize int) error {
 				log.Printf("Can't read %s, %s", p, err)
 				return nil
 			}
+			if utf8.Valid(src) == false {
+				log.Printf("%s not valid UTF-8", p)
+				return fmt.Errorf("%s is not valid UTF-8", p)
+			}
 			view := new(cait.NormalizedAccessionView)
 			err = json.Unmarshal(src, &view)
 			if err != nil {
@@ -234,7 +239,7 @@ func indexSite(index bleve.Index, maxBatchSize int) error {
 
 func check(cfg *cli.Config, key, value string) string {
 	if value == "" {
-		log.Fatal("Missing %s_%s", cfg.EnvPrefix, strings.ToUpper(key))
+		log.Fatalf("Missing %s_%s", cfg.EnvPrefix, strings.ToUpper(key))
 		return ""
 	}
 	return value
