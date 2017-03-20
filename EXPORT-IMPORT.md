@@ -25,7 +25,7 @@ The following environment variables not note used in the export process
 + CAIT_HTDOCS_INDEX
 + CAIT_TEMPLATES
 
-I am also assuming you have installed the _cait_ utility in *./bin/cait*
+I am also assuming you have installed the *cait* (e.g. _cait_) utilities are installed in your path
 
 ```bash
     #!/bin/bash
@@ -34,7 +34,7 @@ I am also assuming you have installed the _cait_ utility in *./bin/cait*
     export CAIT_PASSWORD=admin
     export CAIT_DATASET=dataset
 
-    ./bin/cait archivesspace export
+    cait archivesspace export
     unset CAIT_USERNAME
     unset CAIT_PASSWORD
     unset CAIT_API_URL
@@ -47,7 +47,7 @@ when the export is complete.
 ## Importing into a development deployment
 
 In this example we're assuming your *data* directory is already populated, you are using the Bash shell,
-and the _cait_ utilities are installed in *./bin/*.
+and the _cait_ utilities are installed in your path.
 
 The basic setups are
 
@@ -93,12 +93,12 @@ If you have any non-default extent_extent_type create them before proceeding
 
     # If you have non-default extent extent types, create them before proceeding
     # e.g. Multimedia, ProRes Master file, DVD
-    ./bin/cait repository create -input dataset/repositories/2.json
-    find dataset/subjects -type f | while read ITEM; do ./bin/cait subject create -input $ITEM; done
-    find dataset/agents/people -type f | while read ITEM; do ./bin/cait agent create -input $ITEM; done
-    find dataset/agents/corporate_entities -type f | while read ITEM; do ./bin/cait agent create -input $ITEM; done
-    find dataset/repositories/2/digital_objects -type f | while read ITEM; do ./bin/cait digital_object create -input $ITEM; done
-    find dataset/repositories/2/accessions -type f | while read ITEM; do ./bin/cait accession create -input $ITEM; done
+    cait repository create -input dataset/repositories/2.json
+    find dataset/subjects -type f | while read ITEM; do cait subject create -input $ITEM; done
+    find dataset/agents/people -type f | while read ITEM; do cait agent create -input $ITEM; done
+    find dataset/agents/corporate_entities -type f | while read ITEM; do cait agent create -input $ITEM; done
+    find dataset/repositories/2/digital_objects -type f | while read ITEM; do cait digital_object create -input $ITEM; done
+    find dataset/repositories/2/accessions -type f | while read ITEM; do cait accession create -input $ITEM; done
 ```
 
 
@@ -109,7 +109,7 @@ You can import content from one ArchivesSpace deployment to the next using a com
 
 The basic steps I take after having setup ArchivesSpace for development and loaded it with data is as follows.
 The instructions assume you're in your *cait* repository directory and that all the *cait* tools are compiled and
-installed in *./bin*.
+installed in your path.
 
 ### Environment required
 
@@ -121,8 +121,8 @@ installed in *./bin*.
 
 ### The workflow to generate website
 
-1. Make sure the *CAIT_* environment variables are set.
-2. Build the website with `./bin/genpages`
-3. Create/update the sitemap with `./bin/sitemapper $CAIT_HTDOCS $CAIT_HTDOCS/sitemap.xml $CAIT_SITE_URL`
-4. Index the site (this takes a while on my machine) `./bin/indexpages`
-5. Launch `./bin/servepages` and test with your web browser
+1. Make sure the *CAIT_* environment variables are set and _cait_ utilities are installed in your path.
+2. Build the website with `cait-genpages`
+3. Create/update the sitemap (from the [mkpage](https://github.com/caltechlibrary/mkpage) project) with `sitemapper $CAIT_HTDOCS $CAIT_HTDOCS/sitemap.xml $CAIT_SITE_URL`
+4. Index the site (this takes a while on my machine) `cait-indexpages`
+5. Launch `cait-servepages` and test with your web browser

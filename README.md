@@ -7,7 +7,6 @@
 + cait-genpages - a simple static page generator based on exported ArchivesSpace content
 + cait-indexpages - for indexing exported JSON structures with [Bleve](https://github.com/blevesearch/bleve)
 + cait-servepages - a web service providing public search services and content browsing
-+ cait-sitemapper - a simple tool to generate a sitemap.xml file from pages rendered with cait-genpages
 
 ## Requirements
 
@@ -33,12 +32,12 @@ Here's a typical example of setting things up.
     go get github.com/blevesearch/bleve/...
     git clone git@github.com:caltechlibrary/cait.git
     cd cait
-    mkdir bin
-    go build -o bin/cait cmds/cait/cait.go
-    go build -o bin/cait-genpages  cmds/cait-genpages/cait-genpages.go
-    go build -o bin/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
-    go build -o bin/cait-servepages cmds/cait-servepages/cait-servepages.go
-    go build -o bin/cait-sitemapper cmds/cait-sitemapper/cait-sitemapper.go
+    mkdir $HOME/bin
+    export PATH=$HOME/bin:$PATH
+    go build -o $HOME/bin/cait cmds/cait/cait.go
+    go build -o $HOME/bin/cait-genpages  cmds/cait-genpages/cait-genpages.go
+    go build -o $HOME/bin/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
+    go build -o $HOME/bin/cait-servepages cmds/cait-servepages/cait-servepages.go
 ```
 
 At this point you should have your command line utilities ready to go in the *bin* directory. You are now ready to setup your environment variables.
@@ -149,8 +148,8 @@ It relies on the following environment variables
 The typical process would use _cait_ to export all your content and then run _cait-genpages_ to generate your website content.
 
 ```
-    ./bin/cait archivesspace export # this takes a while
-    ./bin/cait-genpages # this is faster
+    cait archivesspace export # this takes a while
+    cait-genpages # this is faster
 ```
 
 Assuming the default settings you'll see new webpages in your local *htdocs* directory.
@@ -187,23 +186,13 @@ It uses the following environment variables
 Assuming the default setup, you could start the like
 
 ```
-    ./bin/cait-servepages
+    cait-servepages
 ```
 
 Or you could add a startup script to /etc/init.d/ as appropriate.
-
-### _cait-sitemapper_
-
-_cait-sitemapper_ generates a sitemap.xml file based on the arguments you envoke. It you're site's URL is http://archives.example.edu, your htdocs directory is htdocs and you want to save you sitemap.xml file as htdocs/sitemap.xml you could run the command with
-
-```
-    cait-sitemapper htdocs htdocs/sitemap.xml http://archives.example.edu
-```
-
-This will generate a site map of the HTML files found in *htdocs* with the results saved in *htdocs/sitemap.xml*. For more informaiton about sitemaps see the [sitemaps.org](http://sitemaps.org) website.
 
 ## Setting up a production box
 
 The basic production environment would export the contents of ArchivesSpace nightly, regenerate the webpages, re-index the webpages and finally restart _cait-servepages_ service.
 
-The script in *bin/nightly-update.sh* shows these steps based on the configuration in *etc/setup.sh*. This script is suitable for running form a cronjob under Linux/Unix/Mac OS X.
+The script in *scripts/nightly-update.sh* shows these steps based on the configuration in *etc/setup.sh*. This script is suitable for running form a cronjob under Linux/Unix/Mac OS X.

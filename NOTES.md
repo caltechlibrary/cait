@@ -45,14 +45,13 @@ Example shell commands run
     vi /Sites/archives.example.edu/bin/nightly-update.bash
     # Step 7
     cait -v
-    genpages -v
-    indexpages -v
-    sitemapper -v
-    servepages -v
-    bin/update-website.bash
-    bin/nightly-update.bash
+    cait-genpages -v
+    cait-indexpages -v
+    cait-servepages -v
+    scripts/update-website.bash
+    scripts/nightly-update.bash
     # Step 8
-    # Add the cronjob for /Sites/archives.example.edu/bin/nightly-update.bash
+    # Add the cronjob for /Sites/archives.example.edu/scripts/nightly-update.bash
     cronjob -e
     # List the cronjob and verify it is correct.
     cronjob -l
@@ -72,7 +71,7 @@ Example shell commands run
     #  day of week   0-7 (0 or 7 is Sun, or use names)
     #
     # Run archives site update everyday at 6:30am.
-    30 6 * * * /Sites/archives.example.edu/bin/nightly-update.bash >> /Sites/archives.example.edu/logs/nightly-update.log 2>&1
+    30 6 * * * /Sites/archives.example.edu/scripts/nightly-update.bash >> /Sites/archives.example.edu/logs/nightly-update.log 2>&1
 ```
 
 ## Reference Links
