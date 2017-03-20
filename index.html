@@ -31,18 +31,17 @@
 <li>cait-genpages - a simple static page generator based on exported ArchivesSpace content</li>
 <li>cait-indexpages - for indexing exported JSON structures with <a href="https://github.com/blevesearch/bleve">Bleve</a></li>
 <li>cait-servepages - a web service providing public search services and content browsing</li>
-<li>cait-sitemapper - a simple tool to generate a sitemap.xml file from pages rendered with cait-genpages</li>
 </ul>
 
 <h2>Requirements</h2>
 
 <ul>
 <li>A working deployment of ArchivesSpace</li>
-<li>Golang 1.7.3 or better to compile</li>
+<li>Golang 1.8 or better to compile</li>
 <li>Three 3rd party Go packages
 
 <ul>
-<li><a href="https://github.com/blevesearch/bleve">Bleve</a> v0.5.0 by <a href="http://blevesearch.com">Blevesearch</a>, Apache License, Version 2.0</li>
+<li><a href="https://github.com/blevesearch/bleve">Bleve</a> by <a href="http://blevesearch.com">Blevesearch</a>, Apache License, Version 2.0</li>
 </ul></li>
 <li>Caltech Library&rsquo;s Go packages
 
@@ -67,12 +66,12 @@
 <pre><code>    go get github.com/blevesearch/bleve/...
     git clone git@github.com:caltechlibrary/cait.git
     cd cait
-    mkdir bin
-    go build -o bin/cait cmds/cait/cait.go
-    go build -o bin/cait-genpages  cmds/cait-genpages/cait-genpages.go
-    go build -o bin/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
-    go build -o bin/cait-servepages cmds/cait-servepages/cait-servepages.go
-    go build -o bin/cait-sitemapper cmds/cait-sitemapper/cait-sitemapper.go
+    mkdir $HOME/bin
+    export PATH=$HOME/bin:$PATH
+    go build -o $HOME/bin/cait cmds/cait/cait.go
+    go build -o $HOME/bin/cait-genpages  cmds/cait-genpages/cait-genpages.go
+    go build -o $HOME/bin/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
+    go build -o $HOME/bin/cait-servepages cmds/cait-servepages/cait-servepages.go
 </code></pre>
 
 <p>At this point you should have your command line utilities ready to go in the <em>bin</em> directory. You are now ready to setup your environment variables.</p>
@@ -179,8 +178,8 @@ locally capture output of the API.</p>
 
 <p>The typical process would use <em>cait</em> to export all your content and then run <em>cait-genpages</em> to generate your website content.</p>
 
-<pre><code>    ./bin/cait archivesspace export # this takes a while
-    ./bin/cait-genpages # this is faster
+<pre><code>    cait archivesspace export # this takes a while
+    cait-genpages # this is faster
 </code></pre>
 
 <p>Assuming the default settings you&rsquo;ll see new webpages in your local <em>htdocs</em> directory.</p>
@@ -219,25 +218,16 @@ uses the search page and results templates defined in CAIT_TEMPLATES.</p>
 
 <p>Assuming the default setup, you could start the like</p>
 
-<pre><code>    ./bin/cait-servepages
+<pre><code>    cait-servepages
 </code></pre>
 
 <p>Or you could add a startup script to /etc/init.d/ as appropriate.</p>
-
-<h3><em>cait-sitemapper</em></h3>
-
-<p><em>cait-sitemapper</em> generates a sitemap.xml file based on the arguments you envoke. It you&rsquo;re site&rsquo;s URL is <a href="http://archives.example.edu">http://archives.example.edu</a>, your htdocs directory is htdocs and you want to save you sitemap.xml file as htdocs/sitemap.xml you could run the command with</p>
-
-<pre><code>    cait-sitemapper htdocs htdocs/sitemap.xml http://archives.example.edu
-</code></pre>
-
-<p>This will generate a site map of the HTML files found in <em>htdocs</em> with the results saved in <em>htdocs/sitemap.xml</em>. For more informaiton about sitemaps see the <a href="http://sitemaps.org">sitemaps.org</a> website.</p>
 
 <h2>Setting up a production box</h2>
 
 <p>The basic production environment would export the contents of ArchivesSpace nightly, regenerate the webpages, re-index the webpages and finally restart <em>cait-servepages</em> service.</p>
 
-<p>The script in <em>bin/nightly-update.sh</em> shows these steps based on the configuration in <em>etc/setup.sh</em>. This script is suitable for running form a cronjob under Linux/Unix/Mac OS X.</p>
+<p>The script in <em>scripts/nightly-update.sh</em> shows these steps based on the configuration in <em>etc/setup.sh</em>. This script is suitable for running form a cronjob under Linux/Unix/Mac OS X.</p>
 
 </section>
 
