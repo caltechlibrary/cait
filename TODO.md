@@ -10,6 +10,7 @@
 
 + [ ] Aprox., Circa, C.E. dates need to be formated correctly in archives.caltech.edu website
 + [ ] Single Date rendering bug
++ [ ] Some templates have meta tag setting charset explicitly to iso-8859-1, remove or switch to utf-8
 
 
 ## Some day, Maybe list
@@ -20,6 +21,10 @@
 + [ ] Add support to core cait for resource objects, archival_objects, etc.
 + [ ] Implement incremental update support for AS export (see Humdol plugin at Github)
 + [ ] Add harvesting of agents/corporate entity
++ [ ] Migrate from cait-indexer to mkpage's general purpose indexer
++ [ ] Migrate from cait-servepages to mkpage's ws embedded search enabled
++ [ ] Add support to auto-render useful shared Google spreadsheet(s) based on AS harvest
++ [ ] Modernize website design (e.g. use CSS for layout instead of tables)
  
 ## Completed
 
