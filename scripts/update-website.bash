@@ -6,4 +6,3 @@
 cd /Sites/archives.example.edu/
 git fetch origin
 git pull origin master
-

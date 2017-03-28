@@ -11,52 +11,54 @@
 # export CONFIG=/Sites/archives.example.edu
 
 # This is an example cronjob to be run from the root account.
-export WEEKDAY=$(date +%A)
+WEEKDAY="$(date +%A)"
+export WEEKDAY
 if [ ! -d "logs" ]; then
-    mkdir -p logs
+	mkdir -p logs
 fi
 
-function consolelog {
-    echo $(date +"%Y/%m/%d %H:%M:%S")" $@"
-    echo $(date +"%Y/%m/%d %H:%M:%S")" $@" >> logs/harvest.$WEEKDAY.log
+function consolelog() {
+	echo "$(date +"%Y/%m/%d %H:%M:%S")" "$@"
+	echo "$(date +"%Y/%m/%d %H:%M:%S")" "$@" >>"logs/harvest.${WEEKDAY}.log"
 }
 
 # Change directory to where cait is installed
-consolelog  "Running as $USER"
+consolelog "Running as $USER"
 
 if [ "$CONFIG" = "" ]; then
-    export CONFIG=etc/cait.bash
+	export CONFIG=etc/cait.bash
 fi
 
 consolelog "Working path: $(pwd)"
 # Load the cait configuration
-if [ -f $CONFIG ]; then
-    consolelog "Sourcing configuration $CONFIG"
-    . $CONFIG
+if [ -f "$CONFIG" ]; then
+	consolelog "Sourcing configuration $CONFIG"
+	. "$CONFIG"
 fi
 
-# Export the current content from ArchivesSpace
-bin/cait archivesspace export >> logs/harvest.$WEEKDAY.log
-
-# Generate webpages
-bin/cait-genpages >> logs/harvest.$WEEKDAY.log
+{
+	# Export the current content from ArchivesSpace
+	bin/cait archivesspace export
+	# Generate webpages
+	bin/cait-genpages
+} >>"logs/harvest.${WEEKDAY}.log"
 
 # Generate sitemap
-bin/cait-sitemapper -exclude agents -url $CAIT_SITE_URL >> logs/harvest.$WEEKDAY.log
+bin/cait-sitemapper -exclude agents -url "$CAIT_SITE_URL" >>"logs/harvest.${WEEKDAY}.log"
 
 # Index webpages
 bleveIndexes=${CAIT_BLEVE/:/ }
 for I in $bleveIndexes; do
-    consolelog "Updating $I"
-    pids=$(pgrep cait-servepages)
-    if [ "$pids" != "" ]; then
-        consolelog "Sending signal to swap out index $I"
-        kill -s HUP $pids
-        # Sleep for a minute after sending SIGHUP to give time for the indexes to switch
-        sleep 60
-    fi
-    consolelog "Rebuilding index $I"
-    /bin/rm -fR $I && bin/cait-indexpages $I >> logs/harvest.$WEEKDAY.log
+	consolelog "Updating $I"
+	pids=$(pgrep cait-servepages)
+	if [ "$pids" != "" ]; then
+		consolelog "Sending signal to swap out index $I"
+		kill -s HUP "$pids"
+		# Sleep for a minute after sending SIGHUP to give time for the indexes to switch
+		sleep 60
+	fi
+	consolelog "Rebuilding index $I"
+	/bin/rm -fR "$I" && bin/cait-indexpages "$I" >>"logs/harvest.${WEEKDAY}.log"
 done
 
 #
@@ -70,5 +72,3 @@ done
 
 # For development and non-systemd configuraiton try: 
 # "cd $HOME && . etc/cait.bash && bin/cait-servepages"
-
-

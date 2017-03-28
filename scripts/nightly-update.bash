@@ -6,41 +6,41 @@
 # export HOME=/Sites/archives.example.edu
 
 # This is an example cronjob to be run from the root account.
-function consolelog {
-    echo $(date +"%Y/%m/%d %H:%M:%S")" $@"
+function consolelog() {
+	echo "$(date +"%Y/%m/%d %H:%M:%S")" "$@"
 }
 
 # Change directory to where cait is installed
-consolelog  "Running as $USER"
-cd $HOME
+consolelog "Running as $USER"
+cd "$HOME"
 
 consolelog "Working path $(pwd)"
 # Load the cait configuration
-if [ -f $HOME/etc/cait.bash ]; then
-    consolelog "Sourcing configuration $HOME/etc/cait.bash"
-    . $HOME/etc/cait.bash
+if [ -f "$HOME/etc/cait.bash" ]; then
+	consolelog "Sourcing configuration $HOME/etc/cait.bash"
+	. "$HOME/etc/cait.bash"
 fi
 
 # Export the current content from ArchivesSpace
-$HOME/bin/cait archivesspace export
+"$HOME/bin/cait" archivesspace export
 
 # Generate webpages
-$HOME/bin/cait-genpages
+"$HOME/bin/cait-genpages"
 
 # Generate sitemap
-$HOME/bin/cait-sitemapper htdocs htdocs/sitemap.xml $CAIT_SITE_URL
+"$HOME/bin/cait-sitemapper" htdocs htdocs/sitemap.xml "$CAIT_SITE_URL"
 
 # Index webpages
 bleveIndexes=${CAIT_BELVE/:/ }
 for I in $bleveIndexes; do
-    console "Updating $I"
-    pids=$(pgrep cait-servepages)
-    if [ "$pids" != "" ]; then
-        console "Sending signal to swap out index $I"
-        kill -s HUP $pids
-    fi
-    echo "Rebuilding index $I"
-    $HOME/bin/cait-indexpages
+	console "Updating $I"
+	pids=$(pgrep cait-servepages)
+	if [ "$pids" != "" ]; then
+		console "Sending signal to swap out index $I"
+		kill -s HUP "$pids"
+	fi
+	echo "Rebuilding index $I"
+	"$HOME/bin/cait-indexpages"
 done
 
 #if [ "$USER" = "root" ]; then
@@ -50,4 +50,3 @@ done
 #    systemctl daemon-reload
 #    systemctl restart cait-servepages
 #fi
-

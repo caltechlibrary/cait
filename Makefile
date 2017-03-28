@@ -59,7 +59,7 @@ website:
 	./mk-website.bash
 
 save:
-	git commit -am "Quick save"
+	if [ "$(msg)" != "" ]; then git commit -am "$(msg)"; else git commit -am "Quick save"; fi
 	git push origin $(BRANCH)
 
 refresh:

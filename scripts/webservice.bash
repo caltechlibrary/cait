@@ -7,12 +7,12 @@
 #
 
 # Run the web service with logging.
-export WEEKDAY=$(date +%A)
+WEEKDAY="$(date +%A)"
+export WEEKDAY
 if [ -f etc/cait.bash ]; then
-    . etc/cait.bash
+	. etc/cait.bash
 fi
 if [ ! -d logs ]; then
-    mkdir -p logs
+	mkdir -p logs
 fi
-bin/servepages >> logs/servepages.$WEEKDAY.log
-
+bin/servepages >>"logs/servepages.${WEEKDAY}.log"

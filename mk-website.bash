@@ -1,25 +1,25 @@
 #!/bin/bash
 
 function softwareCheck() {
-    for CMD in $@; do
-        APP=$(which $CMD)
-        if [ "$APP" = "" ]; then
-            echo "Skipping, missing $CMD"
-            exit 1;
-        fi 
-    done
+	for CMD in "$@"; do
+		APP=$(which "$CMD")
+		if [ "$APP" = "" ]; then
+			echo "Skipping, missing $CMD"
+			exit 1
+		fi
+	done
 }
 
-function mkPage () {
-    nav="$1"
-    content="$2"
-    html="$3"
+function mkPage() {
+	nav="$1"
+	content="$2"
+	html="$3"
 
-    echo "Rendering $html"
-    mkpage \
-        "nav=$nav" \
-        "content=$content" \
-        page.tmpl > $html
+	echo "Rendering $html"
+	mkpage \
+		"nav=$nav" \
+		"content=$content" \
+		page.tmpl >"$html"
 }
 
 echo "Checking software..."
