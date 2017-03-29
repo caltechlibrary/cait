@@ -10,7 +10,7 @@
 
 + [ ] Aprox., Circa, C.E. dates need to be formated correctly in archives.caltech.edu website
 + [ ] Single Date rendering bug
-+ [ ] Some templates have meta tag setting charset explicitly to iso-8859-1, remove or switch to utf-8
++ [x] Some templates have meta tag setting charset explicitly to iso-8859-1, remove or switch to utf-8
 
 
 ## Some day, Maybe list
