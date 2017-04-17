@@ -3,6 +3,10 @@
 
 ## Next (Sprint)
 
++ [ ] Update harvest representation to use [dataset](https://caltechlibrary.github.io/dataset) package
+    + io.go has a WriteJSON that can be used to create/write JSON to collections (e.g. repositories/2/accessions is a collection)
+    + view.go has various ioutil.ReadDir() and ioutil.ReadFile() that could be replaced with either dataset functions for getting keys or get data
+    + [ ] Store dataset in S3 rather than on local dist, update processing to support S3
 + [ ] Develop an Agent/Person Template, include name, bio and links to accessions if available
 + [ ] Create an accessions report for Loma to answer Patrons requests (needs to include both Accession, list of persons and link to the access record)0:w
 
@@ -16,8 +20,6 @@
 ## Some day, Maybe list
 
 + [ ] Add sortable results
-+ [ ] Store dataset in S3 rather than on local dist, update processing to support S3
-+ [ ] Update harvest representation to use [dataset](https://caltechlibrary.github.io/dataset) package
 + [ ] Add support to core cait for resource objects, archival_objects, etc.
 + [ ] Implement incremental update support for AS export (see Humdol plugin at Github)
 + [ ] Add harvesting of agents/corporate entity
