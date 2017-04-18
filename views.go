@@ -23,11 +23,7 @@ package cait
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"log"
-	"os"
-	"path"
-	"path/filepath"
 	"sort"
 	"strings"
 	"time"
@@ -218,20 +214,19 @@ func (o *DigitalObject) NormalizeView() *NormalizedDigitalObjectView {
 func MakeAgentList(dname string) ([]*Agent, error) {
 	var agents []*Agent
 
-	dir, err := ioutil.ReadDir(dname)
+	keys, err := GetKeys(dname)
 	if err != nil {
-		return nil, fmt.Errorf("Can't read subjects from %s, %s", dname, err)
+		return nil, fmt.Errorf("Can't read Agents keys from %s, %s", dname, err)
 	}
-	for _, finfo := range dir {
-		fname := path.Join(dname, finfo.Name())
-		src, err := ioutil.ReadFile(fname)
+	for _, key := range keys {
+		src, err := ReadJSON(dname, key)
 		if err != nil {
-			return nil, fmt.Errorf("Can't read %s, %s", fname, err)
+			return nil, fmt.Errorf("Can't read Agent %s, %s", key, err)
 		}
 		agent := new(Agent)
 		err = json.Unmarshal(src, &agent)
 		if err != nil {
-			return nil, fmt.Errorf("Can't parse agent %s, %s", fname, err)
+			return nil, fmt.Errorf("Can't parse Agent %s, %s", key, err)
 		}
 		agents = append(agents, agent)
 	}
@@ -266,20 +261,19 @@ func (s subjectList) HasSubject(a string) bool {
 func MakeSubjectList(dname string) ([]string, error) {
 	var subjects subjectList
 
-	dir, err := ioutil.ReadDir(dname)
+	keys, err := GetKeys(dname)
 	if err != nil {
-		return nil, fmt.Errorf("Can't read subjects from %s, %s", dname, err)
+		return nil, fmt.Errorf("Can't read Subjects from %s, %s", dname, err)
 	}
-	for _, finfo := range dir {
-		fname := path.Join(dname, finfo.Name())
-		src, err := ioutil.ReadFile(fname)
+	for _, key := range keys {
+		src, err := ReadJSON(dname, key)
 		if err != nil {
-			return nil, fmt.Errorf("Can't read %s, %s", fname, err)
+			return nil, fmt.Errorf("Can't read Subjects %s, %s", key, err)
 		}
 		subject := new(Subject)
 		err = json.Unmarshal(src, &subject)
 		if err != nil {
-			return nil, fmt.Errorf("Can't parse subject %s, %s", fname, err)
+			return nil, fmt.Errorf("Can't parse Subject %s, %s", key, err)
 		}
 		if subject.Publish == true {
 			for _, term := range subject.Terms {
@@ -302,20 +296,19 @@ func MakeSubjectList(dname string) ([]string, error) {
 func MakeSubjectMap(dname string) (map[string]*Subject, error) {
 	subjects := make(map[string]*Subject)
 
-	dir, err := ioutil.ReadDir(dname)
+	keys, err := GetKeys(dname)
 	if err != nil {
-		return nil, fmt.Errorf("Can't read subjects from %s, %s", dname, err)
+		return nil, fmt.Errorf("Can't read subject keys from %s, %s", dname, err)
 	}
-	for _, finfo := range dir {
-		fname := path.Join(dname, finfo.Name())
-		src, err := ioutil.ReadFile(fname)
+	for _, key := range keys {
+		src, err := ReadJSON(dname, key)
 		if err != nil {
-			return nil, fmt.Errorf("Can't read %s, %s", fname, err)
+			return nil, fmt.Errorf("Can't read %s, %s", key, err)
 		}
 		subject := new(Subject)
 		err = json.Unmarshal(src, &subject)
 		if err != nil {
-			return nil, fmt.Errorf("Can't parse subject %s, %s", fname, err)
+			return nil, fmt.Errorf("Can't parse subject %s, %s", key, err)
 		}
 		subjects[subject.URI] = subject
 	}
@@ -327,20 +320,19 @@ func MakeSubjectMap(dname string) (map[string]*Subject, error) {
 func MakeDigitalObjectMap(dname string) (map[string]*DigitalObject, error) {
 	digitalObjects := make(map[string]*DigitalObject)
 
-	dir, err := ioutil.ReadDir(dname)
+	keys, err := GetKeys(dname)
 	if err != nil {
 		return nil, fmt.Errorf("Can't read Digital Objects from %s, %s", dname, err)
 	}
-	for _, finfo := range dir {
-		fname := path.Join(dname, finfo.Name())
-		src, err := ioutil.ReadFile(fname)
+	for _, key := range keys {
+		src, err := ReadJSON(dname, key)
 		if err != nil {
-			return nil, fmt.Errorf("Can't read %s, %s", fname, err)
+			return nil, fmt.Errorf("Can't read Digital Object %s, %s", key, err)
 		}
 		digitalObject := new(DigitalObject)
 		err = json.Unmarshal(src, &digitalObject)
 		if err != nil {
-			return nil, fmt.Errorf("Can't parse subject %s, %s", fname, err)
+			return nil, fmt.Errorf("Can't parse subject %s, %s", key, err)
 		}
 		digitalObjects[digitalObject.URI] = digitalObject
 	}
@@ -361,13 +353,15 @@ func MakeAccessionTitleIndex(dname string) (map[string]*NavElementView, error) {
 	titleIndex := make(map[string]*NavElementView)
 	titlesWithURI := []string{}
 	log.Printf("Making Accession Title Index")
-	filepath.Walk(dname, func(p string, info os.FileInfo, err error) error {
-		if strings.HasSuffix(p, ".json") {
-			src, err := ioutil.ReadFile(p)
-			if err != nil {
-				log.Printf("Can't read %s, %s", p, err)
-				return nil
-			}
+	keys, err := GetKeys(dname)
+	if err != nil {
+		return nil, fmt.Errorf("MakeAccessionTitleIndex(%q) -> GetKeys(%q), %s", dname, dname, err)
+	}
+	for _, key := range keys {
+		src, err := ReadJSON(dname, key)
+		if err != nil {
+			log.Printf("Can't read Accession %s, %s", key, err)
+		} else {
 			accession := new(struct {
 				Title     string `json:"title,omitempty"`
 				URI       string `json:"uri"`
@@ -375,7 +369,7 @@ func MakeAccessionTitleIndex(dname string) (map[string]*NavElementView, error) {
 			})
 			err = json.Unmarshal(src, &accession)
 			if err != nil {
-				log.Printf("Can't unpack accession info %s, %s", p, err)
+				log.Printf("Can't unpack accession info %s, %s", key, err)
 			}
 			if accession.JSONModel == "accession" {
 				//FIXME: Store the info.
@@ -385,10 +379,9 @@ func MakeAccessionTitleIndex(dname string) (map[string]*NavElementView, error) {
 				titleIndex[accession.URI] = nav
 				titlesWithURI = append(titlesWithURI, fmt.Sprintf("%s|%s", accession.Title, accession.URI))
 			}
-			log.Printf("Recorded %s", p)
+			log.Printf("Recorded %s", key)
 		}
-		return nil
-	})
+	}
 
 	if len(titlesWithURI) == 0 {
 		return nil, fmt.Errorf("No titles found")

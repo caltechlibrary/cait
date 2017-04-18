@@ -26,8 +26,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"path/filepath"
-	"strings"
 	"text/template"
 
 	// Caltech Library packages
@@ -59,12 +57,16 @@ variables-
     CAIT_HTDOCS     this is the directory where the HTML files are written.
 `
 
+	// Standard Options
 	showHelp    bool
 	showVersion bool
 	showLicense bool
 
+	// App Options
+	showVerbose bool
 	htdocsDir   string
 	datasetDir  string
+	repoNo      string
 	templateDir string
 )
 
@@ -81,173 +83,200 @@ func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.T
 	return aHTMLTmpl, aIncTmpl, nil
 }
 
-func processAgentsPeople(templateDir string, aHTMLTmplName string, aIncTmplName string) error {
+func processAgentsPeople(templateDir string, aHTMLTmplName string, aIncTmplName string, agentsPeopleDir string) (int, error) {
 	log.Printf("Reading templates from %s\n", templateDir)
 	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
 	if err != nil {
-		log.Fatalf("template error %q, %q: %s", aHTMLTmplName, aIncTmplName, err)
+		return 0, fmt.Errorf("template error %q, %q: %s", aHTMLTmplName, aIncTmplName, err)
 	}
 
-	return filepath.Walk(path.Join(datasetDir, "agents/people"), func(p string, f os.FileInfo, err error) error {
+	keys, err := cait.GetKeys(agentsPeopleDir)
+	if err != nil {
+		return 0, fmt.Errorf("Can't get keys for %s, %s", agentsPeopleDir, err)
+	}
+
+	cnt := 0
+	for i, key := range keys {
 		// Process accession records
-		if strings.Contains(p, "agents/people") == true && strings.HasSuffix(p, ".json") == true {
-			src, err := ioutil.ReadFile(p)
-			if err != nil {
-				return err
-			}
-			person := new(cait.Agent)
-			err = json.Unmarshal(src, &person)
-			if err != nil {
-				return err
-			}
-
-			// FIXME: which restrictions do we care about agent/people?--
-			//        agent.Published, person.DisplayName.IsDisplayName, person.DisplayName.Authorized
-			if person.Published == true && person.IsLinkedToPublishedRecord == true && person.DisplayName.IsDisplayName == true && person.DisplayName.Authorized == true {
-				// Create a normalized view of the accession to make it easier to work with
-
-				// If the accession is published and the accession is not suppressed then generate the webpage
-				fname := path.Join(htdocsDir, fmt.Sprintf("%s.html", person.URI))
-				dname := path.Dir(fname)
-				err = os.MkdirAll(dname, 0775)
-				if err != nil {
-					return fmt.Errorf("Can't create %s, %s", dname, err)
-				}
-
-				// Process HTML file
-				fp, err := os.Create(fname)
-				if err != nil {
-					return fmt.Errorf("Problem creating %s, %s", fname, err)
-				}
-				log.Printf("Writing %s", fname)
-				err = aHTMLTmpl.Execute(fp, person)
-				if err != nil {
-					log.Fatalf("template execute error %s, %s", aHTMLTmplName, err)
-					return err
-				}
-				fp.Close()
-
-				// Process Include file (just the HTML content)
-				fname = path.Join(htdocsDir, fmt.Sprintf("%s.include", person.URI))
-				fp, err = os.Create(fname)
-				if err != nil {
-					return fmt.Errorf("Problem creating %s, %s", fname, err)
-				}
-				log.Printf("Writing %s", fname)
-				err = aIncTmpl.Execute(fp, person)
-				if err != nil {
-					log.Fatalf("template execute error %s, %s", aIncTmplName, err)
-					return err
-				}
-				fp.Close()
-
-				// Process JSON file (an abridged version of the JSON output in data)
-				fname = path.Join(htdocsDir, fmt.Sprintf("%s.json", person.URI))
-				src, err := json.Marshal(person)
-				if err != nil {
-					return fmt.Errorf("Could not JSON encode %s, %s", fname, err)
-				}
-				log.Printf("Writing %s", fname)
-				err = ioutil.WriteFile(fname, src, 0664)
-				if err != nil {
-					log.Fatalf("could not write JSON view %s, %s", fname, err)
-					return err
-				}
-				fp.Close()
-			}
+		src, err := cait.ReadJSON(agentsPeopleDir, key)
+		if err != nil {
+			return cnt, err
 		}
-		return nil
-	})
+		person := new(cait.Agent)
+		err = json.Unmarshal(src, &person)
+		if err != nil {
+			return cnt, err
+		}
+
+		// FIXME: which restrictions do we care about agent/people?--
+		//        agent.Published, person.DisplayName.IsDisplayName, person.DisplayName.Authorized
+		if person.Published == true && person.IsLinkedToPublishedRecord == true && person.DisplayName.IsDisplayName == true && person.DisplayName.Authorized == true {
+			// Create a normalized view of the accession to make it easier to work with
+
+			// If the accession is published and the accession is not suppressed then generate the webpage
+			fname := path.Join(htdocsDir, fmt.Sprintf("%s.html", person.URI))
+			dname := path.Dir(fname)
+			err = os.MkdirAll(dname, 0775)
+			if err != nil {
+				return cnt, fmt.Errorf("Can't create %s, %s", dname, err)
+			}
+
+			// Process HTML file
+			fp, err := os.Create(fname)
+			if err != nil {
+				return cnt, fmt.Errorf("Problem creating %s, %s", fname, err)
+			}
+			if showVerbose == true {
+				log.Printf("Writing %s", fname)
+			}
+			err = aHTMLTmpl.Execute(fp, person)
+			if err != nil {
+				log.Fatalf("template execute error %s, %s", aHTMLTmplName, err)
+				return cnt, err
+			}
+			fp.Close()
+
+			// Process Include file (just the HTML content)
+			fname = path.Join(htdocsDir, fmt.Sprintf("%s.include", person.URI))
+			fp, err = os.Create(fname)
+			if err != nil {
+				return cnt, fmt.Errorf("Problem creating %s, %s", fname, err)
+			}
+			if showVerbose == true {
+				log.Printf("Writing %s", fname)
+			}
+			err = aIncTmpl.Execute(fp, person)
+			if err != nil {
+				log.Fatalf("template execute error %s, %s", aIncTmplName, err)
+				return cnt, err
+			}
+			fp.Close()
+
+			// Process JSON file (an abridged version of the JSON output in data)
+			fname = path.Join(htdocsDir, fmt.Sprintf("%s.json", person.URI))
+			src, err := json.Marshal(person)
+			if err != nil {
+				return cnt, fmt.Errorf("Could not JSON encode %s, %s", fname, err)
+			}
+			if showVerbose == true {
+				log.Printf("Writing %s", fname)
+			}
+			err = ioutil.WriteFile(fname, src, 0664)
+			if err != nil {
+				log.Fatalf("could not write JSON view %s, %s", fname, err)
+				return cnt, err
+			}
+			fp.Close()
+		}
+		cnt = i
+		if cnt > 0 && (cnt%100) == 0 {
+			log.Printf("%d Agents/People\n", cnt)
+		}
+	}
+	return cnt, nil
 }
 
-func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName string, agents []*cait.Agent, subjects map[string]*cait.Subject, digitalObjects map[string]*cait.DigitalObject) error {
+func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName string, accessionsDir string, agents []*cait.Agent, subjects map[string]*cait.Subject, digitalObjects map[string]*cait.DigitalObject) (int, error) {
 	log.Printf("Reading templates from %s\n", templateDir)
 	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
 	if err != nil {
-		log.Fatalf("template error %q, %q: %s", aHTMLTmplName, aIncTmplName, err)
+		return 0, fmt.Errorf("template error %q, %q: %s", aHTMLTmplName, aIncTmplName, err)
 	}
-
-	return filepath.Walk(path.Join(datasetDir, "repositories"), func(p string, f os.FileInfo, err error) error {
+	keys, err := cait.GetKeys(accessionsDir)
+	if err != nil {
+		return 0, fmt.Errorf("Can't get accession keys, %s", err)
+	}
+	cnt := 0
+	for i, key := range keys {
 		// Process accession records
-		if strings.Contains(p, "accessions") == true && strings.HasSuffix(p, ".json") == true {
-			src, err := ioutil.ReadFile(p)
-			if err != nil {
-				return err
-			}
-			accession := new(cait.Accession)
-			err = json.Unmarshal(src, &accession)
-			if err != nil {
-				return err
-			}
-
-			// FIXME: which restrictions do we care about--
-			//        accession.Publish, accession.Suppressed, accession.AccessRestrictions,
-			//        accession.RestrictionsApply, accession.UseRestrictions
-			if accession.Publish == true && accession.Suppressed == false && accession.RestrictionsApply == false {
-				// Create a normalized view of the accession to make it easier to work with
-				view, err := accession.NormalizeView(agents, subjects, digitalObjects)
-				if err != nil {
-					return fmt.Errorf("Could not generate normalized view, %s", err)
-				}
-
-				// If the accession is published and the accession is not suppressed then generate the webpage
-				fname := path.Join(htdocsDir, fmt.Sprintf("%s.html", accession.URI))
-				dname := path.Dir(fname)
-				err = os.MkdirAll(dname, 0775)
-				if err != nil {
-					return fmt.Errorf("Can't create %s, %s", dname, err)
-				}
-
-				// Process HTML file
-				fp, err := os.Create(fname)
-				if err != nil {
-					return fmt.Errorf("Problem creating %s, %s", fname, err)
-				}
-				log.Printf("Writing %s", fname)
-				err = aHTMLTmpl.Execute(fp, view)
-				if err != nil {
-					log.Fatalf("template execute error %s, %s", aHTMLTmplName, err)
-					return err
-				}
-				fp.Close()
-
-				// Process Include file (just the HTML content)
-				fname = path.Join(htdocsDir, fmt.Sprintf("%s.include", accession.URI))
-				fp, err = os.Create(fname)
-				if err != nil {
-					return fmt.Errorf("Problem creating %s, %s", fname, err)
-				}
-				log.Printf("Writing %s", fname)
-				err = aIncTmpl.Execute(fp, view)
-				if err != nil {
-					log.Fatalf("template execute error %s, %s", aIncTmplName, err)
-					return err
-				}
-				fp.Close()
-
-				// Process JSON file (an abridged version of the JSON output in data)
-				fname = path.Join(htdocsDir, fmt.Sprintf("%s.json", accession.URI))
-				src, err := json.Marshal(view)
-				if err != nil {
-					return fmt.Errorf("Could not JSON encode %s, %s", fname, err)
-				}
-				log.Printf("Writing %s", fname)
-				err = ioutil.WriteFile(fname, src, 0664)
-				if err != nil {
-					log.Fatalf("could not write JSON view %s, %s", fname, err)
-					return err
-				}
-				fp.Close()
-			}
+		src, err := cait.ReadJSON(accessionsDir, key)
+		if err != nil {
+			return cnt, err
 		}
-		return nil
-	})
+		accession := new(cait.Accession)
+		err = json.Unmarshal(src, &accession)
+		if err != nil {
+			return cnt, err
+		}
+		// FIXME: which restrictions do we care about--
+		//        accession.Publish, accession.Suppressed, accession.AccessRestrictions,
+		//        accession.RestrictionsApply, accession.UseRestrictions
+		if accession.Publish == true && accession.Suppressed == false && accession.RestrictionsApply == false {
+			// Create a normalized view of the accession to make it easier to work with
+			view, err := accession.NormalizeView(agents, subjects, digitalObjects)
+			if err != nil {
+				return cnt, fmt.Errorf("Could not generate normalized view, %s", err)
+			}
+
+			// If the accession is published and the accession is not suppressed then generate the webpage
+			fname := path.Join(htdocsDir, fmt.Sprintf("%s.html", accession.URI))
+			dname := path.Dir(fname)
+			err = os.MkdirAll(dname, 0775)
+			if err != nil {
+				return cnt, fmt.Errorf("Can't create %s, %s", dname, err)
+			}
+
+			// Process HTML file
+			fp, err := os.Create(fname)
+			if err != nil {
+				return cnt, fmt.Errorf("Problem creating %s, %s", fname, err)
+			}
+			if showVerbose == true {
+				log.Printf("Writing %s", fname)
+			}
+			err = aHTMLTmpl.Execute(fp, view)
+			if err != nil {
+				log.Fatalf("template execute error %s, %s", aHTMLTmplName, err)
+				return cnt, err
+			}
+			fp.Close()
+
+			// Process Include file (just the HTML content)
+			fname = path.Join(htdocsDir, fmt.Sprintf("%s.include", accession.URI))
+			fp, err = os.Create(fname)
+			if err != nil {
+				return cnt, fmt.Errorf("Problem creating %s, %s", fname, err)
+			}
+			if showVerbose == true {
+				log.Printf("Writing %s", fname)
+			}
+			err = aIncTmpl.Execute(fp, view)
+			if err != nil {
+				log.Fatalf("template execute error %s, %s", aIncTmplName, err)
+				return cnt, err
+			}
+			fp.Close()
+
+			// Process JSON file (an abridged version of the JSON output in data)
+			fname = path.Join(htdocsDir, fmt.Sprintf("%s.json", accession.URI))
+			src, err := json.Marshal(view)
+			if err != nil {
+				return cnt, fmt.Errorf("Could not JSON encode %s, %s", fname, err)
+			}
+			if showVerbose == true {
+				log.Printf("Writing %s", fname)
+			}
+			err = ioutil.WriteFile(fname, src, 0664)
+			if err != nil {
+				log.Fatalf("could not write JSON view %s, %s", fname, err)
+				return cnt, err
+			}
+			fp.Close()
+		}
+		cnt = i
+		if cnt > 0 && (cnt%100) == 0 {
+			log.Printf("%d Accessions processed\n", cnt)
+		}
+
+	}
+	return cnt, nil
 }
 
 func init() {
 	// We are going to log to standard out rather than standard err
 	log.SetOutput(os.Stdout)
 
+	// Standard Options
 	flag.BoolVar(&showHelp, "h", false, "display help")
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "v", false, "display version")
@@ -255,8 +284,11 @@ func init() {
 	flag.BoolVar(&showLicense, "l", false, "display license")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 
+	// App Options
+	flag.BoolVar(&showVerbose, "verbose", false, "more verbose logging")
 	flag.StringVar(&htdocsDir, "htdocs", "", "specify where to write the HTML files to")
 	flag.StringVar(&datasetDir, "dataset", "", "specify where to read the JSON files from")
+	flag.StringVar(&repoNo, "repo-no", "2", "specify a repository number to use, default is 2")
 	flag.StringVar(&templateDir, "templates", "", "specify where to read the templates from")
 }
 
@@ -287,6 +319,7 @@ func main() {
 	}
 
 	datasetDir = cfg.CheckOption("dataset", cfg.MergeEnv("dataset", datasetDir), true)
+	repoNo = cfg.CheckOption("repo-no", cfg.MergeEnv("repo_no", repoNo), true)
 	templateDir = cfg.CheckOption("templates", cfg.MergeEnv("templates", templateDir), true)
 	htdocsDir = cfg.CheckOption("htdocs", cfg.MergeEnv("htdocs", htdocsDir), true)
 
@@ -299,46 +332,46 @@ func main() {
 	//
 	// Setup directories relationships
 	//
-	digitalObjectDir := ""
-	filepath.Walk(datasetDir, func(p string, info os.FileInfo, err error) error {
-		if err == nil && info.IsDir() == true && strings.HasSuffix(p, "digital_objects") {
-			digitalObjectDir = p
-			return nil
-		}
-		return err
-	})
-	if digitalObjectDir == "" {
-		log.Fatalf("Can't find the digital object directory in %s", datasetDir)
-	}
+	accessionsDir := path.Join(datasetDir, "repositories", repoNo, "accessions")
+	digitalObjectDir := path.Join(datasetDir, "repositories", repoNo, "digital_objects")
 	subjectDir := path.Join(datasetDir, "subjects")
-	agentsDir := path.Join(datasetDir, "agents", "people")
+	agentsPeopleDir := path.Join(datasetDir, "agents", "people")
 
 	//
 	// Setup Maps and generate the accessions pages
 	//
-	log.Printf("Reading Subjects from %s", subjectDir)
+	log.Printf("Reading Subjects from %s\n", subjectDir)
 	subjectsMap, err := cait.MakeSubjectMap(subjectDir)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
+	log.Printf("Mapped %d subjects\n", len(subjectsMap))
 
-	log.Printf("Reading Digital Objects from %s", digitalObjectDir)
+	log.Printf("Reading Digital Objects from %s\n", digitalObjectDir)
 	digitalObjectsMap, err := cait.MakeDigitalObjectMap(digitalObjectDir)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
+	log.Printf("Mapped %d Digital Objects\n", len(digitalObjectsMap))
 
-	log.Printf("Reading Agents/People from %s", agentsDir)
-	agentsList, err := cait.MakeAgentList(agentsDir)
+	log.Printf("Reading Agents/People from %s\n", agentsPeopleDir)
+	agentsList, err := cait.MakeAgentList(agentsPeopleDir)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
-	log.Printf("Processing Agents/People in %s\n", agentsDir)
-	err = processAgentsPeople(templateDir, "agents-people.html", "agents-people.include")
+	log.Printf("Mapped %d Agents/People\n", len(agentsList))
+
+	log.Printf("Processing Agents/People in %s\n", agentsPeopleDir)
+	cnt, err := processAgentsPeople(templateDir, "agents-people.html", "agents-people.include", agentsPeopleDir)
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
+	log.Printf("Processed %d Agents/Peoples\n", cnt)
 
 	log.Printf("Processing accessions in %s\n", datasetDir)
-	err = processAccessions(templateDir, "accession.html", "accession.include", agentsList, subjectsMap, digitalObjectsMap)
+	cnt, err = processAccessions(templateDir, "accession.html", "accession.include", accessionsDir, agentsList, subjectsMap, digitalObjectsMap)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
+	log.Printf("Processed %d Accessoins\n", cnt)
 }

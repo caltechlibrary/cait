@@ -233,7 +233,7 @@ func indexSite(index bleve.Index, maxBatchSize int) error {
 		count += batch.Size()
 		log.Printf("Indexed: %d items, batch size %d, running %s\n", count, batchSize, time.Now().Sub(startT))
 	}
-	log.Printf("Total indexed: %d times, total run time %s\n", count, time.Now().Sub(startT))
+	log.Printf("Total indexed: %d items, total run time %s\n", count, time.Now().Sub(startT))
 	return err
 }
 
