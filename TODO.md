@@ -8,6 +8,8 @@
 
 ## Bugs (Sprint)
 
++ [ ] Get to the bottom of why keys.json have zero items after export
+    + look at Create() versus Open() and come up with a better ApiCollection shim.
 + [ ] Aprox., Circa, C.E. dates need to be formated correctly in archives.caltech.edu website
 + [ ] Single Date rendering bug
 
