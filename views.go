@@ -211,15 +211,18 @@ func (o *DigitalObject) NormalizeView() *NormalizedDigitalObjectView {
 
 // MakeAgentList given a base data directory read in the subject JSON blobs and builds
 // a slice or subject data. Takes the path to the subjects directory as a parameter.
-func MakeAgentList(dname string) ([]*Agent, error) {
+func (api *ArchivesSpaceAPI) MakeAgentList(dname string) ([]*Agent, error) {
 	var agents []*Agent
 
-	keys, err := GetKeys(dname)
+	c, err := ApiCollection(api, dname)
 	if err != nil {
-		return nil, fmt.Errorf("Can't read Agents keys from %s, %s", dname, err)
+		return nil, fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
+	defer c.Close()
+
+	keys := GetKeys(c)
 	for _, key := range keys {
-		src, err := ReadJSON(dname, key)
+		src, err := ReadJSON(c, key)
 		if err != nil {
 			return nil, fmt.Errorf("Can't read Agent %s, %s", key, err)
 		}
@@ -258,15 +261,18 @@ func (s subjectList) HasSubject(a string) bool {
 
 // MakeSubjectList given a base data directory read in the subject JSON blobs and builds
 // a slice or subject data. Takes the path to the subjects directory as a parameter.
-func MakeSubjectList(dname string) ([]string, error) {
+func (api *ArchivesSpaceAPI) MakeSubjectList(dname string) ([]string, error) {
 	var subjects subjectList
 
-	keys, err := GetKeys(dname)
+	c, err := ApiCollection(api, dname)
 	if err != nil {
-		return nil, fmt.Errorf("Can't read Subjects from %s, %s", dname, err)
+		return nil, fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
+	defer c.Close()
+
+	keys := GetKeys(c)
 	for _, key := range keys {
-		src, err := ReadJSON(dname, key)
+		src, err := ReadJSON(c, key)
 		if err != nil {
 			return nil, fmt.Errorf("Can't read Subjects %s, %s", key, err)
 		}
@@ -293,15 +299,17 @@ func MakeSubjectList(dname string) ([]string, error) {
 
 // MakeSubjectMap given a base data directory read in the subject JSON blobs and builds
 // a map or subject data. Takes the path to the subjects directory as a parameter.
-func MakeSubjectMap(dname string) (map[string]*Subject, error) {
+func (api *ArchivesSpaceAPI) MakeSubjectMap(dname string) (map[string]*Subject, error) {
 	subjects := make(map[string]*Subject)
 
-	keys, err := GetKeys(dname)
+	c, err := ApiCollection(api, dname)
 	if err != nil {
-		return nil, fmt.Errorf("Can't read subject keys from %s, %s", dname, err)
+		return nil, fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
+	defer c.Close()
+	keys := GetKeys(c)
 	for _, key := range keys {
-		src, err := ReadJSON(dname, key)
+		src, err := ReadJSON(c, key)
 		if err != nil {
 			return nil, fmt.Errorf("Can't read %s, %s", key, err)
 		}
@@ -317,15 +325,17 @@ func MakeSubjectMap(dname string) (map[string]*Subject, error) {
 
 // MakeDigitalObjectMap given a base data directory read in the Digital Object JSON blobs
 // and build a map of object data. Takes the path to the subjects directory as a parameter.
-func MakeDigitalObjectMap(dname string) (map[string]*DigitalObject, error) {
+func (api *ArchivesSpaceAPI) MakeDigitalObjectMap(dname string) (map[string]*DigitalObject, error) {
 	digitalObjects := make(map[string]*DigitalObject)
 
-	keys, err := GetKeys(dname)
+	c, err := ApiCollection(api, dname)
 	if err != nil {
-		return nil, fmt.Errorf("Can't read Digital Objects from %s, %s", dname, err)
+		return nil, fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
+	defer c.Close()
+	keys := GetKeys(c)
 	for _, key := range keys {
-		src, err := ReadJSON(dname, key)
+		src, err := ReadJSON(c, key)
 		if err != nil {
 			return nil, fmt.Errorf("Can't read Digital Object %s, %s", key, err)
 		}
@@ -348,17 +358,19 @@ func MakeDigitalObjectMap(dname string) (map[string]*DigitalObject, error) {
 // a map of navigation links that can be used in search results or browsing views.
 // The parameter dname usually is set to the value of $CAIT_DATASET
 // Output is a map of URI pointing at NavElementView for that URI.
-func MakeAccessionTitleIndex(dname string) (map[string]*NavElementView, error) {
+func (api *ArchivesSpaceAPI) MakeAccessionTitleIndex(dname string) (map[string]*NavElementView, error) {
 	// Title index keyed by URI
 	titleIndex := make(map[string]*NavElementView)
 	titlesWithURI := []string{}
 	log.Printf("Making Accession Title Index")
-	keys, err := GetKeys(dname)
+	c, err := ApiCollection(api, dname)
 	if err != nil {
-		return nil, fmt.Errorf("MakeAccessionTitleIndex(%q) -> GetKeys(%q), %s", dname, dname, err)
+		return nil, fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
+	defer c.Close()
+	keys := GetKeys(c)
 	for _, key := range keys {
-		src, err := ReadJSON(dname, key)
+		src, err := ReadJSON(c, key)
 		if err != nil {
 			log.Printf("Can't read Accession %s, %s", key, err)
 		} else {

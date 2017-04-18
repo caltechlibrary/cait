@@ -711,6 +711,8 @@ func main() {
 		log.Fatalf("Can't read %s, %s", templateName, err)
 	}
 
+	log.Printf("%s %s\n", appName, cait.Version)
+
 	handleSignals()
 
 	// Wake up our search engine

@@ -63,14 +63,17 @@ configuration when overriding the defaults:
     CAIT_BLEVE	  A colon delimited list of the Bleve indexes (for swapping)
 `
 
+	// Standard Options
 	showHelp    bool
 	showVersion bool
 	showLicense bool
 
-	htdocs     string
-	bleveNames string
-	dirCount   int
-	fileCount  int
+	// App Options
+	htdocs      string
+	bleveNames  string
+	dirCount    int
+	fileCount   int
+	showVerbose bool
 )
 
 func handleSignals() {
@@ -177,7 +180,7 @@ func newIndex(indexName string) (bleve.Index, error) {
 	return index, nil
 }
 
-func indexSite(index bleve.Index, maxBatchSize int) error {
+func indexSite(index bleve.Index, maxBatchSize int, verbose bool) error {
 	startT := time.Now()
 	count := 0
 	batch := index.NewBatch()
@@ -192,7 +195,7 @@ func indexSite(index bleve.Index, maxBatchSize int) error {
 			}
 			if utf8.Valid(src) == false {
 				log.Printf("%s not valid UTF-8", p)
-				return fmt.Errorf("%s is not valid UTF-8", p)
+				return nil
 			}
 			view := new(cait.NormalizedAccessionView)
 			err = json.Unmarshal(src, &view)
@@ -214,13 +217,15 @@ func indexSite(index bleve.Index, maxBatchSize int) error {
 				}
 				count += batch.Size()
 				batch = index.NewBatch()
-				log.Printf("Indexed: %d items, batch size %d, running %s\n", count, batchSize, time.Now().Sub(startT))
 				if batchSize < maxBatchSize {
 					batchSize = batchSize * 2
 				}
 				if batchSize > maxBatchSize {
 					batchSize = maxBatchSize
 				}
+			}
+			if verbose == true && count > 0 && (count%100) == 0 {
+				log.Printf("Indexed: %d items, batch size %d, running %s\n", count, batchSize, time.Now().Sub(startT))
 			}
 		}
 		return nil
@@ -231,7 +236,9 @@ func indexSite(index bleve.Index, maxBatchSize int) error {
 			log.Fatal(err)
 		}
 		count += batch.Size()
-		log.Printf("Indexed: %d items, batch size %d, running %s\n", count, batchSize, time.Now().Sub(startT))
+		if verbose == true {
+			log.Printf("Indexed: %d items, batch size %d, running %s\n", count, batchSize, time.Now().Sub(startT))
+		}
 	}
 	log.Printf("Total indexed: %d items, total run time %s\n", count, time.Now().Sub(startT))
 	return err
@@ -249,6 +256,7 @@ func init() {
 	// We are going to log to standard out rather than standard err
 	log.SetOutput(os.Stdout)
 
+	// Standard Options
 	flag.BoolVar(&showHelp, "h", false, "display help")
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "v", false, "display version")
@@ -256,8 +264,10 @@ func init() {
 	flag.BoolVar(&showLicense, "l", false, "display license")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 
+	// App Options
 	flag.StringVar(&htdocs, "htdocs", "", "The document root for the website")
 	flag.StringVar(&bleveNames, "bleve", "", "a colon delimited list of Bleve index db names")
+	flag.BoolVar(&showVerbose, "verbose", false, "more verbose logging")
 }
 
 func main() {
@@ -290,6 +300,8 @@ func main() {
 	htdocs = cfg.CheckOption("htdocs", cfg.MergeEnv("htdocs", htdocs), true)
 	names := cfg.CheckOption("bleve", cfg.MergeEnv("bleve", bleveNames), true)
 
+	log.Printf("%s %s\n", appName, cait.Version)
+
 	handleSignals()
 
 	for _, indexName := range strings.Split(names, ":") {
@@ -301,7 +313,7 @@ func main() {
 
 			// Walk our data import tree and index things
 			log.Printf("Start indexing of %s in %s\n", htdocs, indexName)
-			err = indexSite(index, 1000)
+			err = indexSite(index, 1000, showVerbose)
 			if err != nil {
 				log.Fatal(err)
 			}

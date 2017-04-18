@@ -83,22 +83,23 @@ func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.T
 	return aHTMLTmpl, aIncTmpl, nil
 }
 
-func processAgentsPeople(templateDir string, aHTMLTmplName string, aIncTmplName string, agentsPeopleDir string) (int, error) {
+func processAgentsPeople(api *cait.ArchivesSpaceAPI, templateDir string, aHTMLTmplName string, aIncTmplName string, agentsPeopleDir string) (int, error) {
 	log.Printf("Reading templates from %s\n", templateDir)
 	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
 	if err != nil {
 		return 0, fmt.Errorf("template error %q, %q: %s", aHTMLTmplName, aIncTmplName, err)
 	}
-
-	keys, err := cait.GetKeys(agentsPeopleDir)
+	c, err := cait.ApiCollection(api, agentsPeopleDir)
 	if err != nil {
-		return 0, fmt.Errorf("Can't get keys for %s, %s", agentsPeopleDir, err)
+		return 0, fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
+	defer c.Close()
 
+	keys := cait.GetKeys(c)
 	cnt := 0
 	for i, key := range keys {
 		// Process accession records
-		src, err := cait.ReadJSON(agentsPeopleDir, key)
+		src, err := cait.ReadJSON(c, key)
 		if err != nil {
 			return cnt, err
 		}
@@ -176,20 +177,23 @@ func processAgentsPeople(templateDir string, aHTMLTmplName string, aIncTmplName 
 	return cnt, nil
 }
 
-func processAccessions(templateDir string, aHTMLTmplName string, aIncTmplName string, accessionsDir string, agents []*cait.Agent, subjects map[string]*cait.Subject, digitalObjects map[string]*cait.DigitalObject) (int, error) {
+func processAccessions(api *cait.ArchivesSpaceAPI, templateDir string, aHTMLTmplName string, aIncTmplName string, accessionsDir string, agents []*cait.Agent, subjects map[string]*cait.Subject, digitalObjects map[string]*cait.DigitalObject) (int, error) {
 	log.Printf("Reading templates from %s\n", templateDir)
 	aHTMLTmpl, aIncTmpl, err := loadTemplates(templateDir, aHTMLTmplName, aIncTmplName)
 	if err != nil {
 		return 0, fmt.Errorf("template error %q, %q: %s", aHTMLTmplName, aIncTmplName, err)
 	}
-	keys, err := cait.GetKeys(accessionsDir)
+	c, err := cait.ApiCollection(api, accessionsDir)
 	if err != nil {
-		return 0, fmt.Errorf("Can't get accession keys, %s", err)
+		return 0, fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
+	defer c.Close()
+
+	keys := cait.GetKeys(c)
 	cnt := 0
 	for i, key := range keys {
 		// Process accession records
-		src, err := cait.ReadJSON(accessionsDir, key)
+		src, err := cait.ReadJSON(c, key)
 		if err != nil {
 			return cnt, err
 		}
@@ -329,47 +333,52 @@ func main() {
 		}
 	}
 
+	// create our API object
+	api := cait.New("", "", "", datasetDir)
+
 	//
 	// Setup directories relationships
 	//
-	accessionsDir := path.Join(datasetDir, "repositories", repoNo, "accessions")
-	digitalObjectDir := path.Join(datasetDir, "repositories", repoNo, "digital_objects")
-	subjectDir := path.Join(datasetDir, "subjects")
-	agentsPeopleDir := path.Join(datasetDir, "agents", "people")
+	accessionsDir := path.Join("repositories", repoNo, "accessions")
+	digitalObjectDir := path.Join("repositories", repoNo, "digital_objects")
+	subjectDir := path.Join("subjects")
+	agentsPeopleDir := path.Join("agents", "people")
+
+	log.Printf("%s %s\n", appName, cait.Version)
 
 	//
 	// Setup Maps and generate the accessions pages
 	//
 	log.Printf("Reading Subjects from %s\n", subjectDir)
-	subjectsMap, err := cait.MakeSubjectMap(subjectDir)
+	subjectsMap, err := api.MakeSubjectMap(subjectDir)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
 	log.Printf("Mapped %d subjects\n", len(subjectsMap))
 
 	log.Printf("Reading Digital Objects from %s\n", digitalObjectDir)
-	digitalObjectsMap, err := cait.MakeDigitalObjectMap(digitalObjectDir)
+	digitalObjectsMap, err := api.MakeDigitalObjectMap(digitalObjectDir)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
 	log.Printf("Mapped %d Digital Objects\n", len(digitalObjectsMap))
 
 	log.Printf("Reading Agents/People from %s\n", agentsPeopleDir)
-	agentsList, err := cait.MakeAgentList(agentsPeopleDir)
+	agentsList, err := api.MakeAgentList(agentsPeopleDir)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
 	log.Printf("Mapped %d Agents/People\n", len(agentsList))
 
 	log.Printf("Processing Agents/People in %s\n", agentsPeopleDir)
-	cnt, err := processAgentsPeople(templateDir, "agents-people.html", "agents-people.include", agentsPeopleDir)
+	cnt, err := processAgentsPeople(api, templateDir, "agents-people.html", "agents-people.include", agentsPeopleDir)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}
 	log.Printf("Processed %d Agents/Peoples\n", cnt)
 
 	log.Printf("Processing accessions in %s\n", datasetDir)
-	cnt, err = processAccessions(templateDir, "accession.html", "accession.include", accessionsDir, agentsList, subjectsMap, digitalObjectsMap)
+	cnt, err = processAccessions(api, templateDir, "accession.html", "accession.include", accessionsDir, agentsList, subjectsMap, digitalObjectsMap)
 	if err != nil {
 		log.Fatalf("%s", err)
 	}

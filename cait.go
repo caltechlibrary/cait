@@ -63,14 +63,14 @@ func getenv(envvar, defaultValue string) string {
 
 // New creates a new ArchivesSpaceAPI object for use with most of the functions
 // in the gas package.
-func New(apiURL, username, password string) *ArchivesSpaceAPI {
+func New(apiURL, username, password, dataset string) *ArchivesSpaceAPI {
 	api := new(ArchivesSpaceAPI)
 	api.BaseURL, _ = url.Parse(getenv("CAIT_API_URL", apiURL))
 	api.CallURL, _ = url.Parse(getenv("CAIT_API_URL", apiURL))
 	api.AuthToken = getenv("CAIT_API_TOKEN", "")
 	api.Username = getenv("CAIT_USERNAME", username)
 	api.Password = getenv("CAIT_PASSWORD", password)
-	api.Dataset = getenv("CAIT_DATASET", "dataset")
+	api.Dataset = getenv("CAIT_DATASET", dataset)
 	api.DatasetIndex = getenv("CAIT_DATASET_INDEX", "dataset.bleve")
 	api.Htdocs = getenv("CAIT_HTDOCS", "htdocs")
 	api.HtdocsIndex = getenv("CAIT_HTDOCS_INDEX", "htdocs.bleve")

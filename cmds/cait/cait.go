@@ -119,6 +119,7 @@ Or for a specific repository by ID with
 
 Other SUBJECTS and ACTIONS work in a similar fashion.`
 
+	// App Options
 	caitAPIURL      = `http://localhost:8089`
 	caitUsername    = ``
 	caitPassword    = ``
@@ -126,6 +127,7 @@ Other SUBJECTS and ACTIONS work in a similar fashion.`
 	caitHtdocs      = `htdocs`
 	caitHtdocsIndex = `htdocs.bleve`
 	caitTemplates   = `templates`
+	showVerbose     bool
 )
 
 func containsElement(src []string, elem string) bool {
@@ -139,12 +141,13 @@ func containsElement(src []string, elem string) bool {
 
 func exportArchivesSpace(api *cait.ArchivesSpaceAPI) error {
 	log.Println("Logging into ", api.BaseURL)
+	log.Printf("Exporting to %s\n", api.Dataset)
 	err := api.Login()
 	if err != nil {
 		return fmt.Errorf("%s, error %s", api.BaseURL, err)
 	}
 	//log.Printf("export TOKEN=%s\n", api.AuthToken)
-	err = api.ExportArchivesSpace()
+	err = api.ExportArchivesSpace(showVerbose)
 	if err != nil {
 		return fmt.Errorf("Failed to export ArchivesSpace, %s", err)
 	}
@@ -253,7 +256,6 @@ func runRepoCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	case "export":
 		err := api.ExportRepository(
 			repoID,
-			path.Join(api.Dataset, "repositories"),
 			fmt.Sprintf("%d.json", repoID),
 		)
 		if err != nil {
@@ -338,7 +340,7 @@ func runAgentCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "export":
-		err := api.ExportAgents(aType)
+		err := api.ExportAgents(aType, showVerbose)
 		if err != nil {
 			return "", fmt.Errorf("Exporting /agents/%s, %s", aType, err)
 		}
@@ -418,7 +420,7 @@ func runAccessionCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "export":
-		err := api.ExportAccessions(repoID)
+		err := api.ExportAccessions(repoID, showVerbose)
 		if err != nil {
 			return "", fmt.Errorf("Exporting repositories/%d/accessions, %s", repoID, err)
 		}
@@ -493,7 +495,7 @@ func runSubjectCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "export":
-		err := api.ExportSubjects()
+		err := api.ExportSubjects(showVerbose)
 		if err != nil {
 			return "", fmt.Errorf("Exporting /subjects, %s", err)
 		}
@@ -568,7 +570,7 @@ func runLocationCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "export":
-		err := api.ExportLocations()
+		err := api.ExportLocations(showVerbose)
 		if err != nil {
 			return "", fmt.Errorf("Exporting /locations, %s", err)
 		}
@@ -644,7 +646,7 @@ func runVocabularyCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) 
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "export":
-		err := api.ExportVocabularies()
+		err := api.ExportVocabularies(showVerbose)
 		if err != nil {
 			return "", fmt.Errorf("Exporting /vocabularies, %s", err)
 		}
@@ -726,7 +728,7 @@ func runTermCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "export":
-		err := api.ExportTerms()
+		err := api.ExportTerms(showVerbose)
 		if err != nil {
 			return "", fmt.Errorf("Exporting /terms, %s", err)
 		}
@@ -805,7 +807,7 @@ func runDigitalObjectCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, erro
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "export":
-		err := api.ExportDigitalObjects(repoID)
+		err := api.ExportDigitalObjects(repoID, showVerbose)
 		if err != nil {
 			return "", fmt.Errorf("Exporting repositories/%d/digital_objects, %s", repoID, err)
 		}
@@ -884,7 +886,7 @@ func runResourceCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 		src, err := json.Marshal(responseMsg)
 		return string(src), err
 	case "export":
-		err := api.ExportResources(repoID)
+		err := api.ExportResources(repoID, showVerbose)
 		if err != nil {
 			return "", fmt.Errorf("Exporting repositories/%d/resources, %s", repoID, err)
 		}
@@ -928,6 +930,7 @@ func (c *command) String() string {
 }
 
 func init() {
+	// Standard Options
 	flag.BoolVar(&showHelp, "h", false, "Display help")
 	flag.BoolVar(&showHelp, "help", false, "Display help")
 	flag.BoolVar(&showVersion, "v", false, "Display version")
@@ -935,8 +938,10 @@ func init() {
 	flag.BoolVar(&showLicense, "l", false, "Display license")
 	flag.BoolVar(&showLicense, "license", false, "Display license")
 
+	// App Options
 	flag.StringVar(&payload, "i", "", "Use this filepath for the payload")
 	flag.StringVar(&payload, "input", "", "Use this filepath for the payload")
+	flag.BoolVar(&showVerbose, "verbose", false, "more verbose logging")
 }
 
 func main() {
@@ -994,7 +999,9 @@ func main() {
 	//NOTE: if we have no errors we can switch the log statement to os.Stdout here.
 	log.SetOutput(os.Stdout)
 
-	api := cait.New(caitAPIURL, caitUsername, caitPassword)
+	log.Printf("%s %s\n", appName, cait.Version)
+
+	api := cait.New(caitAPIURL, caitUsername, caitPassword, caitDataset)
 	src, err := runCmd(api, cmd)
 	if err != nil {
 		fmt.Println(err)
