@@ -28,7 +28,7 @@ import (
 // ExportRepository for specific id to a JSON file.
 func (api *ArchivesSpaceAPI) ExportRepository(id int, fname string) error {
 	dir := "repository"
-	c, err := ApiCollection(api, dir)
+	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s/%s, %s", api.Dataset, dir, err)
 	}
@@ -67,7 +67,7 @@ func (api *ArchivesSpaceAPI) ExportRepositories(verbose bool) error {
 // ExportAgents exports all agent records of a given type to JSON files by id.
 func (api *ArchivesSpaceAPI) ExportAgents(agentType string, verbose bool) error {
 	dir := path.Join("agents", agentType)
-	c, err := ApiCollection(api, dir)
+	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
@@ -96,7 +96,7 @@ func (api *ArchivesSpaceAPI) ExportAgents(agentType string, verbose bool) error 
 // ExportAccessions exports all accessions by id to JSON files.
 func (api *ArchivesSpaceAPI) ExportAccessions(repoID int, verbose bool) error {
 	dir := fmt.Sprintf("repositories/%d/accessions", repoID)
-	c, err := ApiCollection(api, dir)
+	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
@@ -129,7 +129,7 @@ func (api *ArchivesSpaceAPI) ExportAccessions(repoID int, verbose bool) error {
 // ExportSubjects exports all subjects by id to JSON files.
 func (api *ArchivesSpaceAPI) ExportSubjects(verbose bool) error {
 	dir := "subjects"
-	c, err := ApiCollection(api, dir)
+	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s/%s, %s", api.Dataset, dir, err)
 	}
@@ -159,7 +159,7 @@ func (api *ArchivesSpaceAPI) ExportSubjects(verbose bool) error {
 // ExportVocabularies exports all the vocabularies by ids to JSON files.
 func (api *ArchivesSpaceAPI) ExportVocabularies(verbose bool) error {
 	dir := "vocabularies"
-	c, err := ApiCollection(api, dir)
+	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
@@ -187,7 +187,7 @@ func (api *ArchivesSpaceAPI) ExportVocabularies(verbose bool) error {
 
 func (api *ArchivesSpaceAPI) collectTerms(vocID int, verbose bool) error {
 	dir := path.Join("vocabularies", fmt.Sprintf("%d", vocID), "terms")
-	c, err := ApiCollection(api, dir)
+	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
@@ -232,7 +232,7 @@ func (api *ArchivesSpaceAPI) ExportTerms(verbose bool) error {
 // ExportLocations export all locations by id to JSON files.
 func (api *ArchivesSpaceAPI) ExportLocations(verbose bool) error {
 	dir := "locations"
-	c, err := ApiCollection(api, dir)
+	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
@@ -262,7 +262,7 @@ func (api *ArchivesSpaceAPI) ExportLocations(verbose bool) error {
 // ExportDigitalObjects export all digital objects by id to JSON files.
 func (api *ArchivesSpaceAPI) ExportDigitalObjects(repoID int, verbose bool) error {
 	dir := path.Join("repositories", fmt.Sprintf("%d", repoID), "digital_objects")
-	c, err := ApiCollection(api, dir)
+	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
@@ -292,7 +292,7 @@ func (api *ArchivesSpaceAPI) ExportDigitalObjects(repoID int, verbose bool) erro
 // ExportResources export all resources by id to JSON files.
 func (api *ArchivesSpaceAPI) ExportResources(repoID int, verbose bool) error {
 	dir := path.Join("repositories", fmt.Sprintf("%d", repoID), "resources")
-	c, err := ApiCollection(api, dir)
+	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}

@@ -89,7 +89,7 @@ func processAgentsPeople(api *cait.ArchivesSpaceAPI, templateDir string, aHTMLTm
 	if err != nil {
 		return 0, fmt.Errorf("template error %q, %q: %s", aHTMLTmplName, aIncTmplName, err)
 	}
-	c, err := cait.ApiCollection(api, agentsPeopleDir)
+	c, err := cait.OpenCollection(api, agentsPeopleDir)
 	if err != nil {
 		return 0, fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
@@ -183,7 +183,7 @@ func processAccessions(api *cait.ArchivesSpaceAPI, templateDir string, aHTMLTmpl
 	if err != nil {
 		return 0, fmt.Errorf("template error %q, %q: %s", aHTMLTmplName, aIncTmplName, err)
 	}
-	c, err := cait.ApiCollection(api, accessionsDir)
+	c, err := cait.OpenCollection(api, accessionsDir)
 	if err != nil {
 		return 0, fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}

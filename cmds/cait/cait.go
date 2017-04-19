@@ -72,7 +72,7 @@ var (
 
 // These are the global environment variables defaults used by various combinations of subjects and actions
 var (
-	usage = `USAGE: %s SUBJECT ACTION [OPTIONS|PAYLOAD]`
+	usage = `USAGE: %s [OPTIONS] SUBJECT ACTION [PAYLOAD]`
 
 	description = `
 SYSNOPSIS
@@ -281,7 +281,7 @@ func runAgentCmd(api *cait.ArchivesSpaceAPI, cmd *command) (string, error) {
 	agentID := cait.URIToID(agent.URI)
 	p := strings.Split(agent.URI, "/")
 	if len(p) < 3 {
-		return "", fmt.Errorf(`Agent commands require a uri in the JSON payload, e.g. {"uri":"/agents/people"} or {"uri":"/agents/poeple/3"}, %s`, cmd.Payload)
+		return "", fmt.Errorf(`Agent commands require a uri in the JSON payload, e.g. {"uri":"/agents/people"} or {"uri":"/agents/people/3"}, %s`, cmd.Payload)
 	} else if len(p) == 3 {
 		agent.URI = ""
 	}
@@ -951,7 +951,7 @@ func main() {
 
 	cfg := cli.New(appName, "CAIT", fmt.Sprintf(cait.LicenseText, appName, cait.Version), cait.Version)
 	cfg.UsageText = fmt.Sprintf(usage, appName)
-	cfg.DescriptionText = fmt.Sprintf(description, appName, appName, appName, appName)
+	cfg.DescriptionText = fmt.Sprintf(description, appName, strings.Join(subjects, ", "), strings.Join(actions, ", "), appName)
 	cfg.ExampleText = fmt.Sprintf(examples, appName, appName, appName)
 	cfg.OptionsText = "OPTIONS\n"
 

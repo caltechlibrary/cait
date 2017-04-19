@@ -60,7 +60,7 @@ var bucketNames = []string{
 	"zw", "zx", "zy", "zz",
 }
 
-func ApiCollection(api *ArchivesSpaceAPI, dname string) (*dataset.Collection, error) {
+func CreateCollection(api *ArchivesSpaceAPI, dname string) (*dataset.Collection, error) {
 	// dname is appended to api.Dataset to form the correct collection name
 	// e.g. s3://test-dataset.library.example.edu/Archives/repositories/2/accessions
 	if api == nil {
@@ -70,6 +70,18 @@ func ApiCollection(api *ArchivesSpaceAPI, dname string) (*dataset.Collection, er
 		return nil, fmt.Errorf("api not initialized")
 	}
 	return dataset.Create(fmt.Sprintf("%s/%s", api.Dataset, dname), bucketNames)
+}
+
+func OpenCollection(api *ArchivesSpaceAPI, dname string) (*dataset.Collection, error) {
+	// dname is appended to api.Dataset to form the correct collection name
+	// e.g. s3://test-dataset.library.example.edu/Archives/repositories/2/accessions
+	if api == nil {
+		return nil, fmt.Errorf("api not initialized")
+	}
+	if api.Dataset == "" {
+		return nil, fmt.Errorf("api not initialized")
+	}
+	return dataset.Open(fmt.Sprintf("%s/%s", api.Dataset, dname))
 }
 
 func GetKeys(c *dataset.Collection) []string {

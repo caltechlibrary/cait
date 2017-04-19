@@ -214,12 +214,11 @@ func (o *DigitalObject) NormalizeView() *NormalizedDigitalObjectView {
 func (api *ArchivesSpaceAPI) MakeAgentList(dname string) ([]*Agent, error) {
 	var agents []*Agent
 
-	c, err := ApiCollection(api, dname)
+	c, err := OpenCollection(api, dname)
 	if err != nil {
 		return nil, fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
 	defer c.Close()
-	fmt.Printf("DEBUG collection: %s/%s type: %d (2 is S3)\n", api.Dataset, dname, c.Store.Type)
 
 	keys := GetKeys(c)
 	for _, key := range keys {
@@ -264,12 +263,11 @@ func (s subjectList) HasSubject(a string) bool {
 // a slice or subject data. Takes the path to the subjects directory as a parameter.
 func (api *ArchivesSpaceAPI) MakeSubjectList(dname string) ([]string, error) {
 	var subjects subjectList
-	c, err := ApiCollection(api, dname)
+	c, err := OpenCollection(api, dname)
 	if err != nil {
 		return nil, fmt.Errorf("Can't open collection %s/%s, %s", api.Dataset, dname, err)
 	}
 	defer c.Close()
-	fmt.Printf("DEBUG collection: %s/%s type: %d (2 is S3)\n", api.Dataset, dname, c.Store.Type)
 
 	keys := GetKeys(c)
 	for _, key := range keys {
@@ -303,15 +301,13 @@ func (api *ArchivesSpaceAPI) MakeSubjectList(dname string) ([]string, error) {
 func (api *ArchivesSpaceAPI) MakeSubjectMap(dname string) (map[string]*Subject, error) {
 	subjects := make(map[string]*Subject)
 
-	c, err := ApiCollection(api, dname)
+	c, err := OpenCollection(api, dname)
 	if err != nil {
 		return nil, fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
 	defer c.Close()
-	fmt.Printf("DEBUG collection: %s/%s type: %d (2 is S3)\n", api.Dataset, dname, c.Store.Type)
 
 	keys := GetKeys(c)
-	fmt.Printf("DEBUG MakeSubjectMap(%q) -> api.Dataset: %q -> keys: %+v\n", dname, api.Dataset, keys)
 	for _, key := range keys {
 		src, err := ReadJSON(c, key)
 		if err != nil {
@@ -332,12 +328,11 @@ func (api *ArchivesSpaceAPI) MakeSubjectMap(dname string) (map[string]*Subject, 
 func (api *ArchivesSpaceAPI) MakeDigitalObjectMap(dname string) (map[string]*DigitalObject, error) {
 	digitalObjects := make(map[string]*DigitalObject)
 
-	c, err := ApiCollection(api, dname)
+	c, err := OpenCollection(api, dname)
 	if err != nil {
 		return nil, fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
 	defer c.Close()
-	fmt.Printf("DEBUG collection: %s/%s type: %d (2 is S3)\n", api.Dataset, dname, c.Store.Type)
 
 	keys := GetKeys(c)
 	for _, key := range keys {
@@ -369,12 +364,11 @@ func (api *ArchivesSpaceAPI) MakeAccessionTitleIndex(dname string) (map[string]*
 	titleIndex := make(map[string]*NavElementView)
 	titlesWithURI := []string{}
 	log.Printf("Making Accession Title Index")
-	c, err := ApiCollection(api, dname)
+	c, err := OpenCollection(api, dname)
 	if err != nil {
 		return nil, fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
 	}
 	defer c.Close()
-	fmt.Printf("DEBUG collection: %s/%s type: %d (2 is S3)\n", api.Dataset, dname, c.Store.Type)
 
 	keys := GetKeys(c)
 	for _, key := range keys {
