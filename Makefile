@@ -80,10 +80,10 @@ dist/linux-amd64: *.go cmds/cait/cait.go cmds/cait-genpages/cait-genpages.go cmd
 	env GOOS=linux GOARCH=amd64 go build -o dist/linux-amd64/cait-servepages cmds/cait-servepages/cait-servepages.go
 
 dist/windows-amd64: *.go cmds/cait/cait.go cmds/cait-genpages/cait-genpages.go cmds/cait-indexpages/cait-indexpages.go cmds/cait-servepages/cait-servepages.go
-	env GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait cmds/cait/cait.go
-	env GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait-genpages cmds/cait-genpages/cait-genpages.go
-	env GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
-	env GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait-servepages cmds/cait-servepages/cait-servepages.go
+	env GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait.exe cmds/cait/cait.go
+	env GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait-genpages.exe cmds/cait-genpages/cait-genpages.go
+	env GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait-indexpages.exe cmds/cait-indexpages/cait-indexpages.go
+	env GOOS=windows GOARCH=amd64 go build -o dist/windows-amd64/cait-servepages.exe cmds/cait-servepages/cait-servepages.go
 
 dist/macosx-amd64: *.go cmds/cait/cait.go cmds/cait-genpages/cait-genpages.go cmds/cait-indexpages/cait-indexpages.go cmds/cait-servepages/cait-servepages.go
 	env GOOS=darwin GOARCH=amd64 go build -o dist/macosx-amd64/cait cmds/cait/cait.go
@@ -97,13 +97,8 @@ dist/raspbian-arm7: *.go cmds/cait/cait.go cmds/cait-genpages/cait-genpages.go c
 	env GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
 	env GOOS=linux GOARCH=arm GOARM=7 go build -o dist/raspbian-arm7/cait-servepages cmds/cait-servepages/cait-servepages.go
 
-dist/raspbian-arm6: *.go cmds/cait/cait.go cmds/cait-genpages/cait-genpages.go cmds/cait-indexpages/cait-indexpages.go cmds/cait-servepages/cait-servepages.go
-	env GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/cait cmds/cait/cait.go
-	env GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/cait-genpages cmds/cait-genpages/cait-genpages.go
-	env GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
-	env GOOS=linux GOARCH=arm GOARM=6 go build -o dist/raspbian-arm6/cait-servepages cmds/cait-servepages/cait-servepages.go
 
-release: dist/linux-amd64 dist/windows-amd64 dist/macosx-amd64 dist/raspbian-arm7 dist/raspbian-arm6
+release: dist/linux-amd64 dist/windows-amd64 dist/macosx-amd64 dist/raspbian-arm7
 	mkdir -p dist
 	mkdir -p dist/etc/systemd/system
 	mkdir -p dist/scripts
