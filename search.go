@@ -48,6 +48,7 @@ type SearchQuery struct {
 	AllIDs bool   `json:"all_ids"`
 	Size   int    `json:"size"`
 	From   int    `json:"from"`
+	Sort   string `json:"sort"`
 
 	// Simple Search
 	Q string `json:"q"`
@@ -89,6 +90,7 @@ func (sq *SearchQuery) AttachSearchResults(sr *bleve.SearchResult) {
 	v.Add("size", fmt.Sprintf("%d", sq.Size))
 	v.Add("from", fmt.Sprintf("%d", sq.From))
 	v.Add("total", fmt.Sprintf("%d", sq.Total))
+	v.Add("sort", fmt.Sprintf("%s", sq.Sort))
 	v.Add("q", sq.Q)
 	v.Add("q_required", sq.QRequired)
 	v.Add("q_exact", sq.QExact)

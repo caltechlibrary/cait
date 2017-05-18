@@ -119,6 +119,7 @@ func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
 		Size      int    `json:"size"`
 		From      int    `json:"from"`
 		AllIDs    bool   `json:"all_ids"`
+		Sort      string `json:"sort"`
 	}{}
 
 	isQuery := false
@@ -166,6 +167,10 @@ func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
 		q.From = 0
 	} else {
 		q.From = raw.From
+	}
+	if raw.Sort != "" {
+		//FIXME: Validate sort field
+		q.Sort = raw.Sort
 	}
 	return q, nil
 }
@@ -238,7 +243,7 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 				if i, err := strconv.Atoi(strings.Join(v, "")); err == nil {
 					submission[k] = i
 				}
-			} else if k == "q" || k == "q_exact" || k == "q_excluded" || k == "q_required" {
+			} else if k == "q" || k == "q_exact" || k == "q_excluded" || k == "q_required" || k == "sort" {
 				submission[k] = strings.Join(v, "")
 			}
 		}
@@ -335,6 +340,15 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		"deaccessions",
 		"accession_date",
 		"created",
+	}
+
+	// NOTE: If we need to sort, configure it before running index.Search()
+	if q.Sort != "" {
+		if strings.Contains(sVal, ":") == true {
+			searchRequest.SortBy(strings.Split(sVal, ":"))
+		} else {
+			searchRequest.SortBy([]string{sVal})
+		}
 	}
 
 	searchResults, err := index.Search(searchRequest)
