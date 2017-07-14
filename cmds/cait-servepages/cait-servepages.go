@@ -103,7 +103,7 @@ variables are supported-
 	index      bleve.Index
 
 	// Internal package var
-	tmplFuncs = tmplfn.Join(tmplfn.TimeMap, tmplfn.PageMap, cait.TmplMap)
+	tmplFuncs = tmplfn.AllFuncs()
 )
 
 func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
@@ -119,6 +119,7 @@ func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
 		Size      int    `json:"size"`
 		From      int    `json:"from"`
 		AllIDs    bool   `json:"all_ids"`
+		Sort      string `json:"sort"`
 	}{}
 
 	isQuery := false
@@ -154,6 +155,12 @@ func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
 
 	if raw.AllIDs == true {
 		q.AllIDs = true
+	}
+
+	if len(raw.Sort) > 0 {
+		// FIXME: need to think about injection
+		q.Sort = raw.Sort
+		log.Printf("DEBUG sorting by %s", q.Sort)
 	}
 
 	//Note: if q.Size is not set by the query request pick a nice default value
@@ -223,6 +230,8 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			} else if k == "q" || k == "q_exact" || k == "q_excluded" || k == "q_required" {
 				submission[k] = strings.Join(v, "")
+			} else if k == "sort" {
+				submission[k] = strings.Join(v, "")
 			}
 		}
 	}
@@ -239,6 +248,8 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 					submission[k] = i
 				}
 			} else if k == "q" || k == "q_exact" || k == "q_excluded" || k == "q_required" {
+				submission[k] = strings.Join(v, "")
+			} else if k == "sort" {
 				submission[k] = strings.Join(v, "")
 			}
 		}
@@ -290,6 +301,13 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
+	}
+	if q.Sort != "" {
+		if strings.Contains(q.Sort, ":") == true {
+			searchRequest.SortBy(strings.Split(q.Sort, ":"))
+		} else {
+			searchRequest.SortBy([]string{q.Sort})
+		}
 	}
 
 	searchRequest.Highlight = bleve.NewHighlight()
@@ -353,7 +371,14 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	pageInclude = "results-search.include"
 
 	// Load my templates and setup to execute them
-	tmpl, err := tmplfn.Assemble(tmplFuncs, path.Join(templatesDir, pageHTML), path.Join(templatesDir, pageInclude))
+	t := tmplfn.New(tmplFuncs)
+	if err := t.ReadFiles(path.Join(templatesDir, pageHTML), path.Join(templatesDir, pageInclude)); err != nil {
+		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Can't render %s, %s/%s, %s", templatesDir, pageHTML, pageInclude, err))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte("Template error"))
+		return
+	}
+	tmpl, err := t.Assemble()
 	if err != nil {
 		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Template Errors: %s, %s, %s\n", pageHTML, pageInclude, err))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -405,16 +430,26 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	if strings.HasPrefix(r.URL.Path, "/search/advanced") == true {
 		formData.URI = "/search/advanced/"
-		tmpl, err = tmplfn.Assemble(tmplFuncs, path.Join(templatesDir, "advanced-search.html"), path.Join(templatesDir, "advanced-search.include"))
-		if err != nil {
+		t := tmplfn.New(tmplFuncs)
+		if err := t.ReadFiles(path.Join(templatesDir, "advanced-search.html"), path.Join(templatesDir, "advanced-search.include")); err != nil {
 			fmt.Printf("Can't read advanced-search templates, %s", err)
+			return
+		}
+		tmpl, err = t.Assemble()
+		if err != nil {
+			fmt.Printf("Can't parse advanced-search templates, %s", err)
 			return
 		}
 	} else {
 		formData.URI = "/search/basic/"
-		tmpl, err = tmplfn.Assemble(tmplFuncs, path.Join(templatesDir, "basic-search.html"), path.Join(templatesDir, "basic-search.include"))
-		if err != nil {
+		t := tmplfn.New(tmplFuncs)
+		if err := t.ReadFiles(path.Join(templatesDir, "basic-search.html"), path.Join(templatesDir, "basic-search.include")); err != nil {
 			log.Printf("Can't read basic-search templates, %s\n", err)
+			return
+		}
+		tmpl, err = t.Assemble()
+		if err != nil {
+			log.Printf("Can't parse basic-search templates, %s\n", err)
 			return
 		}
 	}
