@@ -71,13 +71,25 @@ variables-
 )
 
 func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.Template, *template.Template, error) {
-	tmplFuncs := tmplfn.Join(tmplfn.TimeMap, tmplfn.PageMap, cait.TmplMap)
-	aHTMLTmpl, err := tmplfn.Assemble(tmplFuncs, path.Join(templateDir, aHTMLTmplName), path.Join(templateDir, aIncTmplName))
-	if err != nil {
+	var (
+		aHTMLTmpl *template.Template
+		aIncTmpl  *template.Template
+		err       error
+	)
+
+	t := tmplfn.New(tmplfn.AllFuncs())
+	if err = t.ReadFiles(path.Join(templateDir, aHTMLTmplName), path.Join(templateDir, aIncTmplName)); err != nil {
+		return nil, nil, fmt.Errorf("Can't read template %s, %s, %s", aHTMLTmplName, aIncTmplName, err)
+	}
+	if aHTMLTmpl, err = t.Assemble(); err != nil {
 		return nil, nil, fmt.Errorf("Can't parse template %s, %s, %s", aHTMLTmplName, aIncTmplName, err)
 	}
-	aIncTmpl, err := tmplfn.Assemble(tmplFuncs, path.Join(templateDir, aIncTmplName))
-	if err != nil {
+
+	t = tmplfn.New(tmplfn.AllFuncs())
+	if err = t.ReadFiles(path.Join(templateDir, aIncTmplName)); err != nil {
+		return aHTMLTmpl, nil, fmt.Errorf("Can't read template %s, %s", aIncTmplName, err)
+	}
+	if aIncTmpl, err = t.Assemble(); err != nil {
 		return aHTMLTmpl, nil, fmt.Errorf("Can't parse template %s, %s", aIncTmplName, err)
 	}
 	return aHTMLTmpl, aIncTmpl, nil

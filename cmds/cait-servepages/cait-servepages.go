@@ -101,9 +101,6 @@ variables are supported-
 
 	indexAlias bleve.IndexAlias
 	index      bleve.Index
-
-	// Internal package var
-	tmplFuncs = tmplfn.Join(tmplfn.TimeMap, tmplfn.PageMap, cait.TmplMap)
 )
 
 func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
@@ -353,9 +350,16 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	pageInclude = "results-search.include"
 
 	// Load my templates and setup to execute them
-	tmpl, err := tmplfn.Assemble(tmplFuncs, path.Join(templatesDir, pageHTML), path.Join(templatesDir, pageInclude))
+	t := tmplfn.New(tmplfn.AllFuncs())
+	if err := t.ReadFiles(path.Join(templatesDir, pageHTML), path.Join(templatesDir, pageInclude)); err != nil {
+		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Template Read Errors: %s, %s, %s\n", pageHTML, pageInclude, err))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("Template errors: %s", err)))
+		return
+	}
+	tmpl, err := t.Assemble()
 	if err != nil {
-		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Template Errors: %s, %s, %s\n", pageHTML, pageInclude, err))
+		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Template Assembly Errors: %s, %s, %s\n", pageHTML, pageInclude, err))
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("Template errors: %s", err)))
 		return
@@ -364,7 +368,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, q)
-	//err = tmpl.Execute(w, q)
 	if err != nil {
 		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Can't render %s, %s/%s, %s", templatesDir, pageHTML, pageInclude, err))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -402,19 +405,30 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		tmpl *template.Template
 		err  error
 	)
+	t := tmplfn.New(tmplfn.AllFuncs())
 	w.Header().Set("Content-Type", "text/html")
 	if strings.HasPrefix(r.URL.Path, "/search/advanced") == true {
 		formData.URI = "/search/advanced/"
-		tmpl, err = tmplfn.Assemble(tmplFuncs, path.Join(templatesDir, "advanced-search.html"), path.Join(templatesDir, "advanced-search.include"))
+		err = t.ReadFiles(path.Join(templatesDir, "advanced-search.html"), path.Join(templatesDir, "advanced-search.include"))
 		if err != nil {
 			fmt.Printf("Can't read advanced-search templates, %s", err)
 			return
 		}
+		tmpl, err = t.Assemble()
+		if err != nil {
+			fmt.Printf("Can't assemble advanced-search templates, %s", err)
+			return
+		}
 	} else {
 		formData.URI = "/search/basic/"
-		tmpl, err = tmplfn.Assemble(tmplFuncs, path.Join(templatesDir, "basic-search.html"), path.Join(templatesDir, "basic-search.include"))
+		err = t.ReadFiles(path.Join(templatesDir, "basic-search.html"), path.Join(templatesDir, "basic-search.include"))
 		if err != nil {
 			log.Printf("Can't read basic-search templates, %s\n", err)
+			return
+		}
+		tmpl, err = t.Assemble()
+		if err != nil {
+			log.Printf("Can't assemble basic-search templates, %s\n", err)
 			return
 		}
 	}
