@@ -1,6 +1,12 @@
 
 # Action Items
 
+## Bug
+
++ [ ] Indexing dates is failing to be handled properly (need to use a some logic and derive a useful value like with templated defs in dsindexer)
+    + Two problems, dates need to be normalized for all varieties (e.g. single, single partial, inclusive, inclusive partial dates)
+    + Document type isn't identitied so the Mappings aren't overriding the default indexing, this is why date sorts fail
+
 ## Next (Sprint)
 
 + [ ] Develop an Agent/Person Template, include name, bio and links to accessions if available
