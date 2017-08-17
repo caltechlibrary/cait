@@ -33,7 +33,7 @@ import (
 
 // Version of library
 var (
-	Version = "v0.0.15-p2"
+	Version = "v0.0.15"
 
 	LicenseText = `
 %s %s
