@@ -35,6 +35,7 @@ import (
 
 	// 3rd Party packages
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/analysis/analyzer/simple"
 
 	// Caltech Libraries packages
 	"github.com/caltechlibrary/cait"
@@ -98,79 +99,75 @@ func newIndex(indexName string) (bleve.Index, error) {
 	log.Printf("Creating Bleve index at %s\n", indexName)
 	log.Println("Setting up index...")
 	indexMapping := bleve.NewIndexMapping()
-	// Add Accession as a specific document map
-	accessionMapping := bleve.NewDocumentMapping()
+	indexMapping.DefaultAnalyzer = simple.Name
 
 	// Now add specific accession fields
 	titleMapping := bleve.NewTextFieldMapping()
 	titleMapping.Analyzer = "en"
 	titleMapping.Store = true
 	titleMapping.Index = true
-	accessionMapping.AddFieldMappingsAt("title", titleMapping)
+	indexMapping.DefaultMapping.AddFieldMappingsAt("title", titleMapping)
 
 	descriptionMapping := bleve.NewTextFieldMapping()
 	descriptionMapping.Analyzer = "en"
 	descriptionMapping.Store = true
 	descriptionMapping.Index = true
-	accessionMapping.AddFieldMappingsAt("content_description", descriptionMapping)
+	indexMapping.DefaultMapping.AddFieldMappingsAt("content_description", descriptionMapping)
 
 	subjectsMapping := bleve.NewTextFieldMapping()
 	subjectsMapping.Analyzer = "en"
 	subjectsMapping.Store = true
 	subjectsMapping.Index = true
 	subjectsMapping.IncludeTermVectors = true
-	accessionMapping.AddFieldMappingsAt("subjects", subjectsMapping)
+	indexMapping.DefaultMapping.AddFieldMappingsAt("subjects", subjectsMapping)
 
 	subjectsFunctionMapping := bleve.NewTextFieldMapping()
 	subjectsFunctionMapping.Analyzer = "en"
 	subjectsFunctionMapping.Store = true
 	subjectsFunctionMapping.Index = true
 	subjectsFunctionMapping.IncludeTermVectors = true
-	accessionMapping.AddFieldMappingsAt("subjects_function", subjectsFunctionMapping)
+	indexMapping.DefaultMapping.AddFieldMappingsAt("subjects_function", subjectsFunctionMapping)
 
 	subjectsTopicalMapping := bleve.NewTextFieldMapping()
 	subjectsTopicalMapping.Analyzer = "en"
 	subjectsTopicalMapping.Store = true
 	subjectsTopicalMapping.Index = true
 	subjectsTopicalMapping.IncludeTermVectors = true
-	accessionMapping.AddFieldMappingsAt("subjects_topical", subjectsTopicalMapping)
+	indexMapping.DefaultMapping.AddFieldMappingsAt("subjects_topical", subjectsTopicalMapping)
 
 	objectTitleMapping := bleve.NewTextFieldMapping()
 	objectTitleMapping.Analyzer = "en"
 	objectTitleMapping.Store = true
 	objectTitleMapping.Index = false
-	accessionMapping.AddFieldMappingsAt("digital_objects.title", objectTitleMapping)
+	indexMapping.DefaultMapping.AddFieldMappingsAt("digital_objects.title", objectTitleMapping)
 
 	objectFileURIMapping := bleve.NewTextFieldMapping()
 	objectFileURIMapping.Analyzer = ""
 	objectFileURIMapping.Store = true
 	objectFileURIMapping.Index = false
-	accessionMapping.AddFieldMappingsAt("digital_objects.file_uris", objectFileURIMapping)
+	indexMapping.DefaultMapping.AddFieldMappingsAt("digital_objects.file_uris", objectFileURIMapping)
 
 	extentsMapping := bleve.NewTextFieldMapping()
 	extentsMapping.Analyzer = "en"
 	extentsMapping.Store = true
 	extentsMapping.Index = true
-	accessionMapping.AddFieldMappingsAt("extents", extentsMapping)
+	indexMapping.DefaultMapping.AddFieldMappingsAt("extents", extentsMapping)
 
 	accessionDateMapping := bleve.NewTextFieldMapping()
 	accessionDateMapping.Analyzer = "en"
 	accessionDateMapping.Store = true
 	accessionDateMapping.Index = false
-	accessionMapping.AddFieldMappingsAt("accession_date", accessionDateMapping)
+	indexMapping.DefaultMapping.AddFieldMappingsAt("accession_date", accessionDateMapping)
 
 	datesMapping := bleve.NewTextFieldMapping()
 	datesMapping.Store = true
 	datesMapping.Index = false
-	accessionMapping.AddFieldMappingsAt("date_expression", datesMapping)
+	indexMapping.DefaultMapping.AddFieldMappingsAt("date_expression", datesMapping)
 
 	createdMapping := bleve.NewDateTimeFieldMapping()
 	createdMapping.Store = true
 	createdMapping.Index = false
-	accessionMapping.AddFieldMappingsAt("created", createdMapping)
-
-	// Finally add this mapping to the main index mapping
-	indexMapping.AddDocumentMapping("accession", accessionMapping)
+	indexMapping.DefaultMapping.AddFieldMappingsAt("created", createdMapping)
 
 	log.Printf("Opening a new Bleve index at %s", indexName)
 	index, err := bleve.New(indexName, indexMapping)
