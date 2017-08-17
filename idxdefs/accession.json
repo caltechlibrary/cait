@@ -1,0 +1,84 @@
+{
+    "title": {
+        "object_path": ".title",
+        "field_mapping": "text",
+        "analyzer": "standard",
+        "store": true
+    },
+    "content_description": {
+        "object_path": ".content_description",
+        "field_mapping": "text",
+        "analyzer": "standard",
+        "store": true
+    },
+    "content_condition": {
+        "object_path": ".content_condition",
+        "field_mapping": "text",
+        "analyzer": "standard",
+        "store": true
+    },
+    "subjects": {
+        "object_path": ".subjects",
+        "field_mapping": "text",
+        "analyzer": "standard",
+        "store": true
+    },
+    "subjects_function": {
+        "object_path": ".subjects_function",
+        "field_mapping": "text",
+        "analyzer": "standard",
+        "store": true
+    },
+    "subjects_topical": {
+        "object_path": ".subjects_topical",
+        "field_mapping": "text",
+        "analyzer": "standard",
+        "store": true
+    },
+    "ditial_objects_title": {
+        "object_path": "digital_objects[:].title",
+        "field_mapping": "text",
+        "analyzer": "standard",
+        "store": true
+    },
+    "digital_objects_file_uris": {
+        "object_path": "digital_objects[:].file_uris",
+        "field_mapping": "text",
+        "analyzer": "standard",
+        "store": true
+    },
+    "extents": {
+        "object_path": ".extents",
+        "field_mapping": "text",
+        "analyzer": "standard",
+        "store": true
+    },
+    "extents_summary": {
+        "object_path": ".extents[:].container_summary",
+        "field_mapping": "text",
+        "analyzer": "standard",
+        "store": true
+    },
+    "extents_type": {
+        "object_path": ".extents[:].extent_type",
+        "field_mapping": "text",
+        "analyzer": "standard",
+        "store": true
+    },
+    "accession_date": {
+        "object_template": "idxdefs/dates-accession.tmpl",
+        "field_mapping": "datetime",
+        "store": true
+    },
+    "date_expression": {
+        "object_template": "idxdefs/dates-expression.tmpl",
+        "field_mapping": "datetime",
+        "store": true
+    },
+    "created": {
+        "object_path": ".created",
+        "field_mapping": "datetime",
+        "store": true
+    }
+}
+
