@@ -368,7 +368,8 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	pageInclude = "results-search.include"
 
 	// Load my templates and setup to execute them
-	t := tmplfn.New(tmplfn.AllFuncs())
+	tmplFuncs := tmplfn.Join(tmplfn.AllFuncs(), cait.TmplMap)
+	t := tmplfn.New(tmplFuncs)
 	if err := t.ReadFiles(path.Join(templatesDir, pageHTML), path.Join(templatesDir, pageInclude)); err != nil {
 		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Template Read Errors: %s, %s, %s\n", pageHTML, pageInclude, err))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -423,7 +424,8 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		tmpl *template.Template
 		err  error
 	)
-	t := tmplfn.New(tmplfn.AllFuncs())
+	tmplFuncs := tmplfn.Join(tmplfn.AllFuncs(), cait.TmplMap)
+	t := tmplfn.New(tmplFuncs)
 	w.Header().Set("Content-Type", "text/html")
 	if strings.HasPrefix(r.URL.Path, "/search/advanced") == true {
 		formData.URI = "/search/advanced/"

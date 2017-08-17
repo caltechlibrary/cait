@@ -71,7 +71,7 @@ variables-
 )
 
 func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.Template, *template.Template, error) {
-	tmplFuncs := tmplfn.AllFuncs()
+	tmplFuncs := tmplfn.Join(tmplfn.AllFuncs(), cait.TmplMap)
 	t := tmplfn.New(tmplFuncs)
 	if err := t.ReadFiles(path.Join(templateDir, aHTMLTmplName), path.Join(templateDir, aIncTmplName)); err != nil {
 		return nil, nil, fmt.Errorf("Can't read template %s, %s, %s", aHTMLTmplName, aIncTmplName, err)
