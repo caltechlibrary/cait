@@ -54,8 +54,7 @@ import (
 var (
 	usage = `USAGE: %s [OPTIONS]`
 
-	description = `
- OVERVIEW
+	description = `OVERVIEW
 
 %s provides search services defined by CAIT_SITE_URL for the
 website content defined by CAIT_HTDOCS using the index defined
@@ -79,9 +78,7 @@ variables are supported-
    
    CAIT_WEBHOOK_SECRET
    
-   CAIT_WEBHOOK_COMMAND
-
-`
+   CAIT_WEBHOOK_COMMAND`
 
 	showHelp    bool
 	showVersion bool
@@ -681,10 +678,7 @@ func init() {
 	// We are going to log to standard out rather than standard err
 	log.SetOutput(os.Stdout)
 
-	flag.StringVar(&siteURL, "search", "", "The URL to listen on for search requests")
-	flag.StringVar(&bleveNames, "bleve", "", "a colon delimited list of Bleve index db names")
-	flag.StringVar(&htdocsDir, "htdocs", "", "specify where to write the HTML files to")
-	flag.StringVar(&templatesDir, "templates", "", "The directory path for templates")
+	// Standard Options
 	flag.BoolVar(&showHelp, "h", false, "display help")
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "v", false, "display version")
@@ -692,6 +686,11 @@ func init() {
 	flag.BoolVar(&showLicense, "l", false, "display license")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 
+	// Application Options
+	flag.StringVar(&siteURL, "search", "", "The URL to listen on for search requests")
+	flag.StringVar(&bleveNames, "bleve", "", "a colon delimited list of Bleve index db names")
+	flag.StringVar(&htdocsDir, "htdocs", "", "specify where to write the HTML files to")
+	flag.StringVar(&templatesDir, "templates", "", "The directory path for templates")
 	flag.StringVar(&webhookPath, "webhook-path", "", "the webhook path, e.g. /my-webhook/something")
 	flag.StringVar(&webhookSecret, "webhook-secret", "", "the secret to validate before executing command")
 	flag.StringVar(&webhookCommand, "webhook-command", "", "the command to execute if webhook validates")
@@ -702,14 +701,21 @@ func main() {
 	var err error
 
 	appName := path.Base(os.Args[0])
-	cfg := cli.New(appName, "CAIT", fmt.Sprintf(cait.LicenseText, appName, cait.Version), cait.Version)
+	flag.Parse()
+	args := flag.Args()
+
+	cfg := cli.New(appName, "CAIT", cait.Version)
+	cfg.LicenseText = fmt.Sprintf(cait.LicenseText, appName, cait.Version)
 	cfg.UsageText = fmt.Sprintf(usage, appName)
 	cfg.DescriptionText = fmt.Sprintf(description, appName, appName)
-	cfg.OptionsText = "OPTIONS\n"
+	cfg.OptionText = "OPTIONS\n\n"
 
-	flag.Parse()
 	if showHelp == true {
-		fmt.Println(cfg.Usage())
+		if len(args) > 0 {
+			fmt.Println(cfg.Help(args...))
+		} else {
+			fmt.Println(cfg.Usage())
+		}
 		os.Exit(0)
 	}
 	if showVersion == true {

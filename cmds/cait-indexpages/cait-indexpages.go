@@ -45,8 +45,7 @@ import (
 var (
 	usage = `USAGE: %s [OPTIONS] [BLEVE_INDEX]`
 
-	description = `
-SYNOPSIS
+	description = `SYNOPSIS
 
 %s is a command line utility to create a new index of content in the htdocs directory.
 It produces a Bleve search index used by servepages web service.
@@ -61,8 +60,7 @@ configuration when overriding the defaults:
                   containings the content (e.g. JSON files) to be index.
                   This is generally populated with the genpages command.
 
-    CAIT_BLEVE	  A colon delimited list of the Bleve indexes (for swapping)
-`
+    CAIT_BLEVE	  A colon delimited list of the Bleve indexes (for swapping)`
 
 	// Standard Options
 	showHelp    bool
@@ -272,13 +270,18 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 
-	cfg := cli.New(appName, "CAIT", fmt.Sprintf(cait.LicenseText, appName, cait.Version), cait.Version)
+	cfg := cli.New(appName, "CAIT", cait.Version)
+	cfg.LicenseText = fmt.Sprintf(cait.LicenseText, appName, cait.Version)
 	cfg.UsageText = fmt.Sprintf(usage, appName)
 	cfg.DescriptionText = fmt.Sprintf(description, appName, appName)
-	cfg.OptionsText = "OPTIONS\n"
+	cfg.OptionText = "OPTIONS\n"
 
 	if showHelp == true {
-		fmt.Println(cfg.Usage())
+		if len(args) > 0 {
+			fmt.Println(cfg.Help(args...))
+		} else {
+			fmt.Println(cfg.Usage())
+		}
 		os.Exit(0)
 	}
 	if showVersion == true {

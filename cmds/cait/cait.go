@@ -74,8 +74,7 @@ var (
 var (
 	usage = `USAGE: %s [OPTIONS] SUBJECT ACTION [PAYLOAD]`
 
-	description = `
-SYSNOPSIS
+	description = `SYSNOPSIS
 
 %s is a command line utility for interacting with ArchivesSpace.
 The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
@@ -95,11 +94,9 @@ to ArchivesSpace. The following shell variables are used
     CAIT_API_TOKEN         (e.g. long token string of letters and numbers)
 
 If CAIT_API_TOKEN is not set then CAIT_USERNAME and CAIT_PASSWORD
-are used.
-`
+are used.`
 
-	examples = `
-EXAMPLES:
+	examples = `EXAMPLES:
 
   	%s repository create '{"repo_code":"MyTest","name":"My Test Repository"}'
 
@@ -949,14 +946,19 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 
-	cfg := cli.New(appName, "CAIT", fmt.Sprintf(cait.LicenseText, appName, cait.Version), cait.Version)
+	cfg := cli.New(appName, "CAIT", cait.Version)
+	cfg.LicenseText = fmt.Sprintf(cait.LicenseText, appName, cait.Version)
 	cfg.UsageText = fmt.Sprintf(usage, appName)
 	cfg.DescriptionText = fmt.Sprintf(description, appName, strings.Join(subjects, ", "), strings.Join(actions, ", "), appName)
 	cfg.ExampleText = fmt.Sprintf(examples, appName, appName, appName)
-	cfg.OptionsText = "OPTIONS\n"
+	cfg.OptionText = "OPTIONS\n\n"
 
 	if showHelp == true {
-		fmt.Println(cfg.Usage())
+		if len(args) > 0 {
+			fmt.Println(cfg.Help(args...))
+		} else {
+			fmt.Println(cfg.Usage())
+		}
 		os.Exit(0)
 	}
 
