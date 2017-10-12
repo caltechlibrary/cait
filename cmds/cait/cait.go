@@ -74,7 +74,9 @@ var (
 var (
 	usage = `USAGE: %s [OPTIONS] SUBJECT ACTION [PAYLOAD]`
 
-	description = `SYSNOPSIS
+	description = `
+
+SYSNOPSIS
 
 %s is a command line utility for interacting with ArchivesSpace.
 The command is tructure around an SUBJECT, ACTION and an optional PAYLOAD
@@ -94,9 +96,13 @@ to ArchivesSpace. The following shell variables are used
     CAIT_API_TOKEN         (e.g. long token string of letters and numbers)
 
 If CAIT_API_TOKEN is not set then CAIT_USERNAME and CAIT_PASSWORD
-are used.`
+are used.
 
-	examples = `EXAMPLES:
+`
+
+	examples = `
+
+EXAMPLES:
 
   	%s repository create '{"repo_code":"MyTest","name":"My Test Repository"}'
 
@@ -114,7 +120,9 @@ Or for a specific repository by ID with
 
     %s repository list '{"uri": "/repositories/2"}'
 
-Other SUBJECTS and ACTIONS work in a similar fashion.`
+Other SUBJECTS and ACTIONS work in a similar fashion.
+
+`
 
 	// App Options
 	caitAPIURL      = `http://localhost:8089`

@@ -37,7 +37,9 @@ import (
 var (
 	usage = `USAGE: %s [OPTIONS]`
 
-	description = `SYNOPSIS
+	description = `
+
+SYNOPSIS
 
 %s generates HTML, .include pages and normalized JSON based on the JSON output form
 cait and templates associated with the command.
@@ -53,7 +55,9 @@ variables-
     CAIT_TEMPLATES  this is the directory that contains the templates
                       used used to generate the static content of the website.
 
-    CAIT_HTDOCS     this is the directory where the HTML files are written.`
+    CAIT_HTDOCS     this is the directory where the HTML files are written.
+
+`
 
 	// Standard Options
 	showHelp    bool

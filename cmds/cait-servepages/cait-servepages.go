@@ -54,7 +54,9 @@ import (
 var (
 	usage = `USAGE: %s [OPTIONS]`
 
-	description = `OVERVIEW
+	description = `
+
+OVERVIEW
 
 %s provides search services defined by CAIT_SITE_URL for the
 website content defined by CAIT_HTDOCS using the index defined
@@ -78,7 +80,9 @@ variables are supported-
    
    CAIT_WEBHOOK_SECRET
    
-   CAIT_WEBHOOK_COMMAND`
+   CAIT_WEBHOOK_COMMAND
+
+`
 
 	showHelp    bool
 	showVersion bool

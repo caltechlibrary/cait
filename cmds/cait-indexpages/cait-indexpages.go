@@ -45,7 +45,9 @@ import (
 var (
 	usage = `USAGE: %s [OPTIONS] [BLEVE_INDEX]`
 
-	description = `SYNOPSIS
+	description = `
+
+SYNOPSIS
 
 %s is a command line utility to create a new index of content in the htdocs directory.
 It produces a Bleve search index used by servepages web service.
@@ -60,7 +62,9 @@ configuration when overriding the defaults:
                   containings the content (e.g. JSON files) to be index.
                   This is generally populated with the genpages command.
 
-    CAIT_BLEVE	  A colon delimited list of the Bleve indexes (for swapping)`
+    CAIT_BLEVE	  A colon delimited list of the Bleve indexes (for swapping)
+
+`
 
 	// Standard Options
 	showHelp    bool
