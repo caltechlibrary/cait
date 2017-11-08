@@ -1007,9 +1007,13 @@ func main() {
 	}
 
 	//NOTE: if we have no errors we can switch the log statement to os.Stdout here.
-	log.SetOutput(os.Stdout)
 
-	log.Printf("%s %s\n", appName, cait.Version)
+	if showVerbose == true {
+		log.SetOutput(os.Stdout)
+		log.Printf("%s %s\n", appName, cait.Version)
+	} else {
+		log.SetOutput(os.Stderr)
+	}
 
 	api := cait.New(caitAPIURL, caitUsername, caitPassword, caitDataset)
 	src, err := runCmd(api, cmd)
