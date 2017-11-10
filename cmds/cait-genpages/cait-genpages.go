@@ -38,6 +38,7 @@ var (
 	usage = `USAGE: %s [OPTIONS]`
 
 	description = `
+
 SYNOPSIS
 
 %s generates HTML, .include pages and normalized JSON based on the JSON output form
@@ -55,6 +56,7 @@ variables-
                       used used to generate the static content of the website.
 
     CAIT_HTDOCS     this is the directory where the HTML files are written.
+
 `
 
 	// Standard Options
@@ -71,14 +73,23 @@ variables-
 )
 
 func loadTemplates(templateDir, aHTMLTmplName, aIncTmplName string) (*template.Template, *template.Template, error) {
-	tmplFuncs := tmplfn.Join(tmplfn.TimeMap, tmplfn.PageMap, cait.TmplMap)
-	aHTMLTmpl, err := tmplfn.Assemble(tmplFuncs, path.Join(templateDir, aHTMLTmplName), path.Join(templateDir, aIncTmplName))
+	tmplFuncs := tmplfn.Join(tmplfn.AllFuncs(), cait.TmplMap)
+	t := tmplfn.New(tmplFuncs)
+	if err := t.ReadFiles(path.Join(templateDir, aHTMLTmplName), path.Join(templateDir, aIncTmplName)); err != nil {
+		return nil, nil, fmt.Errorf("Can't read template %s, %s, %s", aHTMLTmplName, aIncTmplName, err)
+	}
+	aHTMLTmpl, err := t.Assemble()
 	if err != nil {
 		return nil, nil, fmt.Errorf("Can't parse template %s, %s, %s", aHTMLTmplName, aIncTmplName, err)
 	}
-	aIncTmpl, err := tmplfn.Assemble(tmplFuncs, path.Join(templateDir, aIncTmplName))
+
+	t = tmplfn.New(tmplFuncs)
+	if err := t.ReadFiles(path.Join(templateDir, aIncTmplName)); err != nil {
+		return nil, nil, fmt.Errorf("Can't read template %s, %s", aIncTmplName, err)
+	}
+	aIncTmpl, err := t.Assemble()
 	if err != nil {
-		return aHTMLTmpl, nil, fmt.Errorf("Can't parse template %s, %s", aIncTmplName, err)
+		return nil, nil, fmt.Errorf("Can't parse template %s, %s", aIncTmplName, err)
 	}
 	return aHTMLTmpl, aIncTmpl, nil
 }
@@ -287,6 +298,7 @@ func init() {
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "l", false, "display license")
 	flag.BoolVar(&showLicense, "license", false, "display license")
+	//flag.BoolVar(&showExamples, "example", false, "display example(s)")
 
 	// App Options
 	flag.BoolVar(&showVerbose, "verbose", false, "more verbose logging")
@@ -299,16 +311,20 @@ func init() {
 func main() {
 	appName := path.Base(os.Args[0])
 	flag.Parse()
-	//args := flag.Args()
+	args := flag.Args()
 
-	cfg := cli.New(appName, "CAIT", fmt.Sprintf(cait.LicenseText, appName, cait.Version), cait.Version)
+	cfg := cli.New(appName, "CAIT", cait.Version)
+	cfg.LicenseText = fmt.Sprintf(cait.LicenseText, appName, cait.Version)
 	cfg.UsageText = fmt.Sprintf(usage, appName)
 	cfg.DescriptionText = fmt.Sprintf(description, appName, appName)
-	//cfg.ExampleText = fmt.Sprintf(examples, appName)
-	cfg.OptionsText = "OPTIONS\n"
+	cfg.OptionText = "OPTIONS\n\n"
 
 	if showHelp == true {
-		fmt.Println(cfg.Usage())
+		if len(args) > 0 {
+			fmt.Println(cfg.Help(args...))
+		} else {
+			fmt.Println(cfg.Usage())
+		}
 		os.Exit(0)
 	}
 

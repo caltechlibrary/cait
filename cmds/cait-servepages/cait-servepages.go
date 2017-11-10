@@ -55,7 +55,8 @@ var (
 	usage = `USAGE: %s [OPTIONS]`
 
 	description = `
- OVERVIEW
+
+OVERVIEW
 
 %s provides search services defined by CAIT_SITE_URL for the
 website content defined by CAIT_HTDOCS using the index defined
@@ -101,9 +102,6 @@ variables are supported-
 
 	indexAlias bleve.IndexAlias
 	index      bleve.Index
-
-	// Internal package var
-	tmplFuncs = tmplfn.Join(tmplfn.TimeMap, tmplfn.PageMap, cait.TmplMap)
 )
 
 func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
@@ -119,6 +117,7 @@ func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
 		Size      int    `json:"size"`
 		From      int    `json:"from"`
 		AllIDs    bool   `json:"all_ids"`
+		Sort      string `json:"sort"`
 	}{}
 
 	isQuery := false
@@ -154,6 +153,12 @@ func mapToSearchQuery(m map[string]interface{}) (*cait.SearchQuery, error) {
 
 	if raw.AllIDs == true {
 		q.AllIDs = true
+	}
+
+	if len(raw.Sort) > 0 {
+		// FIXME: need to think about injection
+		q.Sort = raw.Sort
+		log.Printf("DEBUG sorting by %s", q.Sort)
 	}
 
 	//Note: if q.Size is not set by the query request pick a nice default value
@@ -223,6 +228,8 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 				}
 			} else if k == "q" || k == "q_exact" || k == "q_excluded" || k == "q_required" {
 				submission[k] = strings.Join(v, "")
+			} else if k == "sort" {
+				submission[k] = strings.Join(v, "")
 			}
 		}
 	}
@@ -239,6 +246,8 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 					submission[k] = i
 				}
 			} else if k == "q" || k == "q_exact" || k == "q_excluded" || k == "q_required" {
+				submission[k] = strings.Join(v, "")
+			} else if k == "sort" {
 				submission[k] = strings.Join(v, "")
 			}
 		}
@@ -290,6 +299,13 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprintf("%s", err)))
 		return
+	}
+	if q.Sort != "" {
+		if strings.Contains(q.Sort, ":") == true {
+			searchRequest.SortBy(strings.Split(q.Sort, ":"))
+		} else {
+			searchRequest.SortBy([]string{q.Sort})
+		}
 	}
 
 	searchRequest.Highlight = bleve.NewHighlight()
@@ -353,9 +369,17 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	pageInclude = "results-search.include"
 
 	// Load my templates and setup to execute them
-	tmpl, err := tmplfn.Assemble(tmplFuncs, path.Join(templatesDir, pageHTML), path.Join(templatesDir, pageInclude))
+	tmplFuncs := tmplfn.Join(tmplfn.AllFuncs(), cait.TmplMap)
+	t := tmplfn.New(tmplFuncs)
+	if err := t.ReadFiles(path.Join(templatesDir, pageHTML), path.Join(templatesDir, pageInclude)); err != nil {
+		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Template Read Errors: %s, %s, %s\n", pageHTML, pageInclude, err))
+		w.WriteHeader(http.StatusInternalServerError)
+		w.Write([]byte(fmt.Sprintf("Template errors: %s", err)))
+		return
+	}
+	tmpl, err := t.Assemble()
 	if err != nil {
-		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Template Errors: %s, %s, %s\n", pageHTML, pageInclude, err))
+		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Template Assembly Errors: %s, %s, %s\n", pageHTML, pageInclude, err))
 		w.WriteHeader(http.StatusInternalServerError)
 		w.Write([]byte(fmt.Sprintf("Template errors: %s", err)))
 		return
@@ -364,7 +388,6 @@ func resultsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html")
 	var buf bytes.Buffer
 	err = tmpl.Execute(&buf, q)
-	//err = tmpl.Execute(w, q)
 	if err != nil {
 		responseLogger(r, http.StatusInternalServerError, fmt.Errorf("Can't render %s, %s/%s, %s", templatesDir, pageHTML, pageInclude, err))
 		w.WriteHeader(http.StatusInternalServerError)
@@ -402,19 +425,31 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		tmpl *template.Template
 		err  error
 	)
+	tmplFuncs := tmplfn.Join(tmplfn.AllFuncs(), cait.TmplMap)
+	t := tmplfn.New(tmplFuncs)
 	w.Header().Set("Content-Type", "text/html")
 	if strings.HasPrefix(r.URL.Path, "/search/advanced") == true {
 		formData.URI = "/search/advanced/"
-		tmpl, err = tmplfn.Assemble(tmplFuncs, path.Join(templatesDir, "advanced-search.html"), path.Join(templatesDir, "advanced-search.include"))
+		err = t.ReadFiles(path.Join(templatesDir, "advanced-search.html"), path.Join(templatesDir, "advanced-search.include"))
 		if err != nil {
 			fmt.Printf("Can't read advanced-search templates, %s", err)
 			return
 		}
+		tmpl, err = t.Assemble()
+		if err != nil {
+			fmt.Printf("Can't assemble advanced-search templates, %s", err)
+			return
+		}
 	} else {
 		formData.URI = "/search/basic/"
-		tmpl, err = tmplfn.Assemble(tmplFuncs, path.Join(templatesDir, "basic-search.html"), path.Join(templatesDir, "basic-search.include"))
+		err = t.ReadFiles(path.Join(templatesDir, "basic-search.html"), path.Join(templatesDir, "basic-search.include"))
 		if err != nil {
 			log.Printf("Can't read basic-search templates, %s\n", err)
+			return
+		}
+		tmpl, err = t.Assemble()
+		if err != nil {
+			log.Printf("Can't assemble basic-search templates, %s\n", err)
 			return
 		}
 	}
@@ -647,10 +682,7 @@ func init() {
 	// We are going to log to standard out rather than standard err
 	log.SetOutput(os.Stdout)
 
-	flag.StringVar(&siteURL, "search", "", "The URL to listen on for search requests")
-	flag.StringVar(&bleveNames, "bleve", "", "a colon delimited list of Bleve index db names")
-	flag.StringVar(&htdocsDir, "htdocs", "", "specify where to write the HTML files to")
-	flag.StringVar(&templatesDir, "templates", "", "The directory path for templates")
+	// Standard Options
 	flag.BoolVar(&showHelp, "h", false, "display help")
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "v", false, "display version")
@@ -658,6 +690,11 @@ func init() {
 	flag.BoolVar(&showLicense, "l", false, "display license")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 
+	// Application Options
+	flag.StringVar(&siteURL, "search", "", "The URL to listen on for search requests")
+	flag.StringVar(&bleveNames, "bleve", "", "a colon delimited list of Bleve index db names")
+	flag.StringVar(&htdocsDir, "htdocs", "", "specify where to write the HTML files to")
+	flag.StringVar(&templatesDir, "templates", "", "The directory path for templates")
 	flag.StringVar(&webhookPath, "webhook-path", "", "the webhook path, e.g. /my-webhook/something")
 	flag.StringVar(&webhookSecret, "webhook-secret", "", "the secret to validate before executing command")
 	flag.StringVar(&webhookCommand, "webhook-command", "", "the command to execute if webhook validates")
@@ -668,14 +705,21 @@ func main() {
 	var err error
 
 	appName := path.Base(os.Args[0])
-	cfg := cli.New(appName, "CAIT", fmt.Sprintf(cait.LicenseText, appName, cait.Version), cait.Version)
+	flag.Parse()
+	args := flag.Args()
+
+	cfg := cli.New(appName, "CAIT", cait.Version)
+	cfg.LicenseText = fmt.Sprintf(cait.LicenseText, appName, cait.Version)
 	cfg.UsageText = fmt.Sprintf(usage, appName)
 	cfg.DescriptionText = fmt.Sprintf(description, appName, appName)
-	cfg.OptionsText = "OPTIONS\n"
+	cfg.OptionText = "OPTIONS\n\n"
 
-	flag.Parse()
 	if showHelp == true {
-		fmt.Println(cfg.Usage())
+		if len(args) > 0 {
+			fmt.Println(cfg.Help(args...))
+		} else {
+			fmt.Println(cfg.Usage())
+		}
 		os.Exit(0)
 	}
 	if showVersion == true {

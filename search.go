@@ -48,6 +48,7 @@ type SearchQuery struct {
 	AllIDs bool   `json:"all_ids"`
 	Size   int    `json:"size"`
 	From   int    `json:"from"`
+	Sort   string `json:"sort"`
 
 	// Simple Search
 	Q string `json:"q"`

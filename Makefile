@@ -7,8 +7,6 @@ VERSION = $(shell grep -m 1 'Version =' $(PROJECT).go | cut -d\" -f 2)
 
 BRANCH = $(shell git branch | grep '* ' | cut -d\  -f 2)
 
-GOPATH = $(HOME)
-
 PROGRAM_LIST = bin/cait bin/cait-genpages bin/cait-indexpages bin/cait-servepages 
 
 API = cait.go io.go export.go schema.go search.go views.go
@@ -19,7 +17,7 @@ build: $(API) $(PROGRAM_LIST) $(CMDS)
 
 
 api: $(API)
-	env GOPATH=$(HOME) go build
+	go build
 
 cait: bin/cait
 
@@ -30,19 +28,19 @@ cait-indexpages: bin/cait-indexpages
 cait-servepages: bin/cait-servepages
 
 bin/cait: $(API) cmds/cait/cait.go
-	env GOPATH=$(HOME) go build -o bin/cait cmds/cait/cait.go
+	go build -o bin/cait cmds/cait/cait.go
 
 bin/cait-genpages: $(API)  cmds/cait-genpages/cait-genpages.go
-	env GOPATH=$(HOME) go build -o bin/cait-genpages cmds/cait-genpages/cait-genpages.go
+	go build -o bin/cait-genpages cmds/cait-genpages/cait-genpages.go
 
 bin/cait-indexpages: $(API) cmds/cait-indexpages/cait-indexpages.go
-	env GOPATH=$(HOME) go build -o bin/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
+	go build -o bin/cait-indexpages cmds/cait-indexpages/cait-indexpages.go
 
 bin/cait-servepages: $(API) cmds/cait-servepages/cait-servepages.go
-	env GOPATH=$(HOME) go build -o bin/cait-servepages cmds/cait-servepages/cait-servepages.go
+	go build -o bin/cait-servepages cmds/cait-servepages/cait-servepages.go
 
 test:
-	env GOPATH=$(HOME) go test
+	go test
 
 clean:
 	if [ -d bin ]; then /bin/rm -fR bin; fi
@@ -50,10 +48,10 @@ clean:
 	if [ -f $(PROJECT)-$(VERSION)-release.zip ]; then /bin/rm $(PROJECT)-$(VERSION)-release.zip; fi
 
 install:
-	env GOPATH=$(HOME) GOBIN=$(HOME)/bin go install cmds/cait/cait.go
-	env GOPATH=$(HOME) GOBIN=$(HOME)/bin go install cmds/cait-genpages/cait-genpages.go
-	env GOPATH=$(HOME) GOBIN=$(HOME)/bin go install cmds/cait-indexpages/cait-indexpages.go
-	env GOPATH=$(HOME) GOBIN=$(HOME)/bin go install cmds/cait-servepages/cait-servepages.go
+	env GOBIN=$(GOPATH)/bin go install cmds/cait/cait.go
+	env GOBIN=$(GOPATH)/bin go install cmds/cait-genpages/cait-genpages.go
+	env GOBIN=$(GOPATH)/bin go install cmds/cait-indexpages/cait-indexpages.go
+	env GOBIN=$(GOPATH)/bin go install cmds/cait-servepages/cait-servepages.go
 
 website:
 	./mk-website.bash

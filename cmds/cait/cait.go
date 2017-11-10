@@ -75,6 +75,7 @@ var (
 	usage = `USAGE: %s [OPTIONS] SUBJECT ACTION [PAYLOAD]`
 
 	description = `
+
 SYSNOPSIS
 
 %s is a command line utility for interacting with ArchivesSpace.
@@ -96,9 +97,11 @@ to ArchivesSpace. The following shell variables are used
 
 If CAIT_API_TOKEN is not set then CAIT_USERNAME and CAIT_PASSWORD
 are used.
+
 `
 
 	examples = `
+
 EXAMPLES:
 
   	%s repository create '{"repo_code":"MyTest","name":"My Test Repository"}'
@@ -117,7 +120,9 @@ Or for a specific repository by ID with
 
     %s repository list '{"uri": "/repositories/2"}'
 
-Other SUBJECTS and ACTIONS work in a similar fashion.`
+Other SUBJECTS and ACTIONS work in a similar fashion.
+
+`
 
 	// App Options
 	caitAPIURL      = `http://localhost:8089`
@@ -949,14 +954,19 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 
-	cfg := cli.New(appName, "CAIT", fmt.Sprintf(cait.LicenseText, appName, cait.Version), cait.Version)
+	cfg := cli.New(appName, "CAIT", cait.Version)
+	cfg.LicenseText = fmt.Sprintf(cait.LicenseText, appName, cait.Version)
 	cfg.UsageText = fmt.Sprintf(usage, appName)
 	cfg.DescriptionText = fmt.Sprintf(description, appName, strings.Join(subjects, ", "), strings.Join(actions, ", "), appName)
 	cfg.ExampleText = fmt.Sprintf(examples, appName, appName, appName)
-	cfg.OptionsText = "OPTIONS\n"
+	cfg.OptionText = "OPTIONS\n\n"
 
 	if showHelp == true {
-		fmt.Println(cfg.Usage())
+		if len(args) > 0 {
+			fmt.Println(cfg.Help(args...))
+		} else {
+			fmt.Println(cfg.Usage())
+		}
 		os.Exit(0)
 	}
 
@@ -997,9 +1007,13 @@ func main() {
 	}
 
 	//NOTE: if we have no errors we can switch the log statement to os.Stdout here.
-	log.SetOutput(os.Stdout)
 
-	log.Printf("%s %s\n", appName, cait.Version)
+	if showVerbose == true {
+		log.SetOutput(os.Stdout)
+		log.Printf("%s %s\n", appName, cait.Version)
+	} else {
+		log.SetOutput(os.Stderr)
+	}
 
 	api := cait.New(caitAPIURL, caitUsername, caitPassword, caitDataset)
 	src, err := runCmd(api, cmd)
