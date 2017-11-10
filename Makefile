@@ -108,6 +108,7 @@ release: dist/linux-amd64 dist/windows-amd64 dist/macosx-amd64 dist/raspbian-arm
 	cp -vR scripts/harvest-*.bash dist/scripts/
 	cp -vR etc/*-example dist/etc/
 	cp -vR etc/systemd/system/*-example dist/etc/systemd/system/
+	./package-versions.bash > dist/package-versions.txt
 	zip -r $(PROJECT)-$(VERSION)-release.zip dist/*
 
 
