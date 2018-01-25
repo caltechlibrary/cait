@@ -9,7 +9,8 @@
 
 ## Next (Sprint)
 
-+ [ ] Splite cait tool to support specific dataset collections for agents/people and repositories/2/accessions
++ [ ] Update cait to use v0.0.14-dev or better of dataset
++ [ ] Split cait tool to support specific dataset collections for agents/people and repositories/2/accessions
 + [ ] Develop an Agent/Person Template, include name, bio and links to accessions if available
 + [ ] Create an accessions report for Loma to answer Patrons requests (needs to include both Accession, list of persons and link to the access record)0:w
 
