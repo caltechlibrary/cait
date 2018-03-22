@@ -31,10 +31,11 @@ import (
 
 // Get the environment variables needed for testing.
 var (
-	caitURL      = os.Getenv("CAIT_API_URL")
-	caitToken    = os.Getenv("CAIT_API_TOKEN")
-	caitUsername = os.Getenv("CAIT_USERNAME")
-	caitPassword = os.Getenv("CAIT_PASSWORD")
+	caitURL        = os.Getenv("CAIT_API_URL")
+	caitToken      = os.Getenv("CAIT_API_TOKEN")
+	caitUsername   = os.Getenv("CAIT_USERNAME")
+	caitPassword   = os.Getenv("CAIT_PASSWORD")
+	collectionName = os.Getenv("DATASET")
 )
 
 func checkConfig(t *testing.T) bool {
@@ -87,7 +88,7 @@ func TestArchiveSpaceAPI(t *testing.T) {
 		t.SkipNow()
 	}
 
-	cait := New(caitURL, caitUsername, caitPassword)
+	cait := New(caitURL, caitUsername, caitPassword, collectionName)
 	if cait.BaseURL == nil {
 		t.Errorf("%s\t%s", cait.BaseURL.String(), caitURL)
 	}
@@ -121,7 +122,7 @@ func TestRepository(t *testing.T) {
 		t.Skip()
 	}
 
-	cait := New(caitURL, caitUsername, caitPassword)
+	cait := New(caitURL, caitUsername, caitPassword, collectionName)
 	tm := time.Now()
 	repoCode := fmt.Sprintf("%d", tm.Unix())
 
@@ -220,7 +221,7 @@ func TestAgent(t *testing.T) {
 		t.Skip()
 	}
 
-	cait := New(caitURL, caitUsername, caitPassword)
+	cait := New(caitURL, caitUsername, caitPassword, collectionName)
 	err := cait.Login()
 	if err != nil {
 		t.Error(err)
@@ -326,7 +327,7 @@ func TestAccession(t *testing.T) {
 		t.Skip()
 	}
 
-	cait := New(caitURL, caitUsername, caitPassword)
+	cait := New(caitURL, caitUsername, caitPassword, collectionName)
 	err := cait.Login()
 	if err != nil {
 		t.Error(err)
@@ -434,7 +435,7 @@ func TestVocabularies(t *testing.T) {
 		t.Skip()
 	}
 
-	cait := New(caitURL, caitUsername, caitPassword)
+	cait := New(caitURL, caitUsername, caitPassword, collectionName)
 	err := cait.Login()
 	if err != nil {
 		t.Error(err)
@@ -473,7 +474,7 @@ func TestVocabularies(t *testing.T) {
 // 		t.Skip()
 // 	}
 //
-// 	cait := New(caitURL, caitUsername, caitPassword)
+// 	cait := New(caitURL, caitUsername, caitPassword, collectionName)
 // 	err := cait.Login()
 // 	if err != nil {
 // 		t.Error(err)

@@ -27,7 +27,7 @@ import (
 
 // ExportRepository for specific id to a JSON file.
 func (api *ArchivesSpaceAPI) ExportRepository(id int, fname string) error {
-	dir := "repository"
+	dir := "repository.ds"
 	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s/%s, %s", api.Dataset, dir, err)
@@ -66,7 +66,7 @@ func (api *ArchivesSpaceAPI) ExportRepositories(verbose bool) error {
 
 // ExportAgents exports all agent records of a given type to JSON files by id.
 func (api *ArchivesSpaceAPI) ExportAgents(agentType string, verbose bool) error {
-	dir := path.Join("agents", agentType)
+	dir := path.Join("agents.ds", agentType)
 	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
@@ -84,7 +84,7 @@ func (api *ArchivesSpaceAPI) ExportAgents(agentType string, verbose bool) error 
 		fname := fmt.Sprintf("%d.json", id)
 		err = WriteJSON(c, fname, &data)
 		if err != nil {
-			return fmt.Errorf("Can't write %s/%d.json, %s", dir, agentType, id, err)
+			return fmt.Errorf("Can't write %s/%s/%d.json, %s", dir, agentType, id, err)
 		}
 		if verbose == true && i > 0 && (i%100) == 0 {
 			log.Printf("%d agents/%s exported\n", i, agentType)
@@ -95,7 +95,7 @@ func (api *ArchivesSpaceAPI) ExportAgents(agentType string, verbose bool) error 
 
 // ExportAccessions exports all accessions by id to JSON files.
 func (api *ArchivesSpaceAPI) ExportAccessions(repoID int, verbose bool) error {
-	dir := fmt.Sprintf("repositories/%d/accessions", repoID)
+	dir := fmt.Sprintf("repository-%d/accessions.ds", repoID)
 	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
@@ -128,7 +128,7 @@ func (api *ArchivesSpaceAPI) ExportAccessions(repoID int, verbose bool) error {
 
 // ExportSubjects exports all subjects by id to JSON files.
 func (api *ArchivesSpaceAPI) ExportSubjects(verbose bool) error {
-	dir := "subjects"
+	dir := "subjects.ds"
 	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s/%s, %s", api.Dataset, dir, err)
@@ -158,7 +158,7 @@ func (api *ArchivesSpaceAPI) ExportSubjects(verbose bool) error {
 
 // ExportVocabularies exports all the vocabularies by ids to JSON files.
 func (api *ArchivesSpaceAPI) ExportVocabularies(verbose bool) error {
-	dir := "vocabularies"
+	dir := "vocabularies.ds"
 	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
@@ -186,7 +186,7 @@ func (api *ArchivesSpaceAPI) ExportVocabularies(verbose bool) error {
 }
 
 func (api *ArchivesSpaceAPI) collectTerms(vocID int, verbose bool) error {
-	dir := path.Join("vocabularies", fmt.Sprintf("%d", vocID), "terms")
+	dir := path.Join(fmt.Sprintf("vocabulary-%d", vocID), "terms.ds")
 	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
@@ -231,7 +231,7 @@ func (api *ArchivesSpaceAPI) ExportTerms(verbose bool) error {
 
 // ExportLocations export all locations by id to JSON files.
 func (api *ArchivesSpaceAPI) ExportLocations(verbose bool) error {
-	dir := "locations"
+	dir := "locations.ds"
 	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
@@ -261,7 +261,7 @@ func (api *ArchivesSpaceAPI) ExportLocations(verbose bool) error {
 
 // ExportDigitalObjects export all digital objects by id to JSON files.
 func (api *ArchivesSpaceAPI) ExportDigitalObjects(repoID int, verbose bool) error {
-	dir := path.Join("repositories", fmt.Sprintf("%d", repoID), "digital_objects")
+	dir := path.Join(fmt.Sprintf("repository-%d", repoID), "digital_objects.ds")
 	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
@@ -291,7 +291,7 @@ func (api *ArchivesSpaceAPI) ExportDigitalObjects(repoID int, verbose bool) erro
 
 // ExportResources export all resources by id to JSON files.
 func (api *ArchivesSpaceAPI) ExportResources(repoID int, verbose bool) error {
-	dir := path.Join("repositories", fmt.Sprintf("%d", repoID), "resources")
+	dir := path.Join(fmt.Sprintf("repository-%d", repoID), "resources.ds")
 	c, err := CreateCollection(api, dir)
 	if err != nil {
 		return fmt.Errorf("Can't open collection %s, %s", api.Dataset, err)
@@ -354,7 +354,7 @@ func (api *ArchivesSpaceAPI) ExportArchivesSpace(verbose bool) error {
 	}
 
 	for _, agentType := range []string{"people", "corporate_entities", "families", "software"} {
-		log.Printf("Exporting agents/%s\n", agentType)
+		log.Printf("Exporting agents.ds/%s\n", agentType)
 		err = api.ExportAgents(agentType, verbose)
 		if err != nil {
 			return fmt.Errorf("Can't export agents, %s", err)
@@ -366,17 +366,17 @@ func (api *ArchivesSpaceAPI) ExportArchivesSpace(verbose bool) error {
 		return fmt.Errorf("Can't get a list of repository ids, %s", err)
 	}
 	for _, id := range ids {
-		log.Printf("Exporting repositories/%d/digital_objects\n", id)
+		log.Printf("Exporting repositories/%d/digital_objects.ds\n", id)
 		err = api.ExportDigitalObjects(id, verbose)
 		if err != nil {
-			return fmt.Errorf("Can't export repositories/%d/digital_objects, %s", id, err)
+			return fmt.Errorf("Can't export repositories/%d/digital_objects.ds, %s", id, err)
 		}
 		log.Printf("Exporting repositories/%d/resources\n", id)
 		err = api.ExportResources(id, verbose)
 		if err != nil {
-			return fmt.Errorf("Can't export repositories/%d/accessions, %s", id, err)
+			return fmt.Errorf("Can't export repositories/%d/accessions.ds, %s", id, err)
 		}
-		log.Printf("Exporting repositories/%d/accessions\n", id)
+		log.Printf("Exporting repositories/%d/accessions.ds\n", id)
 		err = api.ExportAccessions(id, verbose)
 		if err != nil {
 			return fmt.Errorf("Can't export repositories/%d/accessions, %s", id, err)
