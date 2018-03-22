@@ -1,0 +1,32 @@
+{
+    "@type": "SoftwareSourceCode",
+    "description": "A set command line tools and Go package for working with the ArchivesSpace REST API",
+    "name": "cait",
+    "codeRepository": "https://github.com/caltechlibrary/cait",
+    "issueTracker": "https://github.com/caltechlibrary/cait/issues",
+    "license": "https://caltechlibrary.github.io/cait/license.html",
+    "version": "0.0.16",
+    "author": [
+        {
+            "@type": "Person",
+            "givenName": "Robert",
+            "familyName": "Doiel",
+            "affiliation": "Caltech Library",
+            "email": "rsdoiel@caltech.edu",
+            "@id": "https://orcid.org/0000-0003-0900-6903"
+        }
+    ],
+    "developmentStatus": "active",
+    "downloadUrl": "https://github.com/caltechlibrary/cait/archive/v0.0.16.zip",
+    "keywords": [
+        "GitHub",
+        "metadata",
+        "repository",
+        "ArchivesSpace",
+        "software"
+    ],
+    "maintainer": "https://orcid.org/0000-0003-0900-6903",
+    "programmingLanguage": [
+        "Go"
+    ]
+}
